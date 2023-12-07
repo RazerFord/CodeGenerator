@@ -10,5 +10,11 @@ public interface Node extends Map<Field, Node> {
 
     void extract() throws IllegalAccessException;
 
-    boolean isLeaf();
+    NodeType nodeType();
+
+    public static enum NodeType {
+        LEAF,
+        INNER,
+        ARRAY,
+    }
 }

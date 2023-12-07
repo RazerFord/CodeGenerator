@@ -34,8 +34,8 @@ public class Leaf implements Node {
     }
 
     @Override
-    public boolean isLeaf() {
-        return true;
+    public NodeType nodeType() {
+        return NodeType.LEAF;
     }
 
 

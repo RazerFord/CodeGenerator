@@ -77,9 +77,10 @@ public class SimpleTest {
 
     public void print(@NotNull Node node, int indent, @NotNull Set<Object> visited) {
         System.out.printf("%s:%s\n", node.getClassOfValue(), node.getValue());
-        if (visited.contains(node)) System.out.printf("%sReference\n", String.join("", Collections.nCopies(indent, " ")));
+        if (visited.contains(node))
+            System.out.printf("%sReference\n", String.join("", Collections.nCopies(indent, " ")));
         if (!visited.add(node) || node.getClassOfValue() == null) return;
-        if (node.isLeaf()) {
+        if (node.nodeType() == Node.NodeType.LEAF) {
             System.out.printf("%s%s\n", String.join("", Collections.nCopies(indent, " ")), node.getValue());
         } else {
             for (Map.Entry<Field, Node> e : node.entrySet()) {

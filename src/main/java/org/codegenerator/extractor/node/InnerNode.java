@@ -56,8 +56,8 @@ public class InnerNode implements Node {
     }
 
     @Override
-    public boolean isLeaf() {
-        return false;
+    public NodeType nodeType() {
+        return NodeType.INNER;
     }
 
     @Override
