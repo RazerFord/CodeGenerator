@@ -18,6 +18,14 @@ public class SimpleTest {
     }
 
     @Test
+    public void sameValuesTest() {
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        SameValues sameValues = new SameValues();
+        Node nd = classFieldExtractor.extract(sameValues);
+        print(nd);
+    }
+
+    @Test
     public void nullTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         NodeIN node = new NodeIN();
@@ -66,6 +74,7 @@ public class SimpleTest {
 
     public void print(@NotNull Node node, int indent, @NotNull Set<Object> visited) {
         System.out.printf("%s\n", node.getClassOfValue());
+        if (visited.contains(node)) System.out.printf("%sV:%s\n", " ".repeat(indent), node.getValue());
         if (!visited.add(node) || node.getClassOfValue() == null) return;
         if (node.isLeaf()) {
             System.out.printf("%s%s\n", " ".repeat(indent), node.getValue());
