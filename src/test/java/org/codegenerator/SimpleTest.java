@@ -70,6 +70,16 @@ public class SimpleTest {
         print(extracted);
     }
 
+    @Test
+    public void arrayTest() {
+        String[] strings = new String[]{"it", "is", "array", "of", "string"};
+
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        Node extracted = classFieldExtractor.extract(strings);
+
+        print(extracted);
+    }
+
     public void print(@NotNull Node node) {
         Set<Object> visited = new HashSet<>();
         print(node, 0, visited);
@@ -86,6 +96,13 @@ public class SimpleTest {
             for (Map.Entry<Object, Node> e : node.entrySet()) {
                 Field key = (Field) e.getKey();
                 String prefix = String.format("%s%s -> ", String.join("", Collections.nCopies(indent + 1, " ")), key.getName());
+                System.out.printf(prefix);
+                print(e.getValue(), prefix.length() + 1, visited);
+            }
+        } else if (node.nodeType() == Node.NodeType.ARRAY) {
+            for (Map.Entry<Object, Node> e : node.entrySet()) {
+                Integer key = (Integer) e.getKey();
+                String prefix = String.format("%s index:[%s] -> ", String.join("", Collections.nCopies(indent + 1, " ")), key);
                 System.out.printf(prefix);
                 print(e.getValue(), prefix.length() + 1, visited);
             }

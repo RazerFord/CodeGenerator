@@ -1,21 +1,26 @@
 package org.codegenerator.extractor.node;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class ArrayNode implements Node {
     private final Class<?> clazz;
-    private final Object value;
+    private final Object[] value;
     private final Map<Integer, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
 
-    public ArrayNode(Class<?> clazz, Object value, Map<Object, Node> visited) {
+    public ArrayNode(@NotNull Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
-        this.value = value;
+        if (!clazz.isArray()) throw new IllegalArgumentException();
+        int length = Array.getLength(value);
+        Object[] newValue = new Object[length];
+        for (int i = 0; i < length; i++) {
+            newValue[i] = Array.get(value, i);
+        }
+        this.value = newValue;
         this.visited = visited;
     }
 
@@ -31,12 +36,20 @@ public class ArrayNode implements Node {
 
     @Override
     public void extract() throws IllegalAccessException {
-        // TODO
+        for (int i = 0; i < value.length; i++) {
+            if (visited.containsKey(value[i])) {
+                fields.put(i, visited.get(value[i]));
+            } else {
+                Node node = Node.createNode(value[i], visited);
+                fields.put(i, node);
+                node.extract();
+            }
+        }
     }
 
     @Override
     public NodeType nodeType() {
-        return NodeType.INNER;
+        return NodeType.ARRAY;
     }
 
     @Override
@@ -110,16 +123,5 @@ public class ArrayNode implements Node {
     @Override
     public Set<Entry<Object, Node>> entrySet() {
         return ((new HashMap<Object, Node>(fields)).entrySet());
-    }
-
-    @Contract("_, _ -> new")
-    private @NotNull Node createNode(@NotNull Field field, Object o) {
-        if (o == null) {
-            return Leaf.NULL_NODE;
-        }
-        if (field.getType().isPrimitive()) {
-            return new Leaf(o.getClass(), o, visited);
-        }
-        return new ArrayNode(o.getClass(), o, visited);
     }
 }

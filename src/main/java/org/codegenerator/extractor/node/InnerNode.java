@@ -40,7 +40,7 @@ public class InnerNode implements Node {
             for (Field field : fields1) {
                 field.setAccessible(true);
                 Object o = field.get(value);
-                Node node = createNode(field, o);
+                Node node = Node.createNode(field, o, visited);
                 Node nextNode = visited.putIfAbsent(o, node);
                 if (nextNode != null) {
                     node = nextNode;
@@ -132,16 +132,5 @@ public class InnerNode implements Node {
     @Override
     public Set<Entry<Object, Node>> entrySet() {
         return ((new HashMap<Object, Node>(fields)).entrySet());
-    }
-
-    @Contract("_, _ -> new")
-    private @NotNull Node createNode(@NotNull Field field, Object o) {
-        if (o == null) {
-            return Leaf.NULL_NODE;
-        }
-        if (field.getType().isPrimitive()) {
-            return new Leaf(o.getClass(), o, visited);
-        }
-        return new InnerNode(o.getClass(), o, visited);
     }
 }

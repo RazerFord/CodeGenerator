@@ -11,7 +11,7 @@ public class ClassFieldExtractor {
     public Node extract(@NotNull Object o) {
         Map<Object, Node> visited = new HashMap<>();
 
-        Node node = new InnerNode(o.getClass(), o, visited);
+        Node node = Node.createNode(o, visited);
         visited.put(o, node);
         try {
             node.extract();
