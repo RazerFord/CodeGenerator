@@ -122,6 +122,16 @@ public class SimpleTest {
         print(extracted);
     }
 
+    @Test
+    public void primitivesTest() {
+        int i = 42;
+
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        Node extracted = classFieldExtractor.extract(i);
+
+        print(extracted);
+    }
+
     public void print(@NotNull Node node) {
         Set<Object> visited = new HashSet<>();
         print(node, 0, visited);
