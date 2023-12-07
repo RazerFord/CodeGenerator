@@ -28,7 +28,7 @@ public class SimpleTest {
     @Test
     public void nullTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
-        NodeIN node = new NodeIN();
+        ListNode node = new ListNode();
         Node nd = classFieldExtractor.extract(node);
         print(nd);
     }
@@ -43,8 +43,8 @@ public class SimpleTest {
 
     @Test
     public void referenceTest() {
-        NodeIN node1 = new NodeIN();
-        NodeIN node2 = new NodeIN();
+        ListNode node1 = new ListNode();
+        ListNode node2 = new ListNode();
 
         node1.next = node2;
         node2.next = node1;
@@ -57,7 +57,7 @@ public class SimpleTest {
 
     @Test
     public void referenceToYourselfTest() {
-        NodeIN node1 = new NodeIN();
+        ListNode node1 = new ListNode();
 
         node1.next = node1;
 
