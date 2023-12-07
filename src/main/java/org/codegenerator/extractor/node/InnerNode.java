@@ -20,7 +20,7 @@ public class InnerNode implements Node {
     }
 
     @Override
-    public Class<?> getRoot() {
+    public Class<?> getClassOfValue() {
         return clazz;
     }
 

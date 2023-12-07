@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 
 public interface Node extends Map<Field, Node> {
-    Class<?> getRoot();
+    Class<?> getClassOfValue();
 
     Object getValue();
 

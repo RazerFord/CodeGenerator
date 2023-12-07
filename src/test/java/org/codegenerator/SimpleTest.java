@@ -5,6 +5,9 @@ import org.codegenerator.extractor.node.Node;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class SimpleTest {
     @Test
     public void simpleBaseTest() {
@@ -25,8 +28,8 @@ public class SimpleTest {
     @Test
     public void simpleTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
-        Clz clzBase = new Clz();
-        Node nd = classFieldExtractor.extract(clzBase);
+        Clz clz = new Clz();
+        Node nd = classFieldExtractor.extract(clz);
         print(nd);
     }
 
@@ -56,17 +59,21 @@ public class SimpleTest {
         print(ext);
     }
 
-    public void print(Node node) {
-        print(node, 1);
+    public void print(@NotNull Node node) {
+        Set<Object> visited = new HashSet<>();
+        print(node, 0, visited);
     }
 
-    public void print(@NotNull Node node, int indent) {
+    public void print(@NotNull Node node, int indent, @NotNull Set<Object> visited) {
+        System.out.printf("%s\n", node.getClassOfValue());
+        if (!visited.add(node) || node.getClassOfValue() == null) return;
         if (node.isLeaf()) {
-            System.out.printf("%s%s -> %s\n", " ".repeat(indent), node.getRoot(), node.getValue());
+            System.out.printf("%s%s\n", " ".repeat(indent), node.getValue());
         } else {
-            System.out.printf("%s%s -> %s\n", " ".repeat(indent), node.getRoot(), node.getValue());
             for (var e : node.entrySet()) {
-                print(e.getValue(), indent + 1);
+                String prefix = String.format("%s%s -> ", " ".repeat(indent + 1), e.getKey().getName());
+                System.out.printf(prefix);
+                print(e.getValue(), prefix.length() + 1, visited);
             }
         }
     }

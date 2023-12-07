@@ -20,7 +20,7 @@ public class Leaf implements Node {
     }
 
     @Override
-    public Class<?> getRoot() {
+    public Class<?> getClassOfValue() {
         return clazz;
     }
 
