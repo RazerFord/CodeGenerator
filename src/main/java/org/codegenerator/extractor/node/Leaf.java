@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 public class Leaf implements Node {
+    public static final Node NULL_NODE = new Leaf(null, null, null);
     private final Class<?> clazz;
     private final Object value;
     private final Map<Field, Node> fields = Collections.emptyMap();

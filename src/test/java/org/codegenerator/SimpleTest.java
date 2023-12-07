@@ -15,6 +15,14 @@ public class SimpleTest {
     }
 
     @Test
+    public void nullTest() {
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        NodeIN node = new NodeIN();
+        Node nd = classFieldExtractor.extract(node);
+        print(nd);
+    }
+
+    @Test
     public void simpleTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         Clz clzBase = new Clz();
