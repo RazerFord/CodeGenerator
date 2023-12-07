@@ -82,9 +82,10 @@ public class SimpleTest {
         if (!visited.add(node) || node.getClassOfValue() == null) return;
         if (node.nodeType() == Node.NodeType.LEAF) {
             System.out.printf("%s%s\n", String.join("", Collections.nCopies(indent, " ")), node.getValue());
-        } else {
-            for (Map.Entry<Field, Node> e : node.entrySet()) {
-                String prefix = String.format("%s%s -> ", String.join("", Collections.nCopies(indent + 1, " ")), e.getKey().getName());
+        } else if (node.nodeType() == Node.NodeType.INNER) {
+            for (Map.Entry<Object, Node> e : node.entrySet()) {
+                Field key = (Field) e.getKey();
+                String prefix = String.format("%s%s -> ", String.join("", Collections.nCopies(indent + 1, " ")), key.getName());
                 System.out.printf(prefix);
                 print(e.getValue(), prefix.length() + 1, visited);
             }

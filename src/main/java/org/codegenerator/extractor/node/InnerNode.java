@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class InnerNode implements Node {
     private final Class<?> clazz;
@@ -87,8 +88,11 @@ public class InnerNode implements Node {
 
     @Nullable
     @Override
-    public Node put(Field field, Node node) {
-        return fields.put(field, node);
+    public Node put(Object field, Node node) {
+        if (field instanceof Field) {
+            return fields.put((Field) field, node);
+        }
+        throw new IllegalArgumentException();
     }
 
     @Override
@@ -97,8 +101,14 @@ public class InnerNode implements Node {
     }
 
     @Override
-    public void putAll(@NotNull Map<? extends Field, ? extends Node> map) {
-        fields.putAll(map);
+    public void putAll(@NotNull Map<?, ? extends Node> map) {
+        for (Map.Entry<?, ? extends Node> e : map.entrySet()) {
+            if (e.getKey() instanceof Field) {
+                fields.put((Field) e.getKey(), e.getValue());
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
     }
 
     @Override
@@ -108,8 +118,8 @@ public class InnerNode implements Node {
 
     @NotNull
     @Override
-    public Set<Field> keySet() {
-        return fields.keySet();
+    public Set<Object> keySet() {
+        return new HashSet<>(fields.keySet());
     }
 
     @NotNull
@@ -120,8 +130,8 @@ public class InnerNode implements Node {
 
     @NotNull
     @Override
-    public Set<Entry<Field, Node>> entrySet() {
-        return fields.entrySet();
+    public Set<Entry<Object, Node>> entrySet() {
+        return ((new HashMap<Object, Node>(fields)).entrySet());
     }
 
     @Contract("_, _ -> new")

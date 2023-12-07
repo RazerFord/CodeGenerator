@@ -1,19 +1,19 @@
 package org.codegenerator.extractor.node;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
-public class Leaf implements Node {
-    public static final Node NULL_NODE = new Leaf(null, null, null);
+public class ArrayNode implements Node {
     private final Class<?> clazz;
     private final Object value;
-    private final Map<Field, Node> fields = Collections.emptyMap();
+    private final Map<Integer, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
 
-    public Leaf(Class<?> clazz, Object value, Map<Object, Node> visited) {
+    public ArrayNode(Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
         this.value = value;
         this.visited = visited;
@@ -30,14 +30,14 @@ public class Leaf implements Node {
     }
 
     @Override
-    public void extract() {
+    public void extract() throws IllegalAccessException {
+        // TODO
     }
 
     @Override
     public NodeType nodeType() {
-        return NodeType.LEAF;
+        return NodeType.INNER;
     }
-
 
     @Override
     public int size() {
@@ -66,39 +66,60 @@ public class Leaf implements Node {
 
     @Nullable
     @Override
-    public Node put(Object field, Node node) {
-        throw new UnsupportedOperationException();
+    public Node put(Object key, Node node) {
+        if (key instanceof Integer) {
+            return fields.put((Integer) key, node);
+        }
+        throw new IllegalArgumentException();
     }
 
     @Override
     public Node remove(Object o) {
-        return null;
+        return fields.remove(o);
     }
 
     @Override
     public void putAll(@NotNull Map<?, ? extends Node> map) {
-        throw new UnsupportedOperationException();
+        for (Entry<?, ? extends Node> e : map.entrySet()) {
+            if (e.getKey() instanceof Integer) {
+                fields.put((Integer) e.getKey(), e.getValue());
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
     }
 
     @Override
     public void clear() {
+        fields.clear();
     }
 
     @NotNull
     @Override
     public Set<Object> keySet() {
-        return Collections.emptySet();
+        return new HashSet<>(fields.keySet());
     }
 
     @NotNull
     @Override
     public Collection<Node> values() {
-        return Collections.emptySet();
+        return fields.values();
     }
 
     @NotNull
     @Override
     public Set<Entry<Object, Node>> entrySet() {
-        return Collections.emptySet();
+        return ((new HashMap<Object, Node>(fields)).entrySet());
+    }
+
+    @Contract("_, _ -> new")
+    private @NotNull Node createNode(@NotNull Field field, Object o) {
+        if (o == null) {
+            return Leaf.NULL_NODE;
+        }
+        if (field.getType().isPrimitive()) {
+            return new Leaf(o.getClass(), o, visited);
+        }
+        return new ArrayNode(o.getClass(), o, visited);
     }
 }

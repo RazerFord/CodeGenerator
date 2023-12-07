@@ -3,7 +3,7 @@ package org.codegenerator.extractor.node;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-public interface Node extends Map<Field, Node> {
+public interface Node extends Map<Object, Node> {
     Class<?> getClassOfValue();
 
     Object getValue();
@@ -12,9 +12,9 @@ public interface Node extends Map<Field, Node> {
 
     NodeType nodeType();
 
-    public static enum NodeType {
-        LEAF,
-        INNER,
+    enum NodeType {
         ARRAY,
+        INNER,
+        LEAF,
     }
 }
