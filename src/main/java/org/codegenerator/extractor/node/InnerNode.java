@@ -13,10 +13,12 @@ public class InnerNode implements Node {
     private final Class<?> clazz;
     private final Object value;
     private final Map<Field, Node> fields = new HashMap<>();
+    private final Set<Object> visited;
 
-    public InnerNode(Class<?> clazz, Object value) {
+    public InnerNode(Class<?> clazz, Object value, Set<Object> visited) {
         this.clazz = clazz;
         this.value = value;
+        this.visited = visited;
     }
 
     @Override
@@ -39,10 +41,14 @@ public class InnerNode implements Node {
                 Object o = field.get(value);
                 Node node;
                 if (field.getType().isPrimitive()) {
-                    node = new Leaf(o.getClass(), o);
+                    node = new Leaf(o.getClass(), o, visited);
                 } else {
-                    node = new InnerNode(o.getClass(), o);
+                    node = new InnerNode(o.getClass(), o, visited);
                 }
+                if (visited.contains(field)) {
+                    continue;
+                }
+                visited.add(field);
                 fields.putIfAbsent(field, node);
             }
             clz = clz.getSuperclass();

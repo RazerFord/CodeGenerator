@@ -10,10 +10,12 @@ public class Leaf implements Node {
     private final Class<?> clazz;
     private final Object value;
     private final Map<Field, Node> fields = Collections.emptyMap();
+    private final Set<Object> visited;
 
-    public Leaf(Class<?> clazz, Object value) {
+    public Leaf(Class<?> clazz, Object value, Set<Object> visited) {
         this.clazz = clazz;
         this.value = value;
+        this.visited = visited;
     }
 
     @Override
