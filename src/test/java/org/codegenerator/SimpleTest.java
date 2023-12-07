@@ -6,10 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class SimpleTest {
     @Test
@@ -73,6 +70,51 @@ public class SimpleTest {
     @Test
     public void arrayTest() {
         String[] strings = new String[]{"it", "is", "array", "of", "string"};
+
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        Node extracted = classFieldExtractor.extract(strings);
+
+        print(extracted);
+    }
+
+    @Test
+    public void listTest() {
+        List<String> strings = new ArrayList<>();
+        strings.add("it");
+        strings.add("is");
+        strings.add("array");
+        strings.add("of");
+        strings.add("string");
+
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        Node extracted = classFieldExtractor.extract(strings);
+
+        print(extracted);
+    }
+
+    @Test
+    public void treeSetTest() {
+        Set<String> strings = new TreeSet<>();
+        strings.add("it");
+        strings.add("is");
+        strings.add("array");
+        strings.add("of");
+        strings.add("string");
+
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        Node extracted = classFieldExtractor.extract(strings);
+
+        print(extracted);
+    }
+
+    @Test
+    public void hashSetTest() {
+        Set<String> strings = new HashSet<>();
+        strings.add("it");
+        strings.add("is");
+        strings.add("array");
+        strings.add("of");
+        strings.add("string");
 
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         Node extracted = classFieldExtractor.extract(strings);
