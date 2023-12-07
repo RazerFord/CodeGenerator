@@ -5,7 +5,10 @@ import org.codegenerator.extractor.node.Node;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class SimpleTest {
@@ -13,32 +16,32 @@ public class SimpleTest {
     public void simpleBaseTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         ClzBase clzBase = new ClzBase();
-        Node nd = classFieldExtractor.extract(clzBase);
-        print(nd);
+        Node extracted = classFieldExtractor.extract(clzBase);
+        print(extracted);
     }
 
     @Test
     public void sameValuesTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         SameValues sameValues = new SameValues();
-        Node nd = classFieldExtractor.extract(sameValues);
-        print(nd);
+        Node extracted = classFieldExtractor.extract(sameValues);
+        print(extracted);
     }
 
     @Test
     public void nullTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         ListNode node = new ListNode();
-        Node nd = classFieldExtractor.extract(node);
-        print(nd);
+        Node extracted = classFieldExtractor.extract(node);
+        print(extracted);
     }
 
     @Test
     public void simpleInheritanceTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         Clz clz = new Clz();
-        Node nd = classFieldExtractor.extract(clz);
-        print(nd);
+        Node extracted = classFieldExtractor.extract(clz);
+        print(extracted);
     }
 
     @Test
@@ -50,9 +53,9 @@ public class SimpleTest {
         node2.next = node1;
 
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
-        var ext = classFieldExtractor.extract(node1);
+        Node extracted = classFieldExtractor.extract(node1);
 
-        print(ext);
+        print(extracted);
     }
 
     @Test
@@ -62,9 +65,9 @@ public class SimpleTest {
         node1.next = node1;
 
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
-        var ext = classFieldExtractor.extract(node1);
+        Node extracted = classFieldExtractor.extract(node1);
 
-        print(ext);
+        print(extracted);
     }
 
     public void print(@NotNull Node node) {
@@ -74,13 +77,13 @@ public class SimpleTest {
 
     public void print(@NotNull Node node, int indent, @NotNull Set<Object> visited) {
         System.out.printf("%s:%s\n", node.getClassOfValue(), node.getValue());
-        if (visited.contains(node)) System.out.printf("%sReference\n", " ".repeat(indent));
+        if (visited.contains(node)) System.out.printf("%sReference\n", String.join("", Collections.nCopies(indent, " ")));
         if (!visited.add(node) || node.getClassOfValue() == null) return;
         if (node.isLeaf()) {
-            System.out.printf("%s%s\n", " ".repeat(indent), node.getValue());
+            System.out.printf("%s%s\n", String.join("", Collections.nCopies(indent, " ")), node.getValue());
         } else {
-            for (var e : node.entrySet()) {
-                String prefix = String.format("%s%s -> ", " ".repeat(indent + 1), e.getKey().getName());
+            for (Map.Entry<Field, Node> e : node.entrySet()) {
+                String prefix = String.format("%s%s -> ", String.join("", Collections.nCopies(indent + 1, " ")), e.getKey().getName());
                 System.out.printf(prefix);
                 print(e.getValue(), prefix.length() + 1, visited);
             }
