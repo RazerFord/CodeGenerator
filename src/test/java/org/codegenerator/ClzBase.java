@@ -1,5 +1,6 @@
 package org.codegenerator;
 
 public class ClzBase {
-    int x = 10;
+    int x1 = 10;
+    int x2 = 12;
 }

@@ -10,9 +10,9 @@ public class Leaf implements Node {
     private final Class<?> clazz;
     private final Object value;
     private final Map<Field, Node> fields = Collections.emptyMap();
-    private final Set<Object> visited;
+    private final Map<Object, Node> visited;
 
-    public Leaf(Class<?> clazz, Object value, Set<Object> visited) {
+    public Leaf(Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
         this.value = value;
         this.visited = visited;

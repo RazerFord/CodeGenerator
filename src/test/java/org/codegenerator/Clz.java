@@ -5,6 +5,7 @@ public class Clz extends ClzBase {
     private final ClzBase base = new ClzBase();
 
     {
-        base.x = 42;
+        base.x1 = 42;
+        base.x2 = 24;
     }
 }

@@ -7,6 +7,14 @@ import org.junit.jupiter.api.Test;
 
 public class SimpleTest {
     @Test
+    public void simpleBaseTest() {
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        ClzBase clzBase = new ClzBase();
+        Node nd = classFieldExtractor.extract(clzBase);
+        print(nd);
+    }
+
+    @Test
     public void simpleTest() {
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         Clz clzBase = new Clz();
@@ -21,6 +29,18 @@ public class SimpleTest {
 
         node1.next = node2;
         node2.next = node1;
+
+        ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
+        var ext = classFieldExtractor.extract(node1);
+
+        print(ext);
+    }
+
+    @Test
+    public void referenceToYourselfTest() {
+        NodeIN node1 = new NodeIN();
+
+        node1.next = node1;
 
         ClassFieldExtractor classFieldExtractor = new ClassFieldExtractor();
         var ext = classFieldExtractor.extract(node1);

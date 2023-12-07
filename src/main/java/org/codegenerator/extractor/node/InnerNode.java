@@ -4,18 +4,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class InnerNode implements Node {
     private final Class<?> clazz;
     private final Object value;
     private final Map<Field, Node> fields = new HashMap<>();
-    private final Set<Object> visited;
+    private final Map<Object, Node> visited;
 
-    public InnerNode(Class<?> clazz, Object value, Set<Object> visited) {
+    public InnerNode(Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
         this.value = value;
         this.visited = visited;
@@ -34,6 +31,8 @@ public class InnerNode implements Node {
     @Override
     public void extract() throws IllegalAccessException {
         Class<?> clz = clazz;
+        List<Node> unvisitedNodes = new ArrayList<>();
+
         while (clz != null) {
             Field[] fields1 = clz.getDeclaredFields();
             for (Field field : fields1) {
@@ -45,15 +44,17 @@ public class InnerNode implements Node {
                 } else {
                     node = new InnerNode(o.getClass(), o, visited);
                 }
-                if (visited.contains(field)) {
-                    continue;
+                Node nextNode = visited.putIfAbsent(o, node);
+                if (nextNode != null) {
+                    node = nextNode;
+                } else {
+                    unvisitedNodes.add(node);
                 }
-                visited.add(field);
                 fields.putIfAbsent(field, node);
             }
             clz = clz.getSuperclass();
         }
-        for (Node node : fields.values()) {
+        for (Node node : unvisitedNodes) {
             node.extract();
         }
     }
