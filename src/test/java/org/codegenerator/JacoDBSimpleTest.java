@@ -1,38 +1,40 @@
 package org.codegenerator;
 
-import org.jacodb.api.JcClassOrInterface;
-import org.jacodb.api.JcDatabase;
-import org.jacodb.impl.JacoDB;
-import org.jacodb.impl.JcSettings;
-import org.jacodb.impl.features.InMemoryHierarchy;
-import org.jacodb.impl.features.Usages;
+import org.codegenerator.extractor.JacoClassFieldExtractor;
+import org.jacodb.api.JcField;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.concurrent.ExecutionException;
+import java.util.Map;
 
 public class JacoDBSimpleTest {
     @Test
-    public void simpleTest() throws ExecutionException, InterruptedException {
-        try (JcDatabase db = createDataBase()) {
-            File file = Paths.get("./src/main/resources/").toAbsolutePath().normalize().toFile();
-            db.asyncLoad(Collections.singletonList(file));
-            JcClassOrInterface clzMain = db.asyncClasspath(Collections.singletonList(file)).get().findClassOrNull("org.testdir.Dir");
-            assert clzMain != null;
-            System.out.println(clzMain);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public void simpleTest() {
+        JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
+        Map<JcField, Object> res = jacoClassFieldExtractor.extract("org.testdir.Dir", "./src/main/resources/");
+        print(res, "org.testdir.Dir");
     }
 
-    public static JcDatabase createDataBase() throws ExecutionException, InterruptedException {
-        return JacoDB.async(new JcSettings()
-                .useProcessJavaRuntime()
-                .persistent("./db" + System.currentTimeMillis())
-                .installFeatures(Usages.INSTANCE, InMemoryHierarchy.INSTANCE)
-        ).get();
+    private void print(Map<JcField, Object> map, String root) {
+        System.out.println(root);
+        print(map, 4, root);
+    }
+
+    private void print(Map<JcField, Object> map, int indent, String root) {
+        if (map == null || map.isEmpty()) {
+            return;
+        }
+        System.out.printf("%s %s\n", String.join("", Collections.nCopies(indent, ">")), root);
+        for (Map.Entry<JcField, Object> entry : map.entrySet()) {
+            JcField field = entry.getKey();
+            System.out.printf("%s%s: %s\n", String.join("", Collections.nCopies(indent, " ")), field.getName(), field.getType());
+
+            if (entry.getValue() instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<JcField, Object> var = (Map<JcField, Object>) entry.getValue();
+                print(var, indent + 4, field.getType().getTypeName());
+            }
+        }
+        System.out.printf("%s%s\n", String.join("", Collections.nCopies(indent, "<")), root);
     }
 }
