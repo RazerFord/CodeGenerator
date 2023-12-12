@@ -2,6 +2,10 @@ package org.codegenerator;
 
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
+import org.codegenerator.resources.Clz;
+import org.codegenerator.resources.ClzBase;
+import org.codegenerator.resources.ListNode;
+import org.codegenerator.resources.SameValues;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 

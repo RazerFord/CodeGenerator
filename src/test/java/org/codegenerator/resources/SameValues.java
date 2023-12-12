@@ -1,4 +1,4 @@
-package org.codegenerator;
+package org.codegenerator.resources;
 
 public class SameValues {
     private final int x1 = 13;

@@ -1,4 +1,4 @@
-package org.codegenerator;
+package org.codegenerator.resources;
 
 public class ClzBase {
     int x1 = 10;
