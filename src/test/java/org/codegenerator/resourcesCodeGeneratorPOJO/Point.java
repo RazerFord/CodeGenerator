@@ -21,11 +21,17 @@ public class Point {
         this.x = x;
     }
 
-    public void setY(int y) {
-        this.y = y;
+    public void setY(int yy) {
+        y = yy;
     }
 
     public void setZ(int z) {
         this.z = z;
+    }
+
+    public void setAll(int xx, int yy, int zz) {
+        x = xx;
+        y = yy;
+        z = zz;
     }
 }
