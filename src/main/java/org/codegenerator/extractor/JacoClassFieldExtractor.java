@@ -59,7 +59,13 @@ public class JacoClassFieldExtractor {
         }
         visited.add(jcClassOrInterface);
 
-        for (JcField jcField : jcClassOrInterface.getDeclaredFields()) {
+        Set<JcField> jcFields = new HashSet<>();
+        while (jcClassOrInterface != null) {
+            jcFields.addAll(jcClassOrInterface.getDeclaredFields());
+            jcClassOrInterface = jcClassOrInterface.getSuperClass();
+        }
+
+        for (JcField jcField : jcFields) {
             Map<JcField, Object> map = new HashMap<>();
             res.put(jcField, map);
             jcClassOrInterface = jcClasspath.findClassOrNull(jcField.getType().getTypeName());

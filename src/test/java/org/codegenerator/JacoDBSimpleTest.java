@@ -10,9 +10,34 @@ import java.util.Map;
 public class JacoDBSimpleTest {
     @Test
     public void simpleTest() {
+        String className = "org.testdir.Name";
         JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
-        Map<JcField, Object> res = jacoClassFieldExtractor.extract("org.testdir.Name", "./src/main/resources/");
-        print(res, "org.testdir.Name");
+        Map<JcField, Object> res = jacoClassFieldExtractor.extract(className, "./src/main/resources/");
+        print(res, className);
+    }
+
+    @Test
+    public void simpleRecursiveTest() {
+        String className = "org.testdir.Node";
+        JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
+        Map<JcField, Object> res = jacoClassFieldExtractor.extract(className, "./src/main/resources/");
+        print(res, className);
+    }
+
+    @Test
+    public void simpleEmptyTest() {
+        String className = "org.testdir.Empty";
+        JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
+        Map<JcField, Object> res = jacoClassFieldExtractor.extract(className, "./src/main/resources/");
+        print(res, className);
+    }
+
+    @Test
+    public void simpleInheritorTest() {
+        String className = "org.testdir.Inheritor";
+        JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
+        Map<JcField, Object> res = jacoClassFieldExtractor.extract(className, "./src/main/resources/");
+        print(res, className);
     }
 
     private void print(Map<JcField, Object> map, String root) {
