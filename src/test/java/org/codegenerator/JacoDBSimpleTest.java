@@ -11,8 +11,8 @@ public class JacoDBSimpleTest {
     @Test
     public void simpleTest() {
         JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
-        Map<JcField, Object> res = jacoClassFieldExtractor.extract("org.testdir.Dir", "./src/main/resources/");
-        print(res, "org.testdir.Dir");
+        Map<JcField, Object> res = jacoClassFieldExtractor.extract("org.testdir.Name", "./src/main/resources/");
+        print(res, "org.testdir.Name");
     }
 
     private void print(Map<JcField, Object> map, String root) {
@@ -35,6 +35,6 @@ public class JacoDBSimpleTest {
                 print(var, indent + 4, field.getType().getTypeName());
             }
         }
-        System.out.printf("%s%s\n", String.join("", Collections.nCopies(indent, "<")), root);
+        System.out.printf("%s %s\n", String.join("", Collections.nCopies(indent, "<")), root);
     }
 }
