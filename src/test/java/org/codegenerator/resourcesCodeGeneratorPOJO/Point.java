@@ -28,10 +28,4 @@ public class Point {
     public void setZ(int z) {
         this.z = z;
     }
-
-    public void setAll(int xx, int yy, int zz) {
-        x = xx;
-        y = yy;
-        z = zz;
-    }
 }

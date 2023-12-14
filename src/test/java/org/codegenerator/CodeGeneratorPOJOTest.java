@@ -6,16 +6,18 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.nio.file.Paths;
 
 public class CodeGeneratorPOJOTest {
     @Test
     public void simpleTest() {
+        POJOGenerator<Point> generator = new POJOGenerator<>(Point.class);
+
         Point pojoObject = new Point();
+        pojoObject.setX(100);
+        pojoObject.setY(2);
+        pojoObject.setZ(3);
 
-        POJOGenerator<Point> generator = new POJOGenerator<>(pojoObject);
-        OutputStream outputStream = new ByteArrayOutputStream();
-        generator.generate(outputStream);
-
-        System.out.println(0.F);
+        generator.generate(pojoObject, Paths.get("./"));
     }
 }
