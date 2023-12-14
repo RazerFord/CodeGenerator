@@ -1,5 +1,7 @@
 package org.codegenerator;
 
+import org.codegenerator.extractor.ClassFieldExtractor;
+import org.codegenerator.extractor.node.Node;
 import org.codegenerator.generator.POJOGenerator;
 import org.codegenerator.resourcesCodeGeneratorPOJO.Point;
 import org.junit.jupiter.api.Test;

@@ -4,6 +4,8 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import org.codegenerator.extractor.ClassFieldExtractor;
+import org.codegenerator.extractor.node.Node;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcDatabase;
 import org.jacodb.api.JcMethod;
@@ -22,32 +24,59 @@ import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
+import static org.codegenerator.Utils.callSupplierWrapper;
 import static org.codegenerator.Utils.throwIf;
 
 public class POJOGenerator<T> {
     private static final String THIS = "this";
     private final Class<?> clazz;
     private final Constructor<?> defaultConstructor;
+    private final Method[] methods;
     private final String dbname = POJOGenerator.class.getCanonicalName();
 
     @Contract(pure = true)
-    public POJOGenerator(Class<?> clazz) {
+    public POJOGenerator(@NotNull Class<?> clazz) {
         this.clazz = clazz;
-        defaultConstructor = throwIfNoConstructorWithoutArgs();
+        defaultConstructor = getConstructorWithoutArgs();
+        methods = clazz.getDeclaredMethods();
         throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
     }
 
     public void generate(@NotNull T object, Path path) {
-        Map<String, JcMethod> setters = new HashMap<>();
-        extractClassOrInterface(setters);
-        Map<String, String> currentFieldValues = getCurrentFieldValues(object);
-        generateCode(generateCodeBlocks(currentFieldValues, setters), path);
+        Object beginObject = callSupplierWrapper(defaultConstructor::newInstance);
+        findPath(beginObject, object);
+        //        Map<String, JcMethod> setters = new HashMap<>();
+        //        extractClassOrInterface(setters);
+        //        Map<String, String> currentFieldValues = getCurrentFieldValues(object);
+        //        generateCode(generateCodeBlocks(currentFieldValues, setters), path);
+    }
+
+    public void findPath(Object beginObject, Object finalObject) {
+        Node finalState = ClassFieldExtractor.extract(finalObject);
+
+        Set<Object> visited = new HashSet<>();
+        Queue<Object> queue = new ArrayDeque<>();
+        queue.add(beginObject);
+
+        List<Edge> edges = generateEdges(finalState);
+        while (!queue.isEmpty()) {
+            Object currentState = queue.poll();
+
+            if (visited.contains(currentState)) {
+                continue;
+            }
+            visited.add(currentState);
+
+            for (Edge edge : edges) {
+                edge.invoke(currentState);
+            }
+        }
     }
 
     private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull Map<String, String> currentFieldValues, Map<String, JcMethod> setters) {
@@ -119,19 +148,6 @@ public class POJOGenerator<T> {
         }
     }
 
-    private <E> @NotNull Map<String, String> getCurrentFieldValues(@NotNull E object) {
-        Map<String, String> currentFieldValues = new HashMap<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
-            try {
-                currentFieldValues.put(field.getName(), field.get(object).toString());
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return currentFieldValues;
-    }
-
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
         return JacoDB.async(new JcSettings()
                 .useProcessJavaRuntime()
@@ -140,7 +156,19 @@ public class POJOGenerator<T> {
         ).get();
     }
 
-    private @Nullable Constructor<?> throwIfNoConstructorWithoutArgs() {
+    private @NotNull List<Edge> generateEdges(Node node) {
+        List<Edge> edges = new ArrayList<>();
+        for (Method method : methods) {
+            for (Map.Entry<Object, Node> entry : node.entrySet()) {
+                if (method.getParameterCount() == 1) {
+                    edges.add(new Edge(method, entry.getValue().getValue()));
+                }
+            }
+        }
+        return edges;
+    }
+
+    private @Nullable Constructor<?> getConstructorWithoutArgs() {
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             if (constructor.getParameterCount() == 0) {
                 return constructor;
@@ -150,4 +178,18 @@ public class POJOGenerator<T> {
     }
 
     private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
+
+    private static final class Edge {
+        private final Method method;
+        private final Object[] args;
+
+        private Edge(Method method, Object... args) {
+            this.method = method;
+            this.args = args;
+        }
+
+        private Object invoke(Object object) {
+            return callSupplierWrapper(() -> method.invoke(object, args));
+        }
+    }
 }

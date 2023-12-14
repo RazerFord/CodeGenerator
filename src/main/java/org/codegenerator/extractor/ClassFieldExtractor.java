@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ClassFieldExtractor {
-    public Node extract(@NotNull Object o) {
+    public static @NotNull Node extract(@NotNull Object o) {
         Map<Object, Node> visited = new HashMap<>();
 
         Node node = Node.createNode(o, visited);
