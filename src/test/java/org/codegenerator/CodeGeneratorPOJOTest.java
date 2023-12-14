@@ -4,8 +4,6 @@ import org.codegenerator.generator.POJOGenerator;
 import org.codegenerator.resourcesCodeGeneratorPOJO.Point;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.nio.file.Paths;
 
 public class CodeGeneratorPOJOTest {
@@ -15,7 +13,9 @@ public class CodeGeneratorPOJOTest {
 
         Point pojoObject = new Point();
         pojoObject.setX(100);
-        pojoObject.setY(2);
+        pojoObject.setZ(6);
+        pojoObject.setZ(5);
+        pojoObject.setZ(4);
         pojoObject.setZ(3);
 
         generator.generate(pojoObject, Paths.get("./"));

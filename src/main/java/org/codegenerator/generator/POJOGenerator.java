@@ -16,6 +16,7 @@ import org.jacodb.impl.JcSettings;
 import org.jacodb.impl.features.InMemoryHierarchy;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.lang.model.element.Modifier;
 import java.io.File;
@@ -27,25 +28,25 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
+import static org.codegenerator.Utils.throwIf;
+
 public class POJOGenerator<T> {
     private static final String THIS = "this";
     private final Class<?> clazz;
+    private final Constructor<?> defaultConstructor;
     private final String dbname = POJOGenerator.class.getCanonicalName();
 
     @Contract(pure = true)
     public POJOGenerator(Class<?> clazz) {
         this.clazz = clazz;
-        throwIfNoDefaultConstructor();
+        defaultConstructor = throwIfNoConstructorWithoutArgs();
+        throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
     }
 
     public void generate(@NotNull T object, Path path) {
-        // находим класс в JacoDB
         Map<String, JcMethod> setters = new HashMap<>();
         extractClassOrInterface(setters);
         Map<String, String> currentFieldValues = getCurrentFieldValues(object);
-        // Соотносим методы. Если все поля удалось соотнести, то отлично.
-        // далее просто проверяем поля объекта, и для его текущего значения генерируем вызов соответствующего сеттера на основе значения
-        // и типа
         generateCode(generateCodeBlocks(currentFieldValues, setters), path);
     }
 
@@ -53,9 +54,9 @@ public class POJOGenerator<T> {
         List<CodeBlock> codeBlocks = new ArrayList<>();
 
         codeBlocks.add(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
+
         for (Map.Entry<String, String> entry : currentFieldValues.entrySet()) {
-            CodeBlock codeBlock = CodeBlock.builder()
-                    .add("object.$L($L)", setters.get(entry.getKey()).getName(), entry.getValue()).build();
+            CodeBlock codeBlock = CodeBlock.builder().add("object.$L($L)", setters.get(entry.getKey()).getName(), entry.getValue()).build();
             codeBlocks.add(codeBlock);
         }
         return codeBlocks;
@@ -84,15 +85,6 @@ public class POJOGenerator<T> {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private void throwIfNoDefaultConstructor() {
-        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
-            if (constructor.getParameterCount() == 0) {
-                return;
-            }
-        }
-        throw new RuntimeException();
     }
 
     private void extractClassOrInterface(Map<String, JcMethod> setters) {
@@ -147,4 +139,15 @@ public class POJOGenerator<T> {
                 .installFeatures(InMemoryHierarchy.INSTANCE)
         ).get();
     }
+
+    private @Nullable Constructor<?> throwIfNoConstructorWithoutArgs() {
+        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+            if (constructor.getParameterCount() == 0) {
+                return constructor;
+            }
+        }
+        return null;
+    }
+
+    private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
 }
