@@ -20,24 +20,26 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.lang.model.element.Modifier;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
-import static org.codegenerator.Utils.callSupplierWrapper;
-import static org.codegenerator.Utils.throwIf;
+import static org.codegenerator.Utils.*;
 
 public class POJOGenerator<T> {
     private static final String THIS = "this";
     private final Class<?> clazz;
     private final Constructor<?> defaultConstructor;
     private final Method[] methods;
+    private final Map<Integer, List<List<Integer>>> combinationsWithPermutations;
     private final String dbname = POJOGenerator.class.getCanonicalName();
 
     @Contract(pure = true)
@@ -46,6 +48,8 @@ public class POJOGenerator<T> {
         defaultConstructor = getConstructorWithoutArgs();
         methods = clazz.getDeclaredMethods();
         throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
+        int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
+        combinationsWithPermutations = generateCombinationsWithPermutations(clazz.getDeclaredFields().length, maxArguments);
     }
 
     public void generate(@NotNull T object, Path path) {
@@ -93,7 +97,7 @@ public class POJOGenerator<T> {
 
     private void generateCode(@NotNull List<CodeBlock> codeBlocks, Path path) {
         MethodSpec.Builder mainBuilder = MethodSpec.methodBuilder("main")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .addModifiers(javax.lang.model.element.Modifier.PUBLIC, javax.lang.model.element.Modifier.STATIC)
                 .returns(void.class)
                 .addParameter(String[].class, "args");
 
@@ -102,7 +106,7 @@ public class POJOGenerator<T> {
         MethodSpec main = mainBuilder.build();
 
         TypeSpec generatedClass = TypeSpec.classBuilder("GeneratedClass")
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addModifiers(javax.lang.model.element.Modifier.PUBLIC, javax.lang.model.element.Modifier.FINAL)
                 .addMethod(main)
                 .build();
 
@@ -156,16 +160,45 @@ public class POJOGenerator<T> {
         ).get();
     }
 
-    private @NotNull List<Edge> generateEdges(Node node) {
+    private @NotNull List<Edge> generateEdges(@NotNull Node node) {
         List<Edge> edges = new ArrayList<>();
+        List<Map.Entry<Object, Node>> entries = new ArrayList<>(node.entrySet());
+
         for (Method method : methods) {
-            for (Map.Entry<Object, Node> entry : node.entrySet()) {
-                if (method.getParameterCount() == 1) {
-                    edges.add(new Edge(method, entry.getValue().getValue()));
-                }
+            edges.addAll(generateEdges(entries, method));
+        }
+        return edges;
+    }
+
+    private @NotNull List<Edge> generateEdges(@NotNull List<Map.Entry<Object, Node>> values, @NotNull Method method) {
+        List<Edge> edges = new ArrayList<>();
+        List<List<Integer>> sequences = combinationsWithPermutations.getOrDefault(method.getParameterCount(), Collections.emptyList());
+        Class<?>[] argsTypes = new Class[method.getParameterCount()];
+        for (List<Integer> sequence : sequences) {
+            Object[] args = new Object[method.getParameterCount()];
+            int j = 0;
+            for (int i : sequence) {
+                argsTypes[j] = ((Field) values.get(i).getKey()).getType();
+                args[j++] = values.get(i).getValue().getValue();
+            }
+            if (equalsArgs(argsTypes, method.getParameterTypes())) {
+                edges.add(new Edge(method, args));
             }
         }
         return edges;
+    }
+
+    @Contract(pure = true)
+    private boolean equalsArgs(Class<?> @NotNull [] l, Class<?> @NotNull [] r) {
+        if (l.length != r.length) {
+            return false;
+        }
+        for (int i = 0; i < l.length; i++) {
+            if (l[i] != r[i]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private @Nullable Constructor<?> getConstructorWithoutArgs() {
@@ -177,7 +210,17 @@ public class POJOGenerator<T> {
         return null;
     }
 
+    private static Map<Integer, List<List<Integer>>> generateCombinationsWithPermutations(int numberProperties, int maxArguments) {
+        List<Integer> sequence = new ArrayList<>(numberProperties);
+        for (int i = 0; i < numberProperties; i++) {
+            sequence.add(i);
+        }
+        return combinationsWithPermutations(sequence, maxArguments).stream()
+                .collect(Collectors.groupingBy(List::size, Collectors.toList()));
+    }
+
     private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
+    private static final int MAX_ARGS = 5;
 
     private static final class Edge {
         private final Method method;
