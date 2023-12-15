@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 import static org.codegenerator.Utils.*;
 
 public class POJOGenerator<T> {
-    private static final String THIS = "this";
     private final Class<?> clazz;
     private final Constructor<?> defaultConstructor;
     private final Method[] methods;
@@ -55,10 +54,6 @@ public class POJOGenerator<T> {
     public void generate(@NotNull T object, Path path) {
         Object beginObject = callSupplierWrapper(defaultConstructor::newInstance);
         findPath(beginObject, object);
-        //        Map<String, JcMethod> setters = new HashMap<>();
-        //        extractClassOrInterface(setters);
-        //        Map<String, String> currentFieldValues = getCurrentFieldValues(object);
-        //        generateCode(generateCodeBlocks(currentFieldValues, setters), path);
     }
 
     public void findPath(Object beginObject, Object finalObject) {
@@ -72,13 +67,19 @@ public class POJOGenerator<T> {
         while (!queue.isEmpty()) {
             Object currentState = queue.poll();
 
+            if (currentState.equals(finalState)) {
+                throw new RuntimeException("adff");
+            }
+
             if (visited.contains(currentState)) {
                 continue;
             }
             visited.add(currentState);
 
             for (Edge edge : edges) {
-                edge.invoke(currentState);
+                Object instance = copyObject(currentState);
+                edge.invoke(instance);
+                queue.add(instance);
             }
         }
     }
@@ -201,6 +202,15 @@ public class POJOGenerator<T> {
         return true;
     }
 
+    private Object copyObject(Object o) {
+        Object instance = callSupplierWrapper(defaultConstructor::newInstance);
+        for (Field field : clazz.getDeclaredFields()) {
+            field.setAccessible(true);
+            callRunnableWrapper(() -> field.set(instance, callSupplierWrapper(() -> field.get(o))));
+        }
+        return instance;
+    }
+
     private @Nullable Constructor<?> getConstructorWithoutArgs() {
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             if (constructor.getParameterCount() == 0) {
@@ -220,7 +230,7 @@ public class POJOGenerator<T> {
     }
 
     private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
-    private static final int MAX_ARGS = 5;
+    private static final String THIS = "this";
 
     private static final class Edge {
         private final Method method;
