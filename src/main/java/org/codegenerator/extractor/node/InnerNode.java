@@ -133,4 +133,15 @@ public class InnerNode implements Node {
     public Set<Entry<Object, Node>> entrySet() {
         return ((new HashMap<Object, Node>(fields)).entrySet());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof InnerNode)) return false;
+        return entrySet().equals(((Node) o).entrySet());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clazz, entrySet());
+    }
 }

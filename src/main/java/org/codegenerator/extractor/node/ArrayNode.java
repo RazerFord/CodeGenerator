@@ -124,4 +124,15 @@ public class ArrayNode implements Node {
     public Set<Entry<Object, Node>> entrySet() {
         return ((new HashMap<Object, Node>(fields)).entrySet());
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ArrayNode)) return false;
+        return entrySet().equals(((Node) o).entrySet());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clazz, Arrays.hashCode(value));
+    }
 }

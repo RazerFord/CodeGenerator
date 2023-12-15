@@ -101,4 +101,15 @@ public class Leaf implements Node {
     public Set<Entry<Object, Node>> entrySet() {
         return Collections.emptySet();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Leaf)) return false;
+        return value.equals(((Node) o).getValue());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clazz, value);
+    }
 }

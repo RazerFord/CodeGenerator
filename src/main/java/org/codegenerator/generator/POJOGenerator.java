@@ -57,24 +57,24 @@ public class POJOGenerator<T> {
     }
 
     public void findPath(Object beginObject, Object finalObject) {
-        Node finalState = ClassFieldExtractor.extract(finalObject);
+        Node finalNode = ClassFieldExtractor.extract(finalObject);
 
-        Set<Object> visited = new HashSet<>();
+        Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
         Queue<Object> queue = new ArrayDeque<>();
         queue.add(beginObject);
 
-        List<Edge> edges = generateEdges(finalState);
+        List<Edge> edges = generateEdges(finalNode);
         while (!queue.isEmpty()) {
             Object currentState = queue.poll();
 
-            if (currentState.equals(finalState)) {
+            Node currentNode = ClassFieldExtractor.extract(currentState);
+            if (currentNode.equals(finalNode)) {
                 throw new RuntimeException("adff");
             }
-
-            if (visited.contains(currentState)) {
+            if (visited.contains(currentNode)) {
                 continue;
             }
-            visited.add(currentState);
+            visited.add(currentNode);
 
             for (Edge edge : edges) {
                 Object instance = copyObject(currentState);
