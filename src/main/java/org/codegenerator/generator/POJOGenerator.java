@@ -60,16 +60,20 @@ public class POJOGenerator<T> {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
 
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
-        Queue<Object> queue = new ArrayDeque<>();
-        queue.add(beginObject);
 
+        Queue<PathNode> queuePath = new ArrayDeque<>(Collections.singleton(new PathNode(null, null, 0)));
+        Queue<Object> queue = new ArrayDeque<>(Collections.singleton(beginObject));
+
+        PathNode finalPathNode = null;
         List<Edge> edges = generateEdges(finalNode);
         while (!queue.isEmpty()) {
             Object currentState = queue.poll();
+            PathNode pathNode = queuePath.poll();
 
             Node currentNode = ClassFieldExtractor.extract(currentState);
             if (currentNode.equals(finalNode)) {
-                throw new RuntimeException("adff");
+                finalPathNode = pathNode;
+                break;
             }
             if (visited.contains(currentNode)) {
                 continue;
@@ -80,8 +84,10 @@ public class POJOGenerator<T> {
                 Object instance = copyObject(currentState);
                 edge.invoke(instance);
                 queue.add(instance);
+                queuePath.add(new PathNode(pathNode, edge));
             }
         }
+        System.out.println(finalPathNode.depth);
     }
 
     private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull Map<String, String> currentFieldValues, Map<String, JcMethod> setters) {
@@ -243,6 +249,26 @@ public class POJOGenerator<T> {
 
         private Object invoke(Object object) {
             return callSupplierWrapper(() -> method.invoke(object, args));
+        }
+    }
+
+    private static final class PathNode {
+        private final PathNode pathNode;
+        private final Edge edge;
+        private final int depth;
+
+        @Contract(pure = true)
+        private PathNode(@NotNull PathNode pathNode, Edge edge) {
+            this.pathNode = pathNode;
+            this.edge = edge;
+            depth = pathNode.depth + 1;
+        }
+
+        @Contract(pure = true)
+        private PathNode(PathNode pathNode, Edge edge, int depth) {
+            this.pathNode = pathNode;
+            this.edge = edge;
+            this.depth = depth;
         }
     }
 }
