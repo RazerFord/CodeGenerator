@@ -31,7 +31,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.codegenerator.Utils.*;
 
@@ -106,14 +105,23 @@ public class POJOGenerator<T> {
         codeBlocks.add(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
 
         for (Edge edge : edges) {
-            Map<String, String> args = new HashMap<>();
-            args.put("func0", edge.method.getName());
-            int i = 1;
-            Arrays.stream(edge.args).forEach(it -> args.put(String.format("arg%s", i), it.toString()));
-            CodeBlock codeBlock = CodeBlock.builder().addNamed("object.$func0:L($arg1:L)", args).build();
-            codeBlocks.add(codeBlock);
+            codeBlocks.add(generateCodeBlock(edge));
         }
         return codeBlocks;
+    }
+
+    private @NotNull CodeBlock generateCodeBlock(@NotNull Edge edge) {
+        Map<String, String> args = new HashMap<>();
+        args.put(PREFIX_METHOD, edge.method.getName());
+        StringBuilder format = new StringBuilder("object.$func:L");
+        format.append("(");
+        for (int i = 0; i < edge.args.length; i++) {
+            String argFormat = String.format("%s%s", PREFIX_ARG, i);
+            args.put(argFormat, edge.args[i].toString());
+            format.append(String.format("$%s:L,", argFormat));
+        }
+        format.setCharAt(format.length() - 1, ')');
+        return CodeBlock.builder().addNamed(format.toString(), args).build();
     }
 
     private void generateCode(@NotNull List<CodeBlock> codeBlocks, Path path) {
@@ -249,9 +257,6 @@ public class POJOGenerator<T> {
                 .collect(Collectors.groupingBy(List::size, Collectors.toList()));
     }
 
-    private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
-    private static final String THIS = "this";
-
     private static final class Edge {
         private final Method method;
         private final Object[] args;
@@ -285,4 +290,9 @@ public class POJOGenerator<T> {
             this.depth = depth;
         }
     }
+
+    private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
+    private static final String THIS = "this";
+    private static final String PREFIX_METHOD = "func";
+    private static final String PREFIX_ARG = "arg";
 }
