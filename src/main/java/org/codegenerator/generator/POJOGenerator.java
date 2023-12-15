@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.codegenerator.Utils.*;
 
@@ -53,10 +54,11 @@ public class POJOGenerator<T> {
 
     public void generate(@NotNull T object, Path path) {
         Object beginObject = callSupplierWrapper(defaultConstructor::newInstance);
-        findPath(beginObject, object);
+        List<Edge> pathNode = findPath(beginObject, object);
+        generateCode(generateCodeBlocks(pathNode), path);
     }
 
-    public void findPath(Object beginObject, Object finalObject) {
+    private @NotNull List<Edge> findPath(Object beginObject, Object finalObject) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
 
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
@@ -68,7 +70,7 @@ public class POJOGenerator<T> {
         List<Edge> edges = generateEdges(finalNode);
         while (!queue.isEmpty()) {
             Object currentState = queue.poll();
-            PathNode pathNode = queuePath.poll();
+            PathNode pathNode = Objects.requireNonNull(queuePath.poll());
 
             Node currentNode = ClassFieldExtractor.extract(currentState);
             if (currentNode.equals(finalNode)) {
@@ -87,16 +89,28 @@ public class POJOGenerator<T> {
                 queuePath.add(new PathNode(pathNode, edge));
             }
         }
-        System.out.println(finalPathNode.depth);
+        if (finalPathNode == null) {
+            return Collections.emptyList();
+        }
+        Deque<Edge> path = new ArrayDeque<>();
+        while (finalPathNode != null && finalPathNode.edge != null) {
+            path.addFirst(finalPathNode.edge);
+            finalPathNode = finalPathNode.prevPathNode;
+        }
+        return new ArrayList<>(path);
     }
 
-    private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull Map<String, String> currentFieldValues, Map<String, JcMethod> setters) {
+    private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<Edge> edges) {
         List<CodeBlock> codeBlocks = new ArrayList<>();
 
         codeBlocks.add(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
 
-        for (Map.Entry<String, String> entry : currentFieldValues.entrySet()) {
-            CodeBlock codeBlock = CodeBlock.builder().add("object.$L($L)", setters.get(entry.getKey()).getName(), entry.getValue()).build();
+        for (Edge edge : edges) {
+            Map<String, String> args = new HashMap<>();
+            args.put("func0", edge.method.getName());
+            int i = 1;
+            Arrays.stream(edge.args).forEach(it -> args.put(String.format("arg%s", i), it.toString()));
+            CodeBlock codeBlock = CodeBlock.builder().addNamed("object.$func0:L($arg1:L)", args).build();
             codeBlocks.add(codeBlock);
         }
         return codeBlocks;
@@ -253,20 +267,20 @@ public class POJOGenerator<T> {
     }
 
     private static final class PathNode {
-        private final PathNode pathNode;
+        private final PathNode prevPathNode;
         private final Edge edge;
         private final int depth;
 
         @Contract(pure = true)
-        private PathNode(@NotNull PathNode pathNode, Edge edge) {
-            this.pathNode = pathNode;
+        private PathNode(@NotNull PathNode prevPathNode, Edge edge) {
+            this.prevPathNode = prevPathNode;
             this.edge = edge;
-            depth = pathNode.depth + 1;
+            depth = prevPathNode.depth + 1;
         }
 
         @Contract(pure = true)
-        private PathNode(PathNode pathNode, Edge edge, int depth) {
-            this.pathNode = pathNode;
+        private PathNode(PathNode prevPathNode, Edge edge, int depth) {
+            this.prevPathNode = prevPathNode;
             this.edge = edge;
             this.depth = depth;
         }
