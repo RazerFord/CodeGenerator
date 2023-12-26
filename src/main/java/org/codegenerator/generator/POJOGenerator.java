@@ -19,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -118,7 +117,7 @@ public class POJOGenerator<T> {
                     }
                 }
             }
-        } catch (IOException | ExecutionException | InterruptedException | URISyntaxException e) {
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }

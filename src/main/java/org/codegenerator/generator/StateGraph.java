@@ -38,14 +38,27 @@ public class StateGraph {
 
     private @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
-
-        Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
-
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
-        Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
+        triple = bfs(triple, finalNode);
+        if (triple == null) {
+            return Collections.emptyList();
+        }
 
-        PathNode finalPathNode = null;
+        PathNode finalPathNode = triple.getThird();
+        Deque<Edge> path = new ArrayDeque<>();
+        while (finalPathNode != null && finalPathNode.edge != null) {
+            path.addFirst(finalPathNode.edge);
+            finalPathNode = finalPathNode.prevPathNode;
+        }
+
+        return path.stream().map(e -> new MethodCall(e.method, e.args)).collect(Collectors.toList());
+    }
+
+    private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode) {
+        Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
+        Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
         List<Edge> edges = generateEdges(finalNode);
+
         while (!queue.isEmpty()) {
             triple = queue.poll();
 
@@ -53,8 +66,7 @@ public class StateGraph {
             PathNode prevPath = triple.getThird();
 
             if (curNode.equals(finalNode)) {
-                finalPathNode = prevPath;
-                break;
+                return triple;
             }
             if (visited.contains(curNode)) {
                 continue;
@@ -76,15 +88,7 @@ public class StateGraph {
                 }
             }
         }
-        if (finalPathNode == null) {
-            return Collections.emptyList();
-        }
-        Deque<Edge> path = new ArrayDeque<>();
-        while (finalPathNode != null && finalPathNode.edge != null) {
-            path.addFirst(finalPathNode.edge);
-            finalPathNode = finalPathNode.prevPathNode;
-        }
-        return path.stream().map(e -> new MethodCall(e.method, e.args)).collect(Collectors.toList());
+        return null;
     }
 
     private @NotNull List<Edge> generateEdges(@NotNull Node node) {
