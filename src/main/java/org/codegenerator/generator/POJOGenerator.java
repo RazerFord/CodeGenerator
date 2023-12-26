@@ -17,26 +17,35 @@ import org.jacodb.impl.JcSettings;
 import org.jacodb.impl.features.InMemoryHierarchy;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+
+import static org.codegenerator.Utils.*;
 
 public class POJOGenerator<T> {
     private final Class<?> clazz;
     private final String dbname = POJOGenerator.class.getCanonicalName();
     private final StateGraph stateGraph;
+    private final Constructor<?> defaultConstructor;
 
     @Contract(pure = true)
     public POJOGenerator(@NotNull Class<?> clazz) {
         this.clazz = clazz;
+        defaultConstructor = getConstructorWithoutArgs();
+        throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
         stateGraph = new StateGraph(clazz);
     }
 
-    public void generate(@NotNull T object, Path path) {
-        List<MethodCall> pathNode = stateGraph.findPath(object);
+    public void generate(@NotNull T finalObject, Path path) {
+        Object beginObject = callSupplierWrapper(defaultConstructor::newInstance);
+        List<MethodCall> pathNode = stateGraph.findPath(beginObject, finalObject, this::copyObject);
         generateCode(generateCodeBlocks(pathNode), path);
     }
 
@@ -93,6 +102,24 @@ public class POJOGenerator<T> {
         }
     }
 
+    private Object copyObject(Object o) {
+        Object instance = callSupplierWrapper(defaultConstructor::newInstance);
+        for (Field field : clazz.getDeclaredFields()) {
+            field.setAccessible(true);
+            callRunnableWrapper(() -> field.set(instance, callSupplierWrapper(() -> field.get(o))));
+        }
+        return instance;
+    }
+
+    private @Nullable Constructor<?> getConstructorWithoutArgs() {
+        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+            if (constructor.getParameterCount() == 0) {
+                return constructor;
+            }
+        }
+        return null;
+    }
+
     private void extractClassOrInterface(Map<String, JcMethod> setters) {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             List<File> fileList = Collections.singletonList(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
@@ -134,4 +161,5 @@ public class POJOGenerator<T> {
     private static final String THIS = "this";
     private static final String PREFIX_METHOD = "func";
     private static final String PREFIX_ARG = "arg";
+    private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
 }

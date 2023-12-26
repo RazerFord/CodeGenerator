@@ -1,6 +1,5 @@
 package org.codegenerator.extractor;
 
-import org.codegenerator.extractor.node.InnerNode;
 import org.codegenerator.extractor.node.Node;
 import org.jetbrains.annotations.NotNull;
 

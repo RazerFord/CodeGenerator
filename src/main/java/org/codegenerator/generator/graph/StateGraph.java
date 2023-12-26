@@ -8,39 +8,29 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.*;
 
 public class StateGraph {
-    private final Class<?> clazz;
-    private final Constructor<?> defaultConstructor;
     private final Method[] methods;
     private final Map<Integer, List<List<Integer>>> combinationsWithPermutations;
 
     public StateGraph(@NotNull Class<?> clazz) {
-        this.clazz = clazz;
-        defaultConstructor = getConstructorWithoutArgs();
         methods = clazz.getDeclaredMethods();
-        throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
         int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
         combinationsWithPermutations = generateCombinationsWithPermutations(clazz.getDeclaredFields().length, maxArguments);
     }
 
-    public @NotNull List<MethodCall> findPath(Object finalObject) {
-        Object beginObject = callSupplierWrapper(defaultConstructor::newInstance);
-        return findPath(beginObject, finalObject);
-    }
-
-    private @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject) {
+    public @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, Function<Object, Object> copyObject) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
-        triple = bfs(triple, finalNode);
+        triple = bfs(triple, finalNode, copyObject);
         if (triple == null) {
             return Collections.emptyList();
         }
@@ -55,7 +45,7 @@ public class StateGraph {
         return path.stream().map(e -> new MethodCall(e.getMethod(), e.getArgs())).collect(Collectors.toList());
     }
 
-    private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode) {
+    private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode, Function<Object, Object> copyObject) {
         Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
         List<Edge> edges = generateEdges(finalNode);
@@ -77,7 +67,7 @@ public class StateGraph {
             List<Triple<Object, Node, PathNode>> lowerLevel = new ArrayList<>();
 
             for (Edge edge : edges) {
-                Object instance = copyObject(triple.getFirst());
+                Object instance = copyObject.apply(triple.getFirst());
                 edge.invoke(instance);
                 lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instance), new PathNode(prevPath, edge)));
             }
@@ -133,24 +123,6 @@ public class StateGraph {
         return true;
     }
 
-    private Object copyObject(Object o) {
-        Object instance = callSupplierWrapper(defaultConstructor::newInstance);
-        for (Field field : clazz.getDeclaredFields()) {
-            field.setAccessible(true);
-            callRunnableWrapper(() -> field.set(instance, callSupplierWrapper(() -> field.get(o))));
-        }
-        return instance;
-    }
-
-    private @Nullable Constructor<?> getConstructorWithoutArgs() {
-        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
-            if (constructor.getParameterCount() == 0) {
-                return constructor;
-            }
-        }
-        return null;
-    }
-
     private static Map<Integer, List<List<Integer>>> generateCombinationsWithPermutations(int numberProperties, int maxArguments) {
         List<Integer> sequence = new ArrayList<>(numberProperties);
         for (int i = 0; i < numberProperties; i++) {
@@ -179,5 +151,4 @@ public class StateGraph {
             this.depth = depth;
         }
     }
-    private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
 }
