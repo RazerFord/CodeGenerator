@@ -1,8 +1,9 @@
-package org.codegenerator.generator;
+package org.codegenerator.generator.graph;
 
 import kotlin.Triple;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
+import org.codegenerator.generator.MethodCall;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,7 +52,7 @@ public class StateGraph {
             finalPathNode = finalPathNode.prevPathNode;
         }
 
-        return path.stream().map(e -> new MethodCall(e.method, e.args)).collect(Collectors.toList());
+        return path.stream().map(e -> new MethodCall(e.getMethod(), e.getArgs())).collect(Collectors.toList());
     }
 
     private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode) {
@@ -159,20 +160,6 @@ public class StateGraph {
                 .collect(Collectors.groupingBy(List::size, Collectors.toList()));
     }
 
-    private static final class Edge {
-        private final Method method;
-        private final Object[] args;
-
-        private Edge(Method method, Object... args) {
-            this.method = method;
-            this.args = args;
-        }
-
-        private Object invoke(Object object) {
-            return callSupplierWrapper(() -> method.invoke(object, args));
-        }
-    }
-
     private static final class PathNode {
         private final PathNode prevPathNode;
         private final Edge edge;
@@ -192,24 +179,5 @@ public class StateGraph {
             this.depth = depth;
         }
     }
-
-    public static final class MethodCall {
-        private final Method method;
-        private final Object[] args;
-
-        private MethodCall(Method method, Object... args) {
-            this.method = method;
-            this.args = args;
-        }
-
-        public Method getMethod() {
-            return method;
-        }
-
-        public Object[] getArgs() {
-            return args;
-        }
-    }
-
     private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
 }

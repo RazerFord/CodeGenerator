@@ -4,6 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import org.codegenerator.generator.graph.StateGraph;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcDatabase;
 import org.jacodb.api.JcMethod;
@@ -35,22 +36,22 @@ public class POJOGenerator<T> {
     }
 
     public void generate(@NotNull T object, Path path) {
-        List<StateGraph.MethodCall> pathNode = stateGraph.findPath(object);
+        List<MethodCall> pathNode = stateGraph.findPath(object);
         generateCode(generateCodeBlocks(pathNode), path);
     }
 
-    private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<StateGraph.MethodCall> methodCalls) {
+    private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<MethodCall> methodCalls) {
         List<CodeBlock> codeBlocks = new ArrayList<>();
 
         codeBlocks.add(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
 
-        for (StateGraph.MethodCall methodCall : methodCalls) {
+        for (MethodCall methodCall : methodCalls) {
             codeBlocks.add(generateCodeBlock(methodCall));
         }
         return codeBlocks;
     }
 
-    private @NotNull CodeBlock generateCodeBlock(@NotNull StateGraph.MethodCall methodCall) {
+    private @NotNull CodeBlock generateCodeBlock(@NotNull MethodCall methodCall) {
         Map<String, String> args = new HashMap<>();
         args.put(PREFIX_METHOD, methodCall.getMethod().getName());
         StringBuilder format = new StringBuilder("object.$func:L");
