@@ -40,7 +40,6 @@ public class POJOGenerator<T> {
         generateCode(generateCodeBlocks(pathNode), path);
     }
 
-
     private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<StateGraph.MethodCall> methodCalls) {
         List<CodeBlock> codeBlocks = new ArrayList<>();
 
@@ -63,7 +62,9 @@ public class POJOGenerator<T> {
             args.put(argFormat, methodArgs[i].toString());
             format.append(String.format("$%s:L,", argFormat));
         }
-        format.setCharAt(format.length() - 1, ')');
+        if (format.charAt(format.length() - 1) == ','){
+            format.setCharAt(format.length() - 1, ')');
+        }
         return CodeBlock.builder().addNamed(format.toString(), args).build();
     }
 
