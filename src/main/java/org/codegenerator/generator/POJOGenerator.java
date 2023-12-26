@@ -40,7 +40,6 @@ public class POJOGenerator<T> {
     private final String dbname = POJOGenerator.class.getCanonicalName();
     private final StateGraph stateGraph;
     private final Constructor<?> defaultConstructor;
-    private final Method[] methods;
     private final Map<Integer, List<List<Integer>>> combinationsWithPermutations;
 
     @Contract(pure = true)
@@ -48,9 +47,12 @@ public class POJOGenerator<T> {
         this.clazz = clazz;
         defaultConstructor = getConstructorWithoutArgs();
         throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
-        methods = clazz.getDeclaredMethods();
+
         int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
-        combinationsWithPermutations = generateCombinationsWithPermutations(clazz.getDeclaredFields().length, maxArguments);
+        int numberFields = clazz.getDeclaredFields().length;
+        throwIf(maxArguments > numberFields, new RuntimeException(NUM_ARG_GREATER_THEN_NUM_FIELDS));
+
+        combinationsWithPermutations = generateCombinationsWithPermutations(numberFields, maxArguments);
         stateGraph = new StateGraph();
     }
 
@@ -136,7 +138,7 @@ public class POJOGenerator<T> {
         List<Edge> edges = new ArrayList<>();
         List<Map.Entry<Object, Node>> entries = new ArrayList<>(node.entrySet());
 
-        for (Method method : methods) {
+        for (Method method : clazz.getDeclaredMethods()) {
             edges.addAll(generateEdges(entries, method));
         }
         return edges;
@@ -224,4 +226,5 @@ public class POJOGenerator<T> {
     private static final String PREFIX_METHOD = "func";
     private static final String PREFIX_ARG = "arg";
     private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
+    private static final String NUM_ARG_GREATER_THEN_NUM_FIELDS = "The number of arguments is greater than the number of fields";
 }
