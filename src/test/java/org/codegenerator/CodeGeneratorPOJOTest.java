@@ -1,7 +1,5 @@
 package org.codegenerator;
 
-import org.codegenerator.extractor.ClassFieldExtractor;
-import org.codegenerator.extractor.node.Node;
 import org.codegenerator.generator.POJOGenerator;
 import org.codegenerator.resourcesCodeGeneratorPOJO.Point;
 import org.junit.jupiter.api.Test;
@@ -15,9 +13,9 @@ public class CodeGeneratorPOJOTest {
 
         Point pojoObject = new Point();
         pojoObject.setX(100);
-        pojoObject.setZ(6);
-        pojoObject.setZ(5);
-        pojoObject.setZ(4);
+        pojoObject.setY(6);
+        pojoObject.setY(4);
+        pojoObject.setY(6);
         pojoObject.setZ(3);
 
         generator.generate(pojoObject, Paths.get("./"));

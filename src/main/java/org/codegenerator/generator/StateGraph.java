@@ -1,0 +1,201 @@
+package org.codegenerator.generator;
+
+import org.codegenerator.extractor.ClassFieldExtractor;
+import org.codegenerator.extractor.node.Node;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.codegenerator.Utils.*;
+
+public class StateGraph {
+    private final Class<?> clazz;
+    private final Constructor<?> defaultConstructor;
+    private final Method[] methods;
+    private final Map<Integer, List<List<Integer>>> combinationsWithPermutations;
+
+    public StateGraph(@NotNull Class<?> clazz) {
+        this.clazz = clazz;
+        defaultConstructor = getConstructorWithoutArgs();
+        methods = clazz.getDeclaredMethods();
+        throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
+        int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
+        combinationsWithPermutations = generateCombinationsWithPermutations(clazz.getDeclaredFields().length, maxArguments);
+    }
+
+    public @NotNull List<MethodCall> findPath(Object finalObject) {
+        Object beginObject = callSupplierWrapper(defaultConstructor::newInstance);
+        return findPath(beginObject, finalObject);
+    }
+
+    private @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject) {
+        Node finalNode = ClassFieldExtractor.extract(finalObject);
+
+        Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
+
+        Queue<PathNode> queuePath = new ArrayDeque<>(Collections.singleton(new PathNode(null, null, 0)));
+        Queue<Object> queue = new ArrayDeque<>(Collections.singleton(beginObject));
+
+        PathNode finalPathNode = null;
+        List<Edge> edges = generateEdges(finalNode);
+        while (!queue.isEmpty()) {
+            Object currentState = queue.poll();
+            PathNode pathNode = Objects.requireNonNull(queuePath.poll());
+
+            Node currentNode = ClassFieldExtractor.extract(currentState);
+            if (currentNode.equals(finalNode)) {
+                finalPathNode = pathNode;
+                break;
+            }
+            if (visited.contains(currentNode)) {
+                continue;
+            }
+            visited.add(currentNode);
+
+            for (Edge edge : edges) {
+                Object instance = copyObject(currentState);
+                edge.invoke(instance);
+                queue.add(instance);
+                queuePath.add(new PathNode(pathNode, edge));
+            }
+        }
+        if (finalPathNode == null) {
+            return Collections.emptyList();
+        }
+        Deque<Edge> path = new ArrayDeque<>();
+        while (finalPathNode != null && finalPathNode.edge != null) {
+            path.addFirst(finalPathNode.edge);
+            finalPathNode = finalPathNode.prevPathNode;
+        }
+        return path.stream().map(e -> new MethodCall(e.method, e.args)).collect(Collectors.toList());
+    }
+
+    private @NotNull List<Edge> generateEdges(@NotNull Node node) {
+        List<Edge> edges = new ArrayList<>();
+        List<Map.Entry<Object, Node>> entries = new ArrayList<>(node.entrySet());
+
+        for (Method method : methods) {
+            edges.addAll(generateEdges(entries, method));
+        }
+        return edges;
+    }
+
+    private @NotNull List<Edge> generateEdges(@NotNull List<Map.Entry<Object, Node>> values, @NotNull Method method) {
+        List<Edge> edges = new ArrayList<>();
+        List<List<Integer>> sequences = combinationsWithPermutations.getOrDefault(method.getParameterCount(), Collections.emptyList());
+        Class<?>[] argsTypes = new Class[method.getParameterCount()];
+        for (List<Integer> sequence : sequences) {
+            Object[] args = new Object[method.getParameterCount()];
+            int j = 0;
+            for (int i : sequence) {
+                argsTypes[j] = ((Field) values.get(i).getKey()).getType();
+                args[j++] = values.get(i).getValue().getValue();
+            }
+            if (equalsArgs(argsTypes, method.getParameterTypes())) {
+                edges.add(new Edge(method, args));
+            }
+        }
+        return edges;
+    }
+
+    @Contract(pure = true)
+    private boolean equalsArgs(Class<?> @NotNull [] l, Class<?> @NotNull [] r) {
+        if (l.length != r.length) {
+            return false;
+        }
+        for (int i = 0; i < l.length; i++) {
+            if (l[i] != r[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private Object copyObject(Object o) {
+        Object instance = callSupplierWrapper(defaultConstructor::newInstance);
+        for (Field field : clazz.getDeclaredFields()) {
+            field.setAccessible(true);
+            callRunnableWrapper(() -> field.set(instance, callSupplierWrapper(() -> field.get(o))));
+        }
+        return instance;
+    }
+
+    private @Nullable Constructor<?> getConstructorWithoutArgs() {
+        for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
+            if (constructor.getParameterCount() == 0) {
+                return constructor;
+            }
+        }
+        return null;
+    }
+
+    private static Map<Integer, List<List<Integer>>> generateCombinationsWithPermutations(int numberProperties, int maxArguments) {
+        List<Integer> sequence = new ArrayList<>(numberProperties);
+        for (int i = 0; i < numberProperties; i++) {
+            sequence.add(i);
+        }
+        return combinationsWithPermutations(sequence, maxArguments).stream()
+                .collect(Collectors.groupingBy(List::size, Collectors.toList()));
+    }
+
+    private static final class Edge {
+        private final Method method;
+        private final Object[] args;
+
+        private Edge(Method method, Object... args) {
+            this.method = method;
+            this.args = args;
+        }
+
+        private Object invoke(Object object) {
+            return callSupplierWrapper(() -> method.invoke(object, args));
+        }
+    }
+
+    private static final class PathNode {
+        private final PathNode prevPathNode;
+        private final Edge edge;
+        private final int depth;
+
+        @Contract(pure = true)
+        private PathNode(@NotNull PathNode prevPathNode, Edge edge) {
+            this.prevPathNode = prevPathNode;
+            this.edge = edge;
+            depth = prevPathNode.depth + 1;
+        }
+
+        @Contract(pure = true)
+        private PathNode(PathNode prevPathNode, Edge edge, int depth) {
+            this.prevPathNode = prevPathNode;
+            this.edge = edge;
+            this.depth = depth;
+        }
+    }
+
+    public static final class MethodCall {
+        private final Method method;
+        private final Object[] args;
+
+        private MethodCall(Method method, Object... args) {
+            this.method = method;
+            this.args = args;
+        }
+
+        public Method getMethod() {
+            return method;
+        }
+
+        public Object[] getArgs() {
+            return args;
+        }
+    }
+
+    private static final String NO_CONSTRUCTOR_WITHOUT_ARG = "There is no constructor without arguments";
+}
