@@ -83,7 +83,7 @@ public class POJOGenerator<T> {
             args.put(argFormat, methodArgs[i].toString());
             format.append(String.format("$%s:L,", argFormat));
         }
-        if (format.charAt(format.length() - 1) == ','){
+        if (methodCall.getArgs().length > 0) {
             format.setCharAt(format.length() - 1, ')');
         }
         return CodeBlock.builder().addNamed(format.toString(), args).build();
