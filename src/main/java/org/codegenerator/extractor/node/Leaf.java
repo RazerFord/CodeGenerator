@@ -38,6 +38,12 @@ public class Leaf implements Node {
         return NodeType.LEAF;
     }
 
+    @Override
+    public int diff(@NotNull Node that) {
+        if (!(that instanceof Leaf)) return -1;
+        return value.equals(that.getValue()) ? 0 : 1;
+    }
+
 
     @Override
     public int size() {

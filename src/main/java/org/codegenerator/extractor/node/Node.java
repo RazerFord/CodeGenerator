@@ -15,6 +15,8 @@ public interface Node extends Map<Object, Node> {
 
     NodeType nodeType();
 
+    int diff(Node that);
+
     enum NodeType {
         ARRAY,
         INNER,

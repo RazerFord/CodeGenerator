@@ -62,6 +62,18 @@ public class InnerNode implements Node {
     }
 
     @Override
+    public int diff(Node that) {
+        if (!(that instanceof InnerNode)) return -1;
+        int diff = 0;
+        for (Map.Entry<Field, Node> entry : fields.entrySet()) {
+            if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
+                diff++;
+            }
+        }
+        return diff;
+    }
+
+    @Override
     public int size() {
         return fields.size();
     }
