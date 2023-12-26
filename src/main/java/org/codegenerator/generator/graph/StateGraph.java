@@ -8,29 +8,15 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.codegenerator.Utils.*;
-
 public class StateGraph {
-    private final Method[] methods;
-    private final Map<Integer, List<List<Integer>>> combinationsWithPermutations;
-
-    public StateGraph(@NotNull Class<?> clazz) {
-        methods = clazz.getDeclaredMethods();
-        int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
-        combinationsWithPermutations = generateCombinationsWithPermutations(clazz.getDeclaredFields().length, maxArguments);
-    }
-
-    public @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, Function<Object, Object> copyObject) {
+    public @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
-        triple = bfs(triple, finalNode, copyObject);
+        triple = bfs(triple, finalNode, edges, copyObject);
         if (triple == null) {
             return Collections.emptyList();
         }
@@ -45,10 +31,9 @@ public class StateGraph {
         return path.stream().map(e -> new MethodCall(e.getMethod(), e.getArgs())).collect(Collectors.toList());
     }
 
-    private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode, Function<Object, Object> copyObject) {
+    private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode, List<Edge> edges, Function<Object, Object> copyObject) {
         Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
-        List<Edge> edges = generateEdges(finalNode);
 
         while (!queue.isEmpty()) {
             triple = queue.poll();
@@ -80,56 +65,6 @@ public class StateGraph {
             }
         }
         return null;
-    }
-
-    private @NotNull List<Edge> generateEdges(@NotNull Node node) {
-        List<Edge> edges = new ArrayList<>();
-        List<Map.Entry<Object, Node>> entries = new ArrayList<>(node.entrySet());
-
-        for (Method method : methods) {
-            edges.addAll(generateEdges(entries, method));
-        }
-        return edges;
-    }
-
-    private @NotNull List<Edge> generateEdges(@NotNull List<Map.Entry<Object, Node>> values, @NotNull Method method) {
-        List<Edge> edges = new ArrayList<>();
-        List<List<Integer>> sequences = combinationsWithPermutations.getOrDefault(method.getParameterCount(), Collections.emptyList());
-        Class<?>[] argsTypes = new Class[method.getParameterCount()];
-        for (List<Integer> sequence : sequences) {
-            Object[] args = new Object[method.getParameterCount()];
-            int j = 0;
-            for (int i : sequence) {
-                argsTypes[j] = ((Field) values.get(i).getKey()).getType();
-                args[j++] = values.get(i).getValue().getValue();
-            }
-            if (equalsArgs(argsTypes, method.getParameterTypes())) {
-                edges.add(new Edge(method, args));
-            }
-        }
-        return edges;
-    }
-
-    @Contract(pure = true)
-    private boolean equalsArgs(Class<?> @NotNull [] l, Class<?> @NotNull [] r) {
-        if (l.length != r.length) {
-            return false;
-        }
-        for (int i = 0; i < l.length; i++) {
-            if (l[i] != r[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static Map<Integer, List<List<Integer>>> generateCombinationsWithPermutations(int numberProperties, int maxArguments) {
-        List<Integer> sequence = new ArrayList<>(numberProperties);
-        for (int i = 0; i < numberProperties; i++) {
-            sequence.add(i);
-        }
-        return combinationsWithPermutations(sequence, maxArguments).stream()
-                .collect(Collectors.groupingBy(List::size, Collectors.toList()));
     }
 
     private static final class PathNode {
