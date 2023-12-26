@@ -1,5 +1,6 @@
 package org.codegenerator.generator;
 
+import kotlin.Triple;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
 import org.jetbrains.annotations.Contract;
@@ -40,30 +41,39 @@ public class StateGraph {
 
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
 
-        Queue<PathNode> queuePath = new ArrayDeque<>(Collections.singleton(new PathNode(null, null, 0)));
-        Queue<Object> queue = new ArrayDeque<>(Collections.singleton(beginObject));
+        Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
+        Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
 
         PathNode finalPathNode = null;
         List<Edge> edges = generateEdges(finalNode);
         while (!queue.isEmpty()) {
-            Object currentState = queue.poll();
-            PathNode pathNode = Objects.requireNonNull(queuePath.poll());
+            triple = queue.poll();
 
-            Node currentNode = ClassFieldExtractor.extract(currentState);
-            if (currentNode.equals(finalNode)) {
-                finalPathNode = pathNode;
+            Node curNode = triple.getSecond();
+            PathNode prevPath = triple.getThird();
+
+            if (curNode.equals(finalNode)) {
+                finalPathNode = prevPath;
                 break;
             }
-            if (visited.contains(currentNode)) {
+            if (visited.contains(curNode)) {
                 continue;
             }
-            visited.add(currentNode);
+            visited.add(curNode);
+
+            List<Triple<Object, Node, PathNode>> lowerLevel = new ArrayList<>();
 
             for (Edge edge : edges) {
-                Object instance = copyObject(currentState);
+                Object instance = copyObject(triple.getFirst());
                 edge.invoke(instance);
-                queue.add(instance);
-                queuePath.add(new PathNode(pathNode, edge));
+                lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instance), new PathNode(prevPath, edge)));
+            }
+            List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
+            int minDif = diffs.stream().min(Integer::compareTo).orElse(Integer.MAX_VALUE);
+            for (int i = 0; i < diffs.size(); i++) {
+                if (minDif == diffs.get(i)) {
+                    queue.add(lowerLevel.get(i));
+                }
             }
         }
         if (finalPathNode == null) {

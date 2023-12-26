@@ -54,7 +54,7 @@ public class ArrayNode implements Node {
 
     @Override
     public int diff(Node that) {
-        if (!(that instanceof ArrayNode)) return -1;
+        if (!(that instanceof ArrayNode)) return Integer.MAX_VALUE;
         int diff = 0;
         for (Map.Entry<Integer, Node> entry : fields.entrySet()) {
             if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {

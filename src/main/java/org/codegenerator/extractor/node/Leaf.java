@@ -11,12 +11,10 @@ public class Leaf implements Node {
     private final Class<?> clazz;
     private final Object value;
     private final Map<Field, Node> fields = Collections.emptyMap();
-    private final Map<Object, Node> visited;
 
-    public Leaf(Class<?> clazz, Object value, Map<Object, Node> visited) {
+    public Leaf(Class<?> clazz, Object value, Map<Object, Node> ignoredVisited) {
         this.clazz = clazz;
         this.value = value;
-        this.visited = visited;
     }
 
     @Override
@@ -40,7 +38,7 @@ public class Leaf implements Node {
 
     @Override
     public int diff(@NotNull Node that) {
-        if (!(that instanceof Leaf)) return -1;
+        if (!(that instanceof Leaf)) return Integer.MAX_VALUE;
         return value.equals(that.getValue()) ? 0 : 1;
     }
 

@@ -1,12 +1,10 @@
 package org.codegenerator.extractor.node;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class InnerNode implements Node {
     private final Class<?> clazz;
@@ -63,7 +61,7 @@ public class InnerNode implements Node {
 
     @Override
     public int diff(Node that) {
-        if (!(that instanceof InnerNode)) return -1;
+        if (!(that instanceof InnerNode)) return Integer.MAX_VALUE;
         int diff = 0;
         for (Map.Entry<Field, Node> entry : fields.entrySet()) {
             if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
