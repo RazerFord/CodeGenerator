@@ -1,5 +1,6 @@
 package org.codegenerator.generator.graph;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
@@ -13,6 +14,7 @@ public class EdgeGenerator {
     }
 
     public List<Edge> generate(Map<Class<?>, List<Object>> typeToValues) {
+        typeToValues = new HashMap<>(typeToValues);
         List<Edge> edges = new ArrayList<>();
         for (Method method : clazz.getDeclaredMethods()) {
             List<Node> roots = buildGraph(method, typeToValues);
@@ -56,7 +58,8 @@ public class EdgeGenerator {
 
         for (Class<?> type : method.getParameterTypes()) {
             List<Node> level = new ArrayList<>();
-            for (int i = 0; i < typeToValues.get(type).size(); i++) {
+            List<Object> values = typeToValues.computeIfAbsent(type, k -> computeValues(k, typeToValues));
+            for (int i = 0; i < values.size(); i++) {
                 level.add(new Node(type, i));
             }
             if (level.size() != method.getParameterCount()) {
@@ -79,6 +82,15 @@ public class EdgeGenerator {
                 }
             }
         }
+    }
+
+    private List<Object> computeValues(Class<?> nKey, @NotNull Map<Class<?>, List<Object>> map) {
+        for (Class<?> key : map.keySet()) {
+            if (ClassUtils.isAssignable(nKey, key)) {
+                return map.get(key);
+            }
+        }
+        return Collections.emptyList();
     }
 
     private static final class Node {

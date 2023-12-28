@@ -12,6 +12,8 @@ repositories {
 dependencies {
     val jacodbVersion = "1.4.4"
 
+    implementation("org.apache.commons:commons-lang3:3.14.0")
+
     implementation(group = "org.jacodb", name = "jacodb-api", version = jacodbVersion)
     implementation(group = "org.jacodb", name = "jacodb-core", version = jacodbVersion)
     implementation(group = "org.jacodb", name = "jacodb-analysis", version = jacodbVersion)
