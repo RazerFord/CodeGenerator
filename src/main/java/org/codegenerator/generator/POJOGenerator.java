@@ -4,9 +4,8 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import org.codegenerator.extractor.ClassFieldExtractor;
-import org.codegenerator.extractor.node.Node;
 import org.codegenerator.generator.graph.Edge;
+import org.codegenerator.generator.graph.EdgeGenerator;
 import org.codegenerator.generator.graph.StateGraph;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcDatabase;
@@ -31,16 +30,15 @@ import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.*;
 
 public class POJOGenerator<T> {
     private final Class<?> clazz;
     private final String dbname = POJOGenerator.class.getCanonicalName();
-    private final StateGraph stateGraph;
     private final Constructor<?> defaultConstructor;
-    private final Map<Integer, List<List<Integer>>> combinationsWithPermutations;
+    private final StateGraph stateGraph;
+    private final EdgeGenerator edgeGenerator;
 
     @Contract(pure = true)
     public POJOGenerator(@NotNull Class<?> clazz) {
@@ -52,15 +50,25 @@ public class POJOGenerator<T> {
         int numberFields = clazz.getDeclaredFields().length;
         throwIf(maxArguments > numberFields, new RuntimeException(NUM_ARG_GREATER_THEN_NUM_FIELDS));
 
-        combinationsWithPermutations = generateCombinationsWithPermutations(numberFields, maxArguments);
         stateGraph = new StateGraph();
+        edgeGenerator = new EdgeGenerator(clazz);
     }
 
     public void generate(@NotNull T finalObject, Path path) {
         Object beginObject = callSupplierWrapper(defaultConstructor::newInstance);
-        List<Edge> edges = generateEdges(ClassFieldExtractor.extract(finalObject));
+        List<Edge> edges = edgeGenerator.generate(prepareTypeToValues(finalObject));
         List<MethodCall> pathNode = stateGraph.findPath(beginObject, finalObject, edges, this::copyObject);
         generateCode(generateCodeBlocks(pathNode), path);
+    }
+
+    private @NotNull Map<Class<?>, List<Object>> prepareTypeToValues(Object o) {
+        Map<Class<?>, List<Object>> typeToValues = new HashMap<>();
+        for (Field field : clazz.getDeclaredFields()) {
+            List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
+            field.setAccessible(true);
+            list.add(callSupplierWrapper(() -> field.get(o)));
+        }
+        return typeToValues;
     }
 
     private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<MethodCall> methodCalls) {
@@ -132,56 +140,6 @@ public class POJOGenerator<T> {
             }
         }
         return null;
-    }
-
-    private @NotNull List<Edge> generateEdges(@NotNull Node node) {
-        List<Edge> edges = new ArrayList<>();
-        List<Map.Entry<Object, Node>> entries = new ArrayList<>(node.entrySet());
-
-        for (Method method : clazz.getDeclaredMethods()) {
-            edges.addAll(generateEdges(entries, method));
-        }
-        return edges;
-    }
-
-    private @NotNull List<Edge> generateEdges(@NotNull List<Map.Entry<Object, Node>> values, @NotNull Method method) {
-        List<Edge> edges = new ArrayList<>();
-        List<List<Integer>> sequences = combinationsWithPermutations.getOrDefault(method.getParameterCount(), Collections.emptyList());
-        Class<?>[] argsTypes = new Class[method.getParameterCount()];
-        for (List<Integer> sequence : sequences) {
-            Object[] args = new Object[method.getParameterCount()];
-            int j = 0;
-            for (int i : sequence) {
-                argsTypes[j] = ((Field) values.get(i).getKey()).getType();
-                args[j++] = values.get(i).getValue().getValue();
-            }
-            if (equalsArgs(argsTypes, method.getParameterTypes())) {
-                edges.add(new Edge(method, args));
-            }
-        }
-        return edges;
-    }
-
-    @Contract(pure = true)
-    private boolean equalsArgs(Class<?> @NotNull [] l, Class<?> @NotNull [] r) {
-        if (l.length != r.length) {
-            return false;
-        }
-        for (int i = 0; i < l.length; i++) {
-            if (l[i] != r[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static Map<Integer, List<List<Integer>>> generateCombinationsWithPermutations(int numberProperties, int maxArguments) {
-        List<Integer> sequence = new ArrayList<>(numberProperties);
-        for (int i = 0; i < numberProperties; i++) {
-            sequence.add(i);
-        }
-        return combinationsWithPermutations(sequence, maxArguments).stream()
-                .collect(Collectors.groupingBy(List::size, Collectors.toList()));
     }
 
     private void extractClassOrInterface(Map<String, JcMethod> setters) {
