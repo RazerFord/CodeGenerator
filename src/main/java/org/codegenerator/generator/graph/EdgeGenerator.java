@@ -62,14 +62,14 @@ public class EdgeGenerator {
             for (int i = 0; i < values.size(); i++) {
                 level.add(new Node(type, i));
             }
-            if (level.size() != method.getParameterCount()) {
-                return Collections.emptyList();
-            }
             levels.add(level);
         }
         drawEdges(levels);
 
-        return levels.isEmpty() ? Collections.emptyList() : levels.get(0);
+        if (levels.size() != method.getParameterCount() || levels.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return levels.get(0);
     }
 
     private void drawEdges(@NotNull List<List<Node>> levels) {
