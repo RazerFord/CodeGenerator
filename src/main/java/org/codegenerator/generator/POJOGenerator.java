@@ -114,7 +114,7 @@ public class POJOGenerator<T> {
                 .addMethod(method)
                 .build();
 
-        JavaFile javaFile = JavaFile.builder("generatedclass", generatedClass)
+        JavaFile javaFile = JavaFile.builder(String.format("%s.%s", clazz.getPackage().getName(), "generatedclass"), generatedClass)
                 .build();
 
         try {
