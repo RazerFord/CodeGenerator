@@ -37,14 +37,14 @@ public class POJOGenerator<T> {
     private final Class<?> clazz;
     private final String dbname = POJOGenerator.class.getCanonicalName();
     private final Constructor<?> defaultConstructor;
-    private final StateGraph stateGraph;
+    private final StateGraph stateGraph = new StateGraph();
     private final EdgeGenerator edgeGenerator;
+    private final ConverterPrimitiveTypesAndString converter = new ConverterPrimitiveTypesAndString();
 
     @Contract(pure = true)
     public POJOGenerator(@NotNull Class<?> clazz) {
         this.clazz = clazz;
         defaultConstructor = getConstructorWithoutArgs();
-        stateGraph = new StateGraph();
         edgeGenerator = new EdgeGenerator(clazz);
 
         checkInvariants();
@@ -87,7 +87,7 @@ public class POJOGenerator<T> {
         Object[] methodArgs = methodCall.getArgs();
         for (int i = 0; i < methodArgs.length; i++) {
             String argFormat = String.format("%s%s", PREFIX_ARG, i);
-            args.put(argFormat, methodArgs[i].toString());
+            args.put(argFormat, converter.convert(methodArgs[i]));
             format.append(String.format("$%s:L,", argFormat));
         }
         if (methodCall.getArgs().length > 0) {
