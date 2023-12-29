@@ -1,10 +1,7 @@
 package org.codegenerator;
 
 import org.codegenerator.generator.POJOGenerator;
-import org.codegenerator.resourcesCodeGeneratorPOJO.Point;
-import org.codegenerator.resourcesCodeGeneratorPOJO.PointComplex;
-import org.codegenerator.resourcesCodeGeneratorPOJO.User;
-import org.codegenerator.resourcesCodeGeneratorPOJO.UserComplex;
+import org.codegenerator.resourcesCodeGeneratorPOJO.*;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
@@ -56,6 +53,23 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
+    public void setterAllPrimitiveTypesTest() {
+        POJOGenerator<AllPrimitiveTypes> generator = new POJOGenerator<>(AllPrimitiveTypes.class);
+
+        AllPrimitiveTypes allPrimitiveTypes = new AllPrimitiveTypes();
+        allPrimitiveTypes.setByte((byte) 1);
+        allPrimitiveTypes.setShort((short) 14);
+        allPrimitiveTypes.setInt(42);
+        allPrimitiveTypes.setLong(123);
+        allPrimitiveTypes.setFloat(42.0F);
+        allPrimitiveTypes.setDouble(42.0);
+        allPrimitiveTypes.setChar('b');
+
+
+        generator.generate(allPrimitiveTypes, Paths.get("./"));
+    }
+
+    @Test
     public void setterPointComplexTest() {
         POJOGenerator<PointComplex> generator = new POJOGenerator<>(PointComplex.class);
 
@@ -75,5 +89,22 @@ public class CodeGeneratorPOJOTest {
         user.setNameAgeWeight("Alex", 12, 42);
 
         generator.generate(user, Paths.get("./"));
+    }
+
+    @Test
+    public void setterAllPrimitiveTypesComplexTest() {
+        POJOGenerator<AllPrimitiveTypesComplex> generator = new POJOGenerator<>(AllPrimitiveTypesComplex.class);
+
+        AllPrimitiveTypesComplex allPrimitiveTypes = new AllPrimitiveTypesComplex();
+        allPrimitiveTypes.setByte((byte) 1);
+        allPrimitiveTypes.setShort((short) 14);
+        allPrimitiveTypes.setInt(42);
+        allPrimitiveTypes.setLong(123);
+        allPrimitiveTypes.setFloat(42.0F);
+        allPrimitiveTypes.setDouble(42.0);
+        allPrimitiveTypes.setChar('b');
+
+
+        generator.generate(allPrimitiveTypes, Paths.get("./"));
     }
 }
