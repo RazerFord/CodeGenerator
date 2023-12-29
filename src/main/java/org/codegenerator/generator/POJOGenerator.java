@@ -79,6 +79,7 @@ public class POJOGenerator<T> {
         for (MethodCall methodCall : methodCalls) {
             codeBlocks.add(generateCodeBlock(methodCall));
         }
+        codeBlocks.add(CodeBlock.builder().add("return object").build());
         return codeBlocks;
     }
 
@@ -100,18 +101,17 @@ public class POJOGenerator<T> {
     }
 
     private void generateCode(@NotNull List<CodeBlock> codeBlocks, Path path) {
-        MethodSpec.Builder mainBuilder = MethodSpec.methodBuilder("main")
+        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("generate")
                 .addModifiers(javax.lang.model.element.Modifier.PUBLIC, javax.lang.model.element.Modifier.STATIC)
-                .returns(void.class)
-                .addParameter(String[].class, "args");
+                .returns(clazz);
 
-        codeBlocks.forEach(mainBuilder::addStatement);
+        codeBlocks.forEach(methodBuilder::addStatement);
 
-        MethodSpec main = mainBuilder.build();
+        MethodSpec method = methodBuilder.build();
 
         TypeSpec generatedClass = TypeSpec.classBuilder("GeneratedClass")
                 .addModifiers(javax.lang.model.element.Modifier.PUBLIC, javax.lang.model.element.Modifier.FINAL)
-                .addMethod(main)
+                .addMethod(method)
                 .build();
 
         JavaFile javaFile = JavaFile.builder("generatedclass", generatedClass)
