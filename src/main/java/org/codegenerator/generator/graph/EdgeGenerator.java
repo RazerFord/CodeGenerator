@@ -77,9 +77,7 @@ public class EdgeGenerator {
             List<Node> prev = levels.get(i);
             List<Node> next = levels.get(i + 1);
             for (Node prevNode : prev) {
-                for (Node nextNode : next) {
-                    prevNode.addNode(nextNode);
-                }
+                prevNode.nodes.addAll(next);
             }
         }
     }
@@ -98,18 +96,9 @@ public class EdgeGenerator {
         private final Class<?> type;
         private final int i;
 
-        private Node() {
-            this(Object.class, -1);
-        }
-
         private Node(Class<?> type, int i) {
             this.type = type;
             this.i = i;
-        }
-
-        @SuppressWarnings("UnusedReturnValue")
-        private boolean addNode(Node node) {
-            return nodes.add(node);
         }
     }
 }
