@@ -44,14 +44,10 @@ public class POJOGenerator<T> {
     public POJOGenerator(@NotNull Class<?> clazz) {
         this.clazz = clazz;
         defaultConstructor = getConstructorWithoutArgs();
-        throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
-
-        int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
-        int numberFields = clazz.getDeclaredFields().length;
-        throwIf(maxArguments > numberFields, new RuntimeException(NUM_ARG_GREATER_THEN_NUM_FIELDS));
-
         stateGraph = new StateGraph();
         edgeGenerator = new EdgeGenerator(clazz);
+
+        checkInvariants();
     }
 
     public void generate(@NotNull T finalObject, Path path) {
@@ -89,7 +85,7 @@ public class POJOGenerator<T> {
         StringBuilder format = new StringBuilder("object.$func:L");
         format.append("(");
         Object[] methodArgs = methodCall.getArgs();
-        for (int i = 0; i < methodCall.getArgs().length; i++) {
+        for (int i = 0; i < methodArgs.length; i++) {
             String argFormat = String.format("%s%s", PREFIX_ARG, i);
             args.put(argFormat, methodArgs[i].toString());
             format.append(String.format("$%s:L,", argFormat));
@@ -140,6 +136,15 @@ public class POJOGenerator<T> {
             }
         }
         return null;
+    }
+
+    private void checkInvariants() {
+        throwIf(defaultConstructor == null, new RuntimeException(NO_CONSTRUCTOR_WITHOUT_ARG));
+
+        int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
+        int numberFields = clazz.getDeclaredFields().length;
+
+        throwIf(maxArguments > numberFields, new RuntimeException(NUM_ARG_GREATER_THEN_NUM_FIELDS));
     }
 
     private void extractClassOrInterface(Map<String, JcMethod> setters) {
