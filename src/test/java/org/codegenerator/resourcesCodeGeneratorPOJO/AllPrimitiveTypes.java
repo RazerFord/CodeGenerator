@@ -1,5 +1,7 @@
 package org.codegenerator.resourcesCodeGeneratorPOJO;
 
+import java.util.Objects;
+
 public class AllPrimitiveTypes {
     private byte aByte;
     private short aShort;
@@ -72,5 +74,24 @@ public class AllPrimitiveTypes {
 
     public void setBoolean(boolean aBoolean) {
         this.aBoolean = aBoolean;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AllPrimitiveTypes)) return false;
+        AllPrimitiveTypes other = (AllPrimitiveTypes) o;
+        return other.aByte == aByte &&
+                other.aShort == aShort &&
+                other.aInt == aInt &&
+                other.aLong == aLong &&
+                other.aFloat == aFloat &&
+                other.aDouble == aDouble &&
+                other.aChar == aChar &&
+                other.aBoolean == aBoolean;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(aByte, aShort, aInt, aLong, aFloat, aDouble, aChar, aBoolean);
     }
 }

@@ -1,7 +1,9 @@
 package org.codegenerator.resourcesCodeGeneratorPOJO;
 
+import java.util.Objects;
+
 public class UserComplex {
-    private String name;
+    private String name = "";
     private int age;
     private double weight;
 
@@ -48,5 +50,17 @@ public class UserComplex {
         this.weight = weight;
         this.age = age;
         this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof UserComplex)) return false;
+        UserComplex user = (UserComplex) o;
+        return user.name.equals(name) && user.age == age && user.weight == weight;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, age, weight);
     }
 }

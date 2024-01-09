@@ -34,19 +34,31 @@ import java.util.concurrent.ExecutionException;
 import static org.codegenerator.Utils.*;
 
 public class POJOGenerator<T> {
+    private static final String PACKAGE_NAME = "generatedclass";
+    private static final String CLASS_NAME = "GeneratedClass";
+    private static final String METHOD_NAME = "generate";
     private final Class<?> clazz;
     private final String dbname = POJOGenerator.class.getCanonicalName();
     private final Constructor<?> defaultConstructor;
     private final StateGraph stateGraph = new StateGraph();
     private final EdgeGenerator edgeGenerator;
     private final ConverterPrimitiveTypesAndString converter = new ConverterPrimitiveTypesAndString();
+    private final String packageName;
+    private final String className;
+    private final String methodName;
 
     @Contract(pure = true)
     public POJOGenerator(@NotNull Class<?> clazz) {
+        this(clazz, PACKAGE_NAME, CLASS_NAME, METHOD_NAME);
+    }
+
+    public POJOGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
         this.clazz = clazz;
         defaultConstructor = getConstructorWithoutArgs();
         edgeGenerator = new EdgeGenerator(clazz);
-
+        this.packageName = packageName;
+        this.className = className;
+        this.methodName = methodName;
         checkInvariants();
     }
 
@@ -97,7 +109,7 @@ public class POJOGenerator<T> {
     }
 
     private void generateCode(@NotNull List<CodeBlock> codeBlocks, Path path) {
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("generate")
+        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                 .addModifiers(javax.lang.model.element.Modifier.PUBLIC, javax.lang.model.element.Modifier.STATIC)
                 .returns(clazz);
 
@@ -105,12 +117,12 @@ public class POJOGenerator<T> {
 
         MethodSpec method = methodBuilder.build();
 
-        TypeSpec generatedClass = TypeSpec.classBuilder("GeneratedClass")
+        TypeSpec generatedClass = TypeSpec.classBuilder(className)
                 .addModifiers(javax.lang.model.element.Modifier.PUBLIC, javax.lang.model.element.Modifier.FINAL)
                 .addMethod(method)
                 .build();
 
-        JavaFile javaFile = JavaFile.builder(String.format("%s.%s", clazz.getPackage().getName(), "generatedclass"), generatedClass)
+        JavaFile javaFile = JavaFile.builder(packageName, generatedClass)
                 .build();
 
         try {
