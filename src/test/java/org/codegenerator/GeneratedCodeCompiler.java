@@ -13,10 +13,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class GeneratedCodeExecutor {
+public class GeneratedCodeCompiler {
     private final JavaCompiler javaCompiler;
 
-    public GeneratedCodeExecutor() {
+    public GeneratedCodeCompiler() {
         javaCompiler = ToolProvider.getSystemJavaCompiler();
     }
 

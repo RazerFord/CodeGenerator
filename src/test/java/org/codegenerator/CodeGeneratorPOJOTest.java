@@ -159,16 +159,36 @@ public class CodeGeneratorPOJOTest {
         assertEquals(allPrimitiveTypes, other);
     }
 
+    @Test
+    public void setterAllPrimitiveTypesBoxedTest() {
+        final String generatedClassName = "GeneratedAllBoxedTypesMixedClass";
+        POJOGenerator<AllBoxedTypesMixed> generator = new POJOGenerator<>(AllBoxedTypesMixed.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        AllBoxedTypesMixed allBoxedTypes = new AllBoxedTypesMixed();
+        allBoxedTypes.setByte((byte) 1);
+        allBoxedTypes.setShort((short) 14);
+        allBoxedTypes.setInt(42);
+        allBoxedTypes.setLong(123);
+        allBoxedTypes.setFloat(42.0F);
+        allBoxedTypes.setDouble(42.0);
+        allBoxedTypes.setChar('b');
+        allBoxedTypes.setBoolean(true);
+        generator.generate(allBoxedTypes, Paths.get(OUTPUT_DIRECTORY));
+
+        AllBoxedTypesMixed other = createObject(generatedClassName);
+        assertEquals(allBoxedTypes, other);
+    }
+
     @SuppressWarnings("unchecked")
     public <R> R createObject(String generatedClassName) {
         try {
             String absolutePathToClass = Paths.get(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, generatedClassName + ".java").toAbsolutePath().normalize().toString();
             String className = CLASS_NAME_PREFIX + generatedClassName;
 
-            GeneratedCodeExecutor generatedCodeExecutor = new GeneratedCodeExecutor();
-            assertTrue(generatedCodeExecutor.compile(OUTPUT_DIRECTORY, absolutePathToClass));
+            GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler();
+            assertTrue(generatedCodeCompiler.compile(OUTPUT_DIRECTORY, absolutePathToClass));
 
-            Class<?> clazz = generatedCodeExecutor.loadClass(OUTPUT_DIRECTORY, className);
+            Class<?> clazz = generatedCodeCompiler.loadClass(OUTPUT_DIRECTORY, className);
             Object o = clazz.getConstructors()[0].newInstance();
             return (R) clazz.getMethod(METHOD_NAME).invoke(o);
         } catch (Throwable t) {
