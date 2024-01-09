@@ -139,6 +139,26 @@ public class CodeGeneratorPOJOTest {
         assertEquals(allPrimitiveTypes, other);
     }
 
+    @Test
+    public void setterAllPrimitiveTypesMixedTest() {
+        final String generatedClassName = "GeneratedAllPrimitiveTypesMixedClass";
+        POJOGenerator<AllPrimitiveTypesMixed> generator = new POJOGenerator<>(AllPrimitiveTypesMixed.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        AllPrimitiveTypesMixed allPrimitiveTypes = new AllPrimitiveTypesMixed();
+        allPrimitiveTypes.setByte((byte) 1);
+        allPrimitiveTypes.setShort((short) 14);
+        allPrimitiveTypes.setInt(42);
+        allPrimitiveTypes.setLong(123);
+        allPrimitiveTypes.setFloat(42.0F);
+        allPrimitiveTypes.setDouble(42.0);
+        allPrimitiveTypes.setChar('b');
+        allPrimitiveTypes.setBoolean(true);
+        generator.generate(allPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
+
+        AllPrimitiveTypesMixed other = createObject(generatedClassName);
+        assertEquals(allPrimitiveTypes, other);
+    }
+
     @SuppressWarnings("unchecked")
     public <R> R createObject(String generatedClassName) {
         try {
