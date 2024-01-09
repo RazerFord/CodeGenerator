@@ -9,7 +9,7 @@ import java.util.*;
 public class InnerNode implements Node {
     private final Class<?> clazz;
     private final Object value;
-    private final Map<Field, Node> fields = new HashMap<>();
+    private final Map<Object, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
 
     public InnerNode(Class<?> clazz, Object value, Map<Object, Node> visited) {
@@ -63,7 +63,7 @@ public class InnerNode implements Node {
     public int diff(Node that) {
         if (!(that instanceof InnerNode)) return Integer.MAX_VALUE;
         int diff = 0;
-        for (Map.Entry<Field, Node> entry : fields.entrySet()) {
+        for (Map.Entry<Object, Node> entry : fields.entrySet()) {
             if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
                 diff++;
             }
@@ -100,7 +100,7 @@ public class InnerNode implements Node {
     @Override
     public Node put(Object field, Node node) {
         if (field instanceof Field) {
-            return fields.put((Field) field, node);
+            return fields.put(field, node);
         }
         throw new IllegalArgumentException();
     }
@@ -114,7 +114,7 @@ public class InnerNode implements Node {
     public void putAll(@NotNull Map<?, ? extends Node> map) {
         for (Map.Entry<?, ? extends Node> e : map.entrySet()) {
             if (e.getKey() instanceof Field) {
-                fields.put((Field) e.getKey(), e.getValue());
+                fields.put(e.getKey(), e.getValue());
             } else {
                 throw new IllegalArgumentException();
             }
@@ -141,17 +141,18 @@ public class InnerNode implements Node {
     @NotNull
     @Override
     public Set<Entry<Object, Node>> entrySet() {
-        return ((new HashMap<Object, Node>(fields)).entrySet());
+        return fields.entrySet();
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof InnerNode)) return false;
-        return entrySet().equals(((Node) o).entrySet());
+        InnerNode innerNode = (InnerNode) o;
+        return Objects.equals(value, innerNode.value) && innerNode.fields.equals(fields);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(clazz, entrySet());
+        return Objects.hash(clazz, value, fields.keySet());
     }
 }

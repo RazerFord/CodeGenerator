@@ -9,7 +9,7 @@ import java.util.*;
 public class ArrayNode implements Node {
     private final Class<?> clazz;
     private final Object[] value;
-    private final Map<Integer, Node> fields = new HashMap<>();
+    private final Map<Object, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
 
     public ArrayNode(@NotNull Class<?> clazz, Object value, Map<Object, Node> visited) {
@@ -56,7 +56,7 @@ public class ArrayNode implements Node {
     public int diff(Node that) {
         if (!(that instanceof ArrayNode)) return Integer.MAX_VALUE;
         int diff = 0;
-        for (Map.Entry<Integer, Node> entry : fields.entrySet()) {
+        for (Map.Entry<Object, Node> entry : fields.entrySet()) {
             if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
                 diff++;
             }
@@ -92,37 +92,28 @@ public class ArrayNode implements Node {
     @Nullable
     @Override
     public Node put(Object key, Node node) {
-        if (key instanceof Integer) {
-            return fields.put((Integer) key, node);
-        }
-        throw new IllegalArgumentException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Node remove(Object o) {
-        return fields.remove(o);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void putAll(@NotNull Map<?, ? extends Node> map) {
-        for (Entry<?, ? extends Node> e : map.entrySet()) {
-            if (e.getKey() instanceof Integer) {
-                fields.put((Integer) e.getKey(), e.getValue());
-            } else {
-                throw new IllegalArgumentException();
-            }
-        }
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void clear() {
-        fields.clear();
+        throw new UnsupportedOperationException();
     }
 
     @NotNull
     @Override
     public Set<Object> keySet() {
-        return new HashSet<>(fields.keySet());
+        return fields.keySet();
     }
 
     @NotNull
@@ -134,13 +125,14 @@ public class ArrayNode implements Node {
     @NotNull
     @Override
     public Set<Entry<Object, Node>> entrySet() {
-        return ((new HashMap<Object, Node>(fields)).entrySet());
+        return fields.entrySet();
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ArrayNode)) return false;
-        return entrySet().equals(((Node) o).entrySet());
+        ArrayNode arrayNode = (ArrayNode) o;
+        return Arrays.equals(arrayNode.value, value);
     }
 
     @Override
