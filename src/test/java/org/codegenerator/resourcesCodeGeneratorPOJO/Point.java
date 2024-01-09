@@ -5,7 +5,7 @@ import java.util.Objects;
 public class Point {
     private int x;
     private int y;
-    private int z;
+    private Integer z = 0;
 
     public int getX() {
         return x;
@@ -27,7 +27,7 @@ public class Point {
         y = yy;
     }
 
-    public void setZ(int z) {
+    public void setZ(Integer z) {
         this.z = z;
     }
 

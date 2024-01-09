@@ -3,14 +3,13 @@ package org.codegenerator.extractor.node;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
 public class Leaf implements Node {
     public static final Node NULL_NODE = new Leaf(null, null, null);
     private final Class<?> clazz;
     private final Object value;
-    private final Map<Field, Node> fields = Collections.emptyMap();
+    private final Map<Object, Node> fields = Collections.emptyMap();
 
     public Leaf(Class<?> clazz, Object value, Map<Object, Node> ignoredVisited) {
         this.clazz = clazz;
@@ -39,7 +38,7 @@ public class Leaf implements Node {
     @Override
     public int diff(@NotNull Node that) {
         if (!(that instanceof Leaf)) return Integer.MAX_VALUE;
-        return value.equals(that.getValue()) ? 0 : 1;
+        return Objects.equals(value, that.getValue()) ? 0 : 1;
     }
 
 
@@ -91,25 +90,25 @@ public class Leaf implements Node {
     @NotNull
     @Override
     public Set<Object> keySet() {
-        return Collections.emptySet();
+        return fields.keySet();
     }
 
     @NotNull
     @Override
     public Collection<Node> values() {
-        return Collections.emptySet();
+        return fields.values();
     }
 
     @NotNull
     @Override
     public Set<Entry<Object, Node>> entrySet() {
-        return Collections.emptySet();
+        return fields.entrySet();
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Leaf)) return false;
-        return value.equals(((Node) o).getValue());
+        return Objects.equals(value, ((Node) o).getValue());
     }
 
     @Override
