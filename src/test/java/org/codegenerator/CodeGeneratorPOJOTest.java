@@ -4,11 +4,18 @@ import org.codegenerator.generator.POJOGenerator;
 import org.codegenerator.resourcesCodeGeneratorPOJO.*;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class CodeGeneratorPOJOTest {
+    private static final String OUTPUT_DIRECTORY = "./";
+
     @Test
-    public void setterPointTest() {
+    public void setterPointTest() throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException, IllegalAccessException {
         POJOGenerator<Point> generator = new POJOGenerator<>(Point.class);
 
         Point point = new Point();
@@ -17,10 +24,16 @@ public class CodeGeneratorPOJOTest {
         point.setZ(3);
 
         generator.generate(point, Paths.get("./"));
+
+        String absolutePath = Paths.get("./org/codegenerator/resourcesCodeGeneratorPOJO/generatedclass/GeneratedClass.java").toAbsolutePath().normalize().toString();
+        String className = "org.codegenerator.resourcesCodeGeneratorPOJO.generatedclass.GeneratedClass";
+
+        Point other = createObject(absolutePath, className);
+        assertEquals(point, other);
     }
 
     @Test
-    public void defaultPointArgumentsTest() {
+    public void defaultPointArgumentsTest() throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException, IllegalAccessException {
         POJOGenerator<Point> generator = new POJOGenerator<>(Point.class);
 
         Point point = new Point();
@@ -29,6 +42,12 @@ public class CodeGeneratorPOJOTest {
         point.setZ(0);
 
         generator.generate(point, Paths.get("./"));
+
+        String absolutePath = Paths.get("./org/codegenerator/resourcesCodeGeneratorPOJO/generatedclass/GeneratedClass.java").toAbsolutePath().normalize().toString();
+        String className = "org.codegenerator.resourcesCodeGeneratorPOJO.generatedclass.GeneratedClass";
+
+        Point other = createObject(absolutePath, className);
+        assertEquals(point, other);
     }
 
     @Test
@@ -106,5 +125,15 @@ public class CodeGeneratorPOJOTest {
 
 
         generator.generate(allPrimitiveTypes, Paths.get("./"));
+    }
+
+    @SuppressWarnings("unchecked")
+    public <R> R createObject(String absolutePathToClass, String className) throws IOException, ClassNotFoundException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        GeneratedCodeExecutor generatedCodeExecutor = new GeneratedCodeExecutor();
+        assertTrue(generatedCodeExecutor.compile(OUTPUT_DIRECTORY, absolutePathToClass));
+
+        Class<?> clazz = generatedCodeExecutor.loadClass(OUTPUT_DIRECTORY, className);
+        Object o = clazz.getConstructors()[0].newInstance();
+        return (R) clazz.getDeclaredMethods()[0].invoke(o);
     }
 }

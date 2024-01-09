@@ -1,5 +1,7 @@
 package org.codegenerator.resourcesCodeGeneratorPOJO;
 
+import java.util.Objects;
+
 public class Point {
     private int x;
     private int y;
@@ -27,5 +29,17 @@ public class Point {
 
     public void setZ(int z) {
         this.z = z;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Point)) return false;
+        Point point = (Point) o;
+        return point.x == x && point.y == y && point.z == z;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, z);
     }
 }
