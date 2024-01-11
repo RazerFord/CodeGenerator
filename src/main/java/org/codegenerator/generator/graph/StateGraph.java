@@ -1,6 +1,7 @@
 package org.codegenerator.generator.graph;
 
 import kotlin.Triple;
+import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
 import org.codegenerator.generator.MethodCall;
@@ -8,12 +9,28 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.codegenerator.Utils.callSupplierWrapper;
+
 public class StateGraph {
-    public @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject) {
+    private final Class<?> clazz;
+    private final EdgeGenerator edgeGenerator;
+
+    public StateGraph(Class<?> clazz) {
+        this.clazz = clazz;
+        edgeGenerator = new EdgeGenerator(clazz);
+    }
+
+    public @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, Function<Object, Object> copyObject) {
+        List<Edge> edges = edgeGenerator.generate(prepareTypeToValues(finalObject));
+        return findPath(beginObject, finalObject, edges, copyObject);
+    }
+
+    private @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
         triple = bfs(triple, finalNode, edges, copyObject);
@@ -65,6 +82,32 @@ public class StateGraph {
             }
         }
         return null;
+    }
+
+    private @NotNull Map<Class<?>, List<Object>> prepareTypeToValues(Object o) {
+        Map<Class<?>, List<Object>> typeToValues = new HashMap<>();
+        for (Field field : clazz.getDeclaredFields()) {
+            List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
+            field.setAccessible(true);
+            list.add(callSupplierWrapper(() -> field.get(o)));
+        }
+        mergeValuesOfSameTypes(typeToValues);
+        return typeToValues;
+    }
+
+    @Contract(pure = true)
+    private void mergeValuesOfSameTypes(@NotNull Map<Class<?>, List<Object>> typeToValues) {
+        for (Class<?> type : typeToValues.keySet()) {
+            for (Map.Entry<Class<?>, List<Object>> entry : typeToValues.entrySet()) {
+                if (ClassUtils.isAssignable(entry.getKey(), type)) {
+                    List<Object> list = typeToValues.get(type);
+                    Set<Object> set = new HashSet<>(list);
+                    set.addAll(entry.getValue());
+                    list.clear();
+                    list.addAll(set);
+                }
+            }
+        }
     }
 
     private static final class PathNode {

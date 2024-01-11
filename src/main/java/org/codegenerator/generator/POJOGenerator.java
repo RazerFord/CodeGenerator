@@ -4,13 +4,10 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.generator.converters.Converter;
 import org.codegenerator.generator.converters.ConverterPipeline;
 import org.codegenerator.generator.converters.ConverterPrimitiveTypesAndString;
 import org.codegenerator.generator.converters.PrimitiveTypeArrayConverter;
-import org.codegenerator.generator.graph.Edge;
-import org.codegenerator.generator.graph.EdgeGenerator;
 import org.codegenerator.generator.graph.StateGraph;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcDatabase;
@@ -28,7 +25,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -42,8 +42,7 @@ public class POJOGenerator<T> {
     private final Class<?> clazz;
     private final String dbname = POJOGenerator.class.getCanonicalName();
     private final Constructor<?> defaultConstructor;
-    private final StateGraph stateGraph = new StateGraph();
-    private final EdgeGenerator edgeGenerator;
+    private final StateGraph stateGraph;
     private final Converter converter = new ConverterPipeline(Arrays.asList(new ConverterPrimitiveTypesAndString(), new PrimitiveTypeArrayConverter()));
     private final String packageName;
     private final String className;
@@ -56,8 +55,8 @@ public class POJOGenerator<T> {
 
     public POJOGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
         this.clazz = clazz;
+        stateGraph = new StateGraph(clazz);
         defaultConstructor = getConstructorWithoutArgs();
-        edgeGenerator = new EdgeGenerator(clazz);
         this.packageName = packageName;
         this.className = className;
         this.methodName = methodName;
@@ -66,35 +65,8 @@ public class POJOGenerator<T> {
 
     public void generate(@NotNull T finalObject, Path path) {
         Object beginObject = callSupplierWrapper(defaultConstructor::newInstance);
-        List<Edge> edges = edgeGenerator.generate(prepareTypeToValues(finalObject));
-        List<MethodCall> pathNode = stateGraph.findPath(beginObject, finalObject, edges, this::copyObject);
+        List<MethodCall> pathNode = stateGraph.findPath(beginObject, finalObject, this::copyObject);
         generateCode(generateCodeBlocks(pathNode), path);
-    }
-
-    private @NotNull Map<Class<?>, List<Object>> prepareTypeToValues(Object o) {
-        Map<Class<?>, List<Object>> typeToValues = new HashMap<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
-            field.setAccessible(true);
-            list.add(callSupplierWrapper(() -> field.get(o)));
-        }
-        mergeValuesOfSameTypes(typeToValues);
-        return typeToValues;
-    }
-
-    @Contract(pure = true)
-    private void mergeValuesOfSameTypes(@NotNull Map<Class<?>, List<Object>> typeToValues) {
-        for (Class<?> type : typeToValues.keySet()) {
-            for (Map.Entry<Class<?>, List<Object>> entry : typeToValues.entrySet()) {
-                if (ClassUtils.isAssignable(entry.getKey(), type)) {
-                    List<Object> list = typeToValues.get(type);
-                    Set<Object> set = new HashSet<>(list);
-                    set.addAll(entry.getValue());
-                    list.clear();
-                    list.addAll(set);
-                }
-            }
-        }
     }
 
     private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<MethodCall> methodCalls) {
