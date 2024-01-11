@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
+import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.FINAL;
+import static javax.lang.model.element.Modifier.STATIC;
+
 public class POJOCodeGenerators {
     private final Converter converter = new ConverterPipeline(Arrays.asList(new ConverterPrimitiveTypesAndString(), new PrimitiveTypeArrayConverter()));
     private final Class<?> clazz;
@@ -29,22 +33,22 @@ public class POJOCodeGenerators {
     }
 
     public void generate(@NotNull List<MethodCall> methodCalls, Path path) {
-        generateCode(generateCodeBlocks(methodCalls), path);
+        generateCode(methodCalls, path);
     }
 
-    private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<MethodCall> methodCalls) {
+    private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<MethodCall> methodCalls, TypeSpec.Builder generatedClassBuilder) {
         List<CodeBlock> codeBlocks = new ArrayList<>();
 
         codeBlocks.add(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
 
         for (MethodCall methodCall : methodCalls) {
-            codeBlocks.add(generateCodeBlock(methodCall));
+            codeBlocks.add(generateCodeBlock(methodCall, generatedClassBuilder));
         }
         codeBlocks.add(CodeBlock.builder().add("return object").build());
         return codeBlocks;
     }
 
-    private @NotNull CodeBlock generateCodeBlock(@NotNull MethodCall methodCall) {
+    private @NotNull CodeBlock generateCodeBlock(@NotNull MethodCall methodCall, TypeSpec.Builder generatedClassBuilder) {
         Map<String, String> args = new HashMap<>();
         args.put(PREFIX_METHOD, methodCall.getMethod().getName());
         StringBuilder format = new StringBuilder("object.$func:L(");
@@ -60,22 +64,18 @@ public class POJOCodeGenerators {
         return CodeBlock.builder().addNamed(format.toString(), args).build();
     }
 
-    private void generateCode(@NotNull List<CodeBlock> codeBlocks, Path path) {
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
-                .addModifiers(javax.lang.model.element.Modifier.PUBLIC, javax.lang.model.element.Modifier.STATIC)
-                .returns(clazz);
+    private void generateCode(@NotNull List<MethodCall> methodCalls, Path path) {
+        TypeSpec.Builder generatedClassBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
+
+        List<CodeBlock> codeBlocks = generateCodeBlocks(methodCalls, generatedClassBuilder);
+
+        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(clazz);
 
         codeBlocks.forEach(methodBuilder::addStatement);
 
         MethodSpec method = methodBuilder.build();
 
-        TypeSpec generatedClass = TypeSpec.classBuilder(className)
-                .addModifiers(javax.lang.model.element.Modifier.PUBLIC, javax.lang.model.element.Modifier.FINAL)
-                .addMethod(method)
-                .build();
-
-        JavaFile javaFile = JavaFile.builder(packageName, generatedClass)
-                .build();
+        JavaFile javaFile = JavaFile.builder(packageName, generatedClassBuilder.addMethod(method).build()).build();
 
         try {
             javaFile.writeTo(path);
