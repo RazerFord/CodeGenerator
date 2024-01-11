@@ -4,6 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import org.codegenerator.generator.converters.ConverterPrimitiveTypesAndString;
 import org.codegenerator.generator.graph.Edge;
 import org.codegenerator.generator.graph.EdgeGenerator;
 import org.codegenerator.generator.graph.StateGraph;

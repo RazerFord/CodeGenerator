@@ -1,4 +1,4 @@
-package org.codegenerator.generator;
+package org.codegenerator.generator.converters;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +27,11 @@ public class ConverterPrimitiveTypesAndString {
         converter.put(Character.class, (o) -> String.format("'%s'", o));
 
         converter.put(String.class, (o) -> String.format("\"%s\"", o));
+    }
+
+    public boolean canConvert(@NotNull Object o) {
+        Class<?> clazz = o.getClass();
+        return ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class;
     }
 
     public String convert(@NotNull Object o) {
