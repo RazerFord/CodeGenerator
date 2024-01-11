@@ -36,16 +36,12 @@ public class POJOCodeGenerators {
         generateCode(methodCalls, path);
     }
 
-    private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<MethodCall> methodCalls, TypeSpec.Builder generatedClassBuilder) {
-        List<CodeBlock> codeBlocks = new ArrayList<>();
-
-        codeBlocks.add(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
-
+    private void generateCodeBlocks(@NotNull List<MethodCall> methodCalls, TypeSpec.Builder generatedClassBuilder, MethodSpec.@NotNull Builder methodBuilder) {
+        methodBuilder.addStatement(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
         for (MethodCall methodCall : methodCalls) {
-            codeBlocks.add(generateCodeBlock(methodCall, generatedClassBuilder));
+            methodBuilder.addStatement(generateCodeBlock(methodCall, generatedClassBuilder));
         }
-        codeBlocks.add(CodeBlock.builder().add("return object").build());
-        return codeBlocks;
+        methodBuilder.addStatement(CodeBlock.builder().add("return object").build());
     }
 
     private @NotNull CodeBlock generateCodeBlock(@NotNull MethodCall methodCall, TypeSpec.Builder generatedClassBuilder) {
@@ -66,16 +62,13 @@ public class POJOCodeGenerators {
 
     private void generateCode(@NotNull List<MethodCall> methodCalls, Path path) {
         TypeSpec.Builder generatedClassBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
-
-        List<CodeBlock> codeBlocks = generateCodeBlocks(methodCalls, generatedClassBuilder);
-
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(clazz);
 
-        codeBlocks.forEach(methodBuilder::addStatement);
+        generateCodeBlocks(methodCalls, generatedClassBuilder, methodBuilder);
 
         MethodSpec method = methodBuilder.build();
-
-        JavaFile javaFile = JavaFile.builder(packageName, generatedClassBuilder.addMethod(method).build()).build();
+        TypeSpec type = generatedClassBuilder.addMethod(method).build();
+        JavaFile javaFile = JavaFile.builder(packageName, type).build();
 
         try {
             javaFile.writeTo(path);
