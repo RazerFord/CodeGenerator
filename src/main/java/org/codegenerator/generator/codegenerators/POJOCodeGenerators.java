@@ -36,30 +36,6 @@ public class POJOCodeGenerators {
         generateCode(methodCalls, path);
     }
 
-    private void generateCodeBlocks(@NotNull List<MethodCall> methodCalls, TypeSpec.Builder generatedClassBuilder, MethodSpec.@NotNull Builder methodBuilder) {
-        methodBuilder.addStatement(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
-        for (MethodCall methodCall : methodCalls) {
-            methodBuilder.addStatement(generateCodeBlock(methodCall, generatedClassBuilder));
-        }
-        methodBuilder.addStatement(CodeBlock.builder().add("return object").build());
-    }
-
-    private @NotNull CodeBlock generateCodeBlock(@NotNull MethodCall methodCall, TypeSpec.Builder generatedClassBuilder) {
-        Map<String, String> args = new HashMap<>();
-        args.put(PREFIX_METHOD, methodCall.getMethod().getName());
-        StringBuilder format = new StringBuilder("object.$func:L(");
-        Object[] methodArgs = methodCall.getArgs();
-        for (int i = 0; i < methodArgs.length; i++) {
-            String argFormat = String.format("%s%s", PREFIX_ARG, i);
-            args.put(argFormat, converter.convert(methodArgs[i]));
-            format.append(String.format("$%s:L,", argFormat));
-        }
-        if (methodCall.getArgs().length > 0) {
-            format.setCharAt(format.length() - 1, ')');
-        }
-        return CodeBlock.builder().addNamed(format.toString(), args).build();
-    }
-
     private void generateCode(@NotNull List<MethodCall> methodCalls, Path path) {
         TypeSpec.Builder generatedClassBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(clazz);
@@ -75,6 +51,34 @@ public class POJOCodeGenerators {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void generateCodeBlocks(@NotNull List<MethodCall> methodCalls,
+                                    TypeSpec.Builder generatedClassBuilder,
+                                    MethodSpec.@NotNull Builder methodBuilder) {
+        methodBuilder.addStatement(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
+        for (MethodCall methodCall : methodCalls) {
+            generateCodeBlock(methodCall, generatedClassBuilder, methodBuilder);
+        }
+        methodBuilder.addStatement(CodeBlock.builder().add("return object").build());
+    }
+
+    private void generateCodeBlock(@NotNull MethodCall methodCall,
+                                   TypeSpec.@NotNull Builder generatedClassBuilder,
+                                   MethodSpec.@NotNull Builder methodBuilder) {
+        Map<String, String> args = new HashMap<>();
+        args.put(PREFIX_METHOD, methodCall.getMethod().getName());
+        StringBuilder format = new StringBuilder("object.$func:L(");
+        Object[] methodArgs = methodCall.getArgs();
+        for (int i = 0; i < methodArgs.length; i++) {
+            String argFormat = String.format("%s%s", PREFIX_ARG, i);
+            args.put(argFormat, converter.convert(methodArgs[i]));
+            format.append(String.format("$%s:L,", argFormat));
+        }
+        if (methodCall.getArgs().length > 0) {
+            format.setCharAt(format.length() - 1, ')');
+        }
+        methodBuilder.addStatement(CodeBlock.builder().addNamed(format.toString(), args).build());
     }
 
     private static final String PREFIX_METHOD = "func";
