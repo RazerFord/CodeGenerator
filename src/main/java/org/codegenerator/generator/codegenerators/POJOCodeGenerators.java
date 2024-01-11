@@ -1,35 +1,29 @@
 package org.codegenerator.generator.codegenerators;
 
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import org.codegenerator.generator.converters.Converter;
-import org.codegenerator.generator.converters.ConverterPipeline;
-import org.codegenerator.generator.converters.ConverterPrimitiveTypesAndString;
-import org.codegenerator.generator.converters.PrimitiveTypeArrayConverter;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.List;
 
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.FINAL;
-import static javax.lang.model.element.Modifier.STATIC;
+import static javax.lang.model.element.Modifier.*;
 
 public class POJOCodeGenerators {
-    private final Converter converter = new ConverterPipeline(Arrays.asList(new ConverterPrimitiveTypesAndString(), new PrimitiveTypeArrayConverter()));
     private final Class<?> clazz;
     private final String packageName;
     private final String className;
     private final String methodName;
+    private final POJOMethodCodeGenerator pojoMethodCodeGenerator;
 
     public POJOCodeGenerators(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
         this.clazz = clazz;
         this.packageName = packageName;
         this.className = className;
         this.methodName = methodName;
+        pojoMethodCodeGenerator = new POJOMethodCodeGenerator(clazz);
     }
 
     public void generate(@NotNull List<MethodCall> methodCalls, Path path) {
@@ -40,7 +34,7 @@ public class POJOCodeGenerators {
         TypeSpec.Builder generatedClassBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(clazz);
 
-        generateCodeBlocks(methodCalls, generatedClassBuilder, methodBuilder);
+        pojoMethodCodeGenerator.generate(methodCalls, generatedClassBuilder, methodBuilder);
 
         MethodSpec method = methodBuilder.build();
         TypeSpec type = generatedClassBuilder.addMethod(method).build();
@@ -52,35 +46,4 @@ public class POJOCodeGenerators {
             throw new RuntimeException(e);
         }
     }
-
-    private void generateCodeBlocks(@NotNull List<MethodCall> methodCalls,
-                                    TypeSpec.Builder generatedClassBuilder,
-                                    MethodSpec.@NotNull Builder methodBuilder) {
-        methodBuilder.addStatement(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
-        for (MethodCall methodCall : methodCalls) {
-            generateCodeBlock(methodCall, generatedClassBuilder, methodBuilder);
-        }
-        methodBuilder.addStatement(CodeBlock.builder().add("return object").build());
-    }
-
-    private void generateCodeBlock(@NotNull MethodCall methodCall,
-                                   TypeSpec.@NotNull Builder generatedClassBuilder,
-                                   MethodSpec.@NotNull Builder methodBuilder) {
-        Map<String, String> args = new HashMap<>();
-        args.put(PREFIX_METHOD, methodCall.getMethod().getName());
-        StringBuilder format = new StringBuilder("object.$func:L(");
-        Object[] methodArgs = methodCall.getArgs();
-        for (int i = 0; i < methodArgs.length; i++) {
-            String argFormat = String.format("%s%s", PREFIX_ARG, i);
-            args.put(argFormat, converter.convert(methodArgs[i], generatedClassBuilder, methodBuilder));
-            format.append(String.format("$%s:L,", argFormat));
-        }
-        if (methodCall.getArgs().length > 0) {
-            format.setCharAt(format.length() - 1, ')');
-        }
-        methodBuilder.addStatement(CodeBlock.builder().addNamed(format.toString(), args).build());
-    }
-
-    private static final String PREFIX_METHOD = "func";
-    private static final String PREFIX_ARG = "arg";
 }
