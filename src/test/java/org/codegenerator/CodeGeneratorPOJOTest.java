@@ -179,6 +179,63 @@ public class CodeGeneratorPOJOTest {
         assertEquals(allBoxedTypes, other);
     }
 
+    @Test
+    public void setterBoxingUnboxingTest() {
+        final String generatedClassName = "GeneratedOneFieldBoxingUnboxingClass";
+        POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        OneFieldBoxingUnboxing oneFieldBoxingUnboxing = new OneFieldBoxingUnboxing();
+        oneFieldBoxingUnboxing.setI(12);
+        oneFieldBoxingUnboxing.setJ(42);
+        generator.generate(oneFieldBoxingUnboxing, Paths.get(OUTPUT_DIRECTORY));
+
+        OneFieldBoxingUnboxing other = createObject(generatedClassName);
+        assertEquals(oneFieldBoxingUnboxing, other);
+    }
+
+    @Test
+    public void setterBoxingUnboxingWithDefaultArgsTest() {
+        final String generatedClassName = "GeneratedOneFieldBoxingUnboxingClass";
+        POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        OneFieldBoxingUnboxing oneFieldBoxingUnboxing = new OneFieldBoxingUnboxing();
+        generator.generate(oneFieldBoxingUnboxing, Paths.get(OUTPUT_DIRECTORY));
+
+        OneFieldBoxingUnboxing other = createObject(generatedClassName);
+        assertEquals(oneFieldBoxingUnboxing, other);
+    }
+
+    @Test
+    public void setterWithArrayTest() {
+        final String generatedClassName = "GeneratedClassWithArrayClass";
+        POJOGenerator<ClassWithArray> generator = new POJOGenerator<>(ClassWithArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        ClassWithArray classWithArray = new ClassWithArray();
+        int[] array = new int[]{1, 2, 4, 2, 5};
+        classWithArray.setArrayOfInt(array);
+        generator.generate(classWithArray, Paths.get(OUTPUT_DIRECTORY));
+
+        ClassWithArray other = createObject(generatedClassName);
+        assertEquals(classWithArray, other);
+    }
+
+    @Test
+    public void setterWithOtherPOJOTest() {
+        final String generatedClassName = "GeneratedClassWithOtherPOJOClass";
+        POJOGenerator<ClassWithOtherPOJO> generator = new POJOGenerator<>(ClassWithOtherPOJO.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        ClassWithOtherPOJO classWithOtherPOJO = new ClassWithOtherPOJO();
+        Point point = new Point();
+        point.setX(1);
+        point.setY(4);
+        point.setZ(9);
+        classWithOtherPOJO.setPoint(point);
+        generator.generate(classWithOtherPOJO, Paths.get(OUTPUT_DIRECTORY));
+
+        ClassWithOtherPOJO other = createObject(generatedClassName);
+        assertEquals(classWithOtherPOJO, other);
+    }
+
     @SuppressWarnings("unchecked")
     public <R> R createObject(String generatedClassName) {
         try {
