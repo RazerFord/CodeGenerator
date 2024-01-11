@@ -2,7 +2,7 @@ package org.codegenerator.resourcescodegeneratorpojo;
 
 import java.util.Arrays;
 
-public class ClassWithArray {
+public class ClassWithArrayOfPrimitiveTypes {
     private int[] arrayOfInt;
 
     public void setArrayOfInt(int[] arrayOfInt) {
@@ -15,9 +15,9 @@ public class ClassWithArray {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof ClassWithArray)) return false;
-        ClassWithArray classWithArray = (ClassWithArray) o;
-        return Arrays.equals(classWithArray.arrayOfInt, arrayOfInt);
+        if (!(o instanceof ClassWithArrayOfPrimitiveTypes)) return false;
+        ClassWithArrayOfPrimitiveTypes classWithArrayOfPrimitiveTypes = (ClassWithArrayOfPrimitiveTypes) o;
+        return Arrays.equals(classWithArrayOfPrimitiveTypes.arrayOfInt, arrayOfInt);
     }
 
     @Override
