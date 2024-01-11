@@ -4,12 +4,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
 
-public class PrimitiveTypeArrayConverter {
+public class PrimitiveTypeArrayConverter implements Converter {
     private final ConverterPrimitiveTypesAndString converterPrimitiveTypesAndString = new ConverterPrimitiveTypesAndString();
 
+    @Override
+    public boolean canConvert(@NotNull Object o) {
+        Class<?> clazz = o.getClass();
+        return clazz.isArray();
+    }
+
+    @Override
     public String convert(@NotNull Object o) {
         Class<?> clazz = o.getClass();
-        if (!clazz.isArray()) {
+        if (!canConvert(o)) {
             throw new IllegalArgumentException();
         }
         Class<?> componentType = clazz.getComponentType();

@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class ConverterPrimitiveTypesAndString {
+public class ConverterPrimitiveTypesAndString implements Converter {
     private final Map<Class<?>, Function<Object, String>> converter = new HashMap<>();
 
     public ConverterPrimitiveTypesAndString() {
@@ -29,14 +29,16 @@ public class ConverterPrimitiveTypesAndString {
         converter.put(String.class, (o) -> String.format("\"%s\"", o));
     }
 
+    @Override
     public boolean canConvert(@NotNull Object o) {
         Class<?> clazz = o.getClass();
         return ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class;
     }
 
+    @Override
     public String convert(@NotNull Object o) {
         Class<?> clazz = o.getClass();
-        if (!ClassUtils.isPrimitiveOrWrapper(clazz) && clazz != String.class) {
+        if (!canConvert(o)) {
             throw new IllegalArgumentException();
         }
         return converter.getOrDefault(clazz, Object::toString).apply(o);
