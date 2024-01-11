@@ -112,8 +112,7 @@ public class POJOGenerator<T> {
     private @NotNull CodeBlock generateCodeBlock(@NotNull MethodCall methodCall) {
         Map<String, String> args = new HashMap<>();
         args.put(PREFIX_METHOD, methodCall.getMethod().getName());
-        StringBuilder format = new StringBuilder("object.$func:L");
-        format.append("(");
+        StringBuilder format = new StringBuilder("object.$func:L(");
         Object[] methodArgs = methodCall.getArgs();
         for (int i = 0; i < methodArgs.length; i++) {
             String argFormat = String.format("%s%s", PREFIX_ARG, i);
