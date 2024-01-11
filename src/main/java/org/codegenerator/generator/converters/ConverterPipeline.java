@@ -1,5 +1,9 @@
 package org.codegenerator.generator.converters;
 
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.List;
 
 public class ConverterPipeline implements Converter {
@@ -18,12 +22,12 @@ public class ConverterPipeline implements Converter {
     }
 
     @Override
-    public String convert(Object o) {
+    public String convert(Object o, TypeSpec.@NotNull Builder generatedClassBuilder, MethodSpec.@NotNull Builder methodBuilder) {
         if (!canConvert(o)) {
             throw new IllegalArgumentException();
         }
         for (Converter converter : converters) {
-            if (converter.canConvert(o)) return converter.convert(o);
+            if (converter.canConvert(o)) return converter.convert(o, generatedClassBuilder, methodBuilder);
         }
         return null;
     }

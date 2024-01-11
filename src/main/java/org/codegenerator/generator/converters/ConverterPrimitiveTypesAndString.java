@@ -1,5 +1,7 @@
 package org.codegenerator.generator.converters;
 
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -36,7 +38,7 @@ public class ConverterPrimitiveTypesAndString implements Converter {
     }
 
     @Override
-    public String convert(@NotNull Object o) {
+    public String convert(@NotNull Object o, TypeSpec.@NotNull Builder ignored0, MethodSpec.@NotNull Builder ignored1) {
         Class<?> clazz = o.getClass();
         if (!canConvert(o)) {
             throw new IllegalArgumentException();

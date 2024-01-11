@@ -1,5 +1,7 @@
 package org.codegenerator.generator.converters;
 
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
@@ -14,7 +16,7 @@ public class PrimitiveTypeArrayConverter implements Converter {
     }
 
     @Override
-    public String convert(@NotNull Object o) {
+    public String convert(@NotNull Object o, TypeSpec.@NotNull Builder generatedClassBuilder, MethodSpec.@NotNull Builder methodBuilder) {
         Class<?> clazz = o.getClass();
         if (!canConvert(o)) {
             throw new IllegalArgumentException();
@@ -23,7 +25,7 @@ public class PrimitiveTypeArrayConverter implements Converter {
         StringBuilder stringBuilder = new StringBuilder(String.format("new %s[]{", componentType.getSimpleName()));
         int length = Array.getLength(o);
         for (int i = 0; i < length; i++) {
-            String representationObject = converterPrimitiveTypesAndString.convert(Array.get(o, i));
+            String representationObject = converterPrimitiveTypesAndString.convert(Array.get(o, i), generatedClassBuilder, methodBuilder);
             stringBuilder.append(representationObject).append(',');
         }
         if (length > 0) {

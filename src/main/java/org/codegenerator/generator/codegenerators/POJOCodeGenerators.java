@@ -72,7 +72,7 @@ public class POJOCodeGenerators {
         Object[] methodArgs = methodCall.getArgs();
         for (int i = 0; i < methodArgs.length; i++) {
             String argFormat = String.format("%s%s", PREFIX_ARG, i);
-            args.put(argFormat, converter.convert(methodArgs[i]));
+            args.put(argFormat, converter.convert(methodArgs[i], generatedClassBuilder, methodBuilder));
             format.append(String.format("$%s:L,", argFormat));
         }
         if (methodCall.getArgs().length > 0) {
