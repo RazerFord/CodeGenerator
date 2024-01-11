@@ -185,7 +185,6 @@ public class CodeGeneratorPOJOTest {
         POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         OneFieldBoxingUnboxing oneFieldBoxingUnboxing = new OneFieldBoxingUnboxing();
-        oneFieldBoxingUnboxing.setI(12);
         oneFieldBoxingUnboxing.setJ(42);
         generator.generate(oneFieldBoxingUnboxing, Paths.get(OUTPUT_DIRECTORY));
 
