@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.Map;
 
-public class JacoDBSimpleTest {
+public class JacoDBExtractionTest {
     @Test
     public void simpleTest() {
         String className = "org.testdir.Name";

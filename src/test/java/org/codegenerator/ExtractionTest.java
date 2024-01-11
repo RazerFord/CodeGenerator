@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.util.*;
 
-public class SimpleTest {
+public class ExtractionTest {
     @Test
     public void simpleBaseTest() {
         ClzBase clzBase = new ClzBase();
