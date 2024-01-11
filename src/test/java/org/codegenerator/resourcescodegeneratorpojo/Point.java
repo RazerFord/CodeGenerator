@@ -1,11 +1,11 @@
-package org.codegenerator.resourcesCodeGeneratorPOJO;
+package org.codegenerator.resourcescodegeneratorpojo;
 
 import java.util.Objects;
 
-public class PointComplex {
+public class Point {
     private int x;
     private int y;
-    private int z;
+    private int z = 0;
 
     public int getX() {
         return x;
@@ -23,27 +23,6 @@ public class PointComplex {
         this.x = x;
     }
 
-    public void setXY(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-
-    public void setXZ(int x, int z) {
-        this.x = x;
-        this.z = z;
-    }
-
-    public void setYZ(int y, int z) {
-        this.y = y;
-        this.z = z;
-    }
-
-    public void setXYZ(int x, int y, int z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
-
     public void setY(int yy) {
         y = yy;
     }
@@ -54,8 +33,8 @@ public class PointComplex {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof PointComplex)) return false;
-        PointComplex point = (PointComplex) o;
+        if (!(o instanceof Point)) return false;
+        Point point = (Point) o;
         return point.x == x && point.y == y && point.z == z;
     }
 

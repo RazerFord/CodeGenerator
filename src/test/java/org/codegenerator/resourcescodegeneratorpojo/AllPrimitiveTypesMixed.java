@@ -1,8 +1,8 @@
-package org.codegenerator.resourcesCodeGeneratorPOJO;
+package org.codegenerator.resourcescodegeneratorpojo;
 
 import java.util.Objects;
 
-public class AllPrimitiveTypes {
+public class AllPrimitiveTypesMixed {
     private byte aByte;
     private short aShort;
     private int aInt;
@@ -76,10 +76,21 @@ public class AllPrimitiveTypes {
         this.aBoolean = aBoolean;
     }
 
+    public void setPart(byte aByte, short aShort, int aInt) {
+        setByte(aByte);
+        setShort(aShort);
+        setInt(aInt);
+    }
+
+    public void setPart(char aChar, boolean aBoolean) {
+        setChar(aChar);
+        setBoolean(aBoolean);
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AllPrimitiveTypes)) return false;
-        AllPrimitiveTypes other = (AllPrimitiveTypes) o;
+        if (!(o instanceof AllPrimitiveTypesMixed)) return false;
+        AllPrimitiveTypesMixed other = (AllPrimitiveTypesMixed) o;
         return other.aByte == aByte &&
                 other.aShort == aShort &&
                 other.aInt == aInt &&

@@ -1,4 +1,4 @@
-package org.codegenerator.resourcesCodeGeneratorPOJO;
+package org.codegenerator.resourcescodegeneratorpojo;
 
 import java.util.Objects;
 

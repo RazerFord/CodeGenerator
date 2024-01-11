@@ -1,7 +1,7 @@
 package org.codegenerator;
 
 import org.codegenerator.generator.POJOGenerator;
-import org.codegenerator.resourcesCodeGeneratorPOJO.*;
+import org.codegenerator.resourcescodegeneratorpojo.*;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;

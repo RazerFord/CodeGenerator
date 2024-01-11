@@ -1,4 +1,4 @@
-package org.codegenerator.resourcesFieldExecutor;
+package org.codegenerator.resourcesfieldextraction;
 
 public class SameValues {
     private final int x1 = 13;

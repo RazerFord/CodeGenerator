@@ -1,16 +1,16 @@
-package org.codegenerator.resourcesCodeGeneratorPOJO;
+package org.codegenerator.resourcescodegeneratorpojo;
 
 import java.util.Objects;
 
-public class AllPrimitiveTypesMixed {
-    private byte aByte;
-    private short aShort;
-    private int aInt;
-    private long aLong;
-    private float aFloat;
-    private double aDouble;
-    private char aChar;
-    private boolean aBoolean;
+public class AllBoxedTypesMixed {
+    private Byte aByte;
+    private Short aShort;
+    private Integer aInt;
+    private Long aLong;
+    private Float aFloat;
+    private Double aDouble;
+    private Character aChar;
+    private Boolean aBoolean;
 
     public byte getByte() {
         return aByte;
@@ -89,16 +89,16 @@ public class AllPrimitiveTypesMixed {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AllPrimitiveTypesMixed)) return false;
-        AllPrimitiveTypesMixed other = (AllPrimitiveTypesMixed) o;
-        return other.aByte == aByte &&
-                other.aShort == aShort &&
-                other.aInt == aInt &&
-                other.aLong == aLong &&
-                other.aFloat == aFloat &&
-                other.aDouble == aDouble &&
-                other.aChar == aChar &&
-                other.aBoolean == aBoolean;
+        if (!(o instanceof AllBoxedTypesMixed)) return false;
+        AllBoxedTypesMixed other = (AllBoxedTypesMixed) o;
+        return Objects.equals(other.aByte, aByte) &&
+                Objects.equals(other.aShort, aShort) &&
+                Objects.equals(other.aInt, aInt) &&
+                Objects.equals(other.aLong, aLong) &&
+                Objects.equals(other.aFloat, aFloat) &&
+                Objects.equals(other.aDouble, aDouble) &&
+                Objects.equals(other.aChar, aChar) &&
+                Objects.equals(other.aBoolean, aBoolean);
     }
 
     @Override
