@@ -4,6 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.generator.converters.Converter;
 import org.codegenerator.generator.converters.ConverterPipeline;
 import org.codegenerator.generator.converters.ConverterPrimitiveTypesAndString;
@@ -77,7 +78,23 @@ public class POJOGenerator<T> {
             field.setAccessible(true);
             list.add(callSupplierWrapper(() -> field.get(o)));
         }
+        mergeValuesOfSameTypes(typeToValues);
         return typeToValues;
+    }
+
+    @Contract(pure = true)
+    private void mergeValuesOfSameTypes(@NotNull Map<Class<?>, List<Object>> typeToValues) {
+        for (Class<?> type : typeToValues.keySet()) {
+            for (Map.Entry<Class<?>, List<Object>> entry : typeToValues.entrySet()) {
+                if (ClassUtils.isAssignable(entry.getKey(), type)) {
+                    List<Object> list = typeToValues.get(type);
+                    Set<Object> set = new HashSet<>(list);
+                    set.addAll(entry.getValue());
+                    list.clear();
+                    list.addAll(set);
+                }
+            }
+        }
     }
 
     private @NotNull List<CodeBlock> generateCodeBlocks(@NotNull List<MethodCall> methodCalls) {
