@@ -4,7 +4,7 @@ import kotlin.Triple;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
-import org.codegenerator.generator.MethodCall;
+import org.codegenerator.generator.codegenerators.MethodCall;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

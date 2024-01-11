@@ -1,4 +1,4 @@
-package org.codegenerator.generator;
+package org.codegenerator.generator.codegenerators;
 
 import java.lang.reflect.Method;
 
