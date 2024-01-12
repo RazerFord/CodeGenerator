@@ -6,6 +6,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
+import org.codegenerator.generator.codegenerators.buildables.ConstructorCall;
 import org.codegenerator.generator.codegenerators.buildables.MethodCall;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -38,9 +39,12 @@ public class StateGraph {
         Object beginObject = objectEdgeConstructorPair.getFirst();
         EdgeConstructor edgeConstructor = objectEdgeConstructorPair.getSecond();
         Function<Object, Object> copyObject = copyObject(edgeConstructor::invoke);
+        ConstructorCall constructorCall = new ConstructorCall(clazz, edgeConstructor.getArgs());
+        List<Buildable> results = new ArrayList<>(Collections.singleton(constructorCall));
 
         List<Edge> edges = edgeGeneratorMethod.generate(values);
-        return findPath(beginObject, finalObject, edges, copyObject);
+        findPath(beginObject, finalObject, edges, copyObject, results);
+        return results;
     }
 
     private @NotNull Pair<Object, EdgeConstructor> buildBeginObjectAndMethodCall(Object finalObject, @NotNull List<EdgeConstructor> edges) {
@@ -62,12 +66,12 @@ public class StateGraph {
         return new Pair<>(currObject, edgeConstructor);
     }
 
-    private @NotNull List<Buildable> findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject) {
+    private void findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject, @NotNull List<Buildable> results) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
         triple = bfs(triple, finalNode, edges, copyObject);
         if (triple == null) {
-            return Collections.emptyList();
+            return;
         }
 
         PathNode finalPathNode = triple.getThird();
@@ -77,7 +81,7 @@ public class StateGraph {
             finalPathNode = finalPathNode.prevPathNode;
         }
 
-        return path.stream().map(e -> new MethodCall(e.getMethod(), e.getArgs())).collect(Collectors.toList());
+        path.forEach(e -> results.add(new MethodCall(e.getMethod(), e.getArgs())));
     }
 
     private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode, List<Edge> edges, Function<Object, Object> copyObject) {

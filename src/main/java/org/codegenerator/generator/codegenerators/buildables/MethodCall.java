@@ -34,6 +34,8 @@ public final class MethodCall implements Buildable {
         }
         if (args.length > 0) {
             format.setCharAt(format.length() - 1, ')');
+        } else {
+            format.append(")");
         }
         methodBuilder.addStatement(CodeBlock.builder().addNamed(format.toString(), argumentMap).build());
     }

@@ -6,16 +6,15 @@ import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.converters.Converter;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class ConstructorCall implements Buildable {
     private final Class<?> clazz;
-    private final Constructor<?> constructor;
     private final Object[] args;
 
-    public ConstructorCall(Class<?> clazz, Constructor<?> constructor, Object... args) {
+    public ConstructorCall(Class<?> clazz, Object... args) {
         this.clazz = clazz;
-        this.constructor = constructor;
         this.args = args;
     }
 
@@ -23,7 +22,23 @@ public final class ConstructorCall implements Buildable {
     public void build(@NotNull Converter converter,
                       TypeSpec.@NotNull Builder typeBuilder,
                       MethodSpec.@NotNull Builder methodBuilder) {
-        methodBuilder.addStatement(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
+        Map<String, String> argumentMap = new HashMap<>();
+        StringBuilder format = new StringBuilder("(");
+        Object[] methodArgs = args;
+        for (int i = 0; i < methodArgs.length; i++) {
+            String argFormat = String.format("%s%s", PREFIX_ARG, i);
+            argumentMap.put(argFormat, converter.convert(methodArgs[i], typeBuilder, methodBuilder));
+            format.append(String.format("$%s:L,", argFormat));
+        }
+        if (args.length > 0) {
+            format.setCharAt(format.length() - 1, ')');
+        } else {
+            format.append(")");
+        }
+        CodeBlock codeBlock = CodeBlock.builder().addNamed(format.toString(), argumentMap).build();
+        codeBlock = CodeBlock.builder().add("$T object = new $T$L", clazz, clazz, codeBlock).build();
+        methodBuilder.addStatement(codeBlock);
     }
+    private static final String PREFIX_ARG = "arg";
 }
 

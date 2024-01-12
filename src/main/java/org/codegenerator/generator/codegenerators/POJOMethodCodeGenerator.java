@@ -28,7 +28,6 @@ public class POJOMethodCodeGenerator {
     private void generateCodeBlocks(@NotNull List<Buildable> methodCalls,
                                     TypeSpec.Builder typeBuilder,
                                     MethodSpec.@NotNull Builder methodBuilder) {
-        methodBuilder.addStatement(CodeBlock.builder().add("$T object = new $T()", clazz, clazz).build());
         for (Buildable methodCall : methodCalls) {
             generateCodeBlock(methodCall, typeBuilder, methodBuilder);
         }
