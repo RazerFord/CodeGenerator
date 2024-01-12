@@ -1,4 +1,4 @@
-package org.codegenerator.generator.codegenerators;
+package org.codegenerator.generator.codegenerators.buildables;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
@@ -10,7 +10,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class MethodCall {
+public final class MethodCall implements Buildable {
     private final Method method;
     private final Object[] args;
 
@@ -19,9 +19,10 @@ public final class MethodCall {
         this.args = args;
     }
 
-    public void buildMethod(@NotNull Converter converter,
-                            TypeSpec.@NotNull Builder typeBuilder,
-                            MethodSpec.@NotNull Builder methodBuilder) {
+    @Override
+    public void build(@NotNull Converter converter,
+                      TypeSpec.@NotNull Builder typeBuilder,
+                      MethodSpec.@NotNull Builder methodBuilder) {
         Map<String, String> argumentMap = new HashMap<>();
         argumentMap.put(PREFIX_METHOD, method.getName());
         StringBuilder format = new StringBuilder("object.$func:L(");
@@ -35,14 +36,6 @@ public final class MethodCall {
             format.setCharAt(format.length() - 1, ')');
         }
         methodBuilder.addStatement(CodeBlock.builder().addNamed(format.toString(), argumentMap).build());
-    }
-
-    public Method getMethod() {
-        return method;
-    }
-
-    public Object[] getArgs() {
-        return args;
     }
 
     private static final String PREFIX_METHOD = "func";
