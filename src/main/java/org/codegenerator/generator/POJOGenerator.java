@@ -21,7 +21,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-public class POJOGenerator<T> {
+public class POJOGenerator<T> implements Generator<T> {
     private static final String PACKAGE_NAME = "generatedclass";
     private static final String CLASS_NAME = "GeneratedClass";
     private static final String METHOD_NAME = "generate";
@@ -58,7 +58,6 @@ public class POJOGenerator<T> {
 
             Set<String> fields = new HashSet<>();
             jcClassOrInterface.getDeclaredFields().forEach(it -> fields.add(String.join(".", THIS, it.getName())));
-
             for (JcMethod jcMethod : jcClassOrInterface.getDeclaredMethods()) {
                 JcInstList<JcInst> instructions = jcMethod.getInstList();
                 for (JcInst inst : instructions) {
