@@ -88,6 +88,20 @@ public class AllBoxedTypesMixed {
     }
 
     @Override
+    public String toString() {
+        return "AllBoxedTypesMixed{" +
+                "aByte=" + aByte +
+                ", aShort=" + aShort +
+                ", aInt=" + aInt +
+                ", aLong=" + aLong +
+                ", aFloat=" + aFloat +
+                ", aDouble=" + aDouble +
+                ", aChar=" + aChar +
+                ", aBoolean=" + aBoolean +
+                '}';
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof AllBoxedTypesMixed)) return false;
         AllBoxedTypesMixed other = (AllBoxedTypesMixed) o;
