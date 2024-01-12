@@ -4,7 +4,6 @@ import org.codegenerator.generator.graph.EdgeGeneratorUtils.Node;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,15 +16,14 @@ public class EdgeGeneratorConstructor {
         this.clazz = clazz;
     }
 
-    public List<Edge> generate(Map<Class<?>, List<Object>> typeToValues) {
+    public List<EdgeConstructor> generate(Map<Class<?>, List<Object>> typeToValues) {
         typeToValues = new HashMap<>(typeToValues);
-        List<Edge> edges = new ArrayList<>();
+        List<EdgeConstructor> edges = new ArrayList<>();
         for (Constructor<?> constructor : clazz.getConstructors()) {
             List<Node> roots = EdgeGeneratorUtils.buildGraph(constructor, typeToValues);
             List<List<Node>> listArguments = EdgeGeneratorUtils.generatePossibleArguments(roots);
             for (List<Node> arguments : listArguments) {
-                // TODO replace it to constructor
-                edges.add(new Edge(((Method) null), EdgeGeneratorUtils.extractArgs(arguments, typeToValues)));
+                edges.add(new EdgeConstructor(constructor, EdgeGeneratorUtils.extractArgs(arguments, typeToValues)));
             }
         }
         return edges;
