@@ -11,10 +11,12 @@ import java.util.Map;
 
 public final class ConstructorCall implements Buildable {
     private final Class<?> clazz;
+    private final String variableName;
     private final Object[] args;
 
-    public ConstructorCall(Class<?> clazz, Object... args) {
+    public ConstructorCall(Class<?> clazz, String variableName, Object... args) {
         this.clazz = clazz;
+        this.variableName = variableName;
         this.args = args;
     }
 
@@ -36,9 +38,10 @@ public final class ConstructorCall implements Buildable {
             format.append(")");
         }
         CodeBlock codeBlock = CodeBlock.builder().addNamed(format.toString(), argumentMap).build();
-        codeBlock = CodeBlock.builder().add("$T object = new $T$L", clazz, clazz, codeBlock).build();
+        codeBlock = CodeBlock.builder().add("$T $L = new $T$L", clazz, variableName, clazz, codeBlock).build();
         methodBuilder.addStatement(codeBlock);
     }
+
     private static final String PREFIX_ARG = "arg";
 }
 

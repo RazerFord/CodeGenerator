@@ -1,6 +1,5 @@
 package org.codegenerator.generator.codegenerators;
 
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
@@ -31,7 +30,6 @@ public class POJOMethodCodeGenerator {
         for (Buildable methodCall : methodCalls) {
             generateCodeBlock(methodCall, typeBuilder, methodBuilder);
         }
-        methodBuilder.addStatement(CodeBlock.builder().add("return object").build());
     }
 
     private void generateCodeBlock(@NotNull Buildable methodCall,

@@ -8,6 +8,7 @@ import org.codegenerator.extractor.node.Node;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.codegenerators.buildables.ConstructorCall;
 import org.codegenerator.generator.codegenerators.buildables.MethodCall;
+import org.codegenerator.generator.codegenerators.buildables.Return;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 import static org.codegenerator.Utils.*;
 
 public class StateGraph {
+    private static final String VARIABLE_NAME = "object";
     private final Class<?> clazz;
     private final EdgeGeneratorMethod edgeGeneratorMethod;
     private final EdgeGeneratorConstructor edgeGeneratorConstructor;
@@ -39,11 +41,14 @@ public class StateGraph {
         Object beginObject = objectEdgeConstructorPair.getFirst();
         EdgeConstructor edgeConstructor = objectEdgeConstructorPair.getSecond();
         Function<Object, Object> copyObject = copyObject(edgeConstructor::invoke);
-        ConstructorCall constructorCall = new ConstructorCall(clazz, edgeConstructor.getArgs());
+        ConstructorCall constructorCall = new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs());
+
         List<Buildable> results = new ArrayList<>(Collections.singleton(constructorCall));
 
         List<Edge> edges = edgeGeneratorMethod.generate(values);
         findPath(beginObject, finalObject, edges, copyObject, results);
+
+        results.add(new Return(VARIABLE_NAME));
         return results;
     }
 
