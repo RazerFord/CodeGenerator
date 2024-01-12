@@ -20,10 +20,14 @@ public class EdgeGeneratorConstructor {
         typeToValues = new HashMap<>(typeToValues);
         List<EdgeConstructor> edges = new ArrayList<>();
         for (Constructor<?> constructor : clazz.getConstructors()) {
-            List<Node> roots = EdgeGeneratorUtils.buildGraph(constructor, typeToValues);
-            List<List<Node>> listArguments = EdgeGeneratorUtils.generatePossibleArguments(roots);
-            for (List<Node> arguments : listArguments) {
-                edges.add(new EdgeConstructor(constructor, EdgeGeneratorUtils.extractArgs(arguments, typeToValues)));
+            if (constructor.getParameterCount() == 0) {
+                edges.add(new EdgeConstructor(constructor));
+            } else {
+                List<Node> roots = EdgeGeneratorUtils.buildGraph(constructor, typeToValues);
+                List<List<Node>> listArguments = EdgeGeneratorUtils.generatePossibleArguments(roots);
+                for (List<Node> arguments : listArguments) {
+                    edges.add(new EdgeConstructor(constructor, EdgeGeneratorUtils.extractArgs(arguments, typeToValues)));
+                }
             }
         }
         return edges;

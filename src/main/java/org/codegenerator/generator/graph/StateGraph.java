@@ -1,5 +1,6 @@
 package org.codegenerator.generator.graph;
 
+import kotlin.Pair;
 import kotlin.Triple;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.extractor.ClassFieldExtractor;
@@ -12,22 +13,52 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static org.codegenerator.Utils.callSupplierWrapper;
+import static org.codegenerator.Utils.*;
 
 public class StateGraph {
     private final Class<?> clazz;
     private final EdgeGeneratorMethod edgeGeneratorMethod;
+    private final EdgeGeneratorConstructor edgeGeneratorConstructor;
 
     public StateGraph(Class<?> clazz) {
         this.clazz = clazz;
         edgeGeneratorMethod = new EdgeGeneratorMethod(clazz);
+        edgeGeneratorConstructor = new EdgeGeneratorConstructor(clazz);
     }
 
-    public @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, Function<Object, Object> copyObject) {
-        List<Edge> edges = edgeGeneratorMethod.generate(prepareTypeToValues(finalObject));
+    public @NotNull List<MethodCall> findPath(Object finalObject) {
+        @NotNull Map<Class<?>, List<Object>> values = prepareTypeToValues(finalObject);
+        List<EdgeConstructor> edgeConstructors = edgeGeneratorConstructor.generate(values);
+
+        Pair<Object, EdgeConstructor> objectEdgeConstructorPair = buildBeginObjectAndMethodCall(finalObject, edgeConstructors);
+        Object beginObject = objectEdgeConstructorPair.getFirst();
+        EdgeConstructor edgeConstructor = objectEdgeConstructorPair.getSecond();
+        Function<Object, Object> copyObject = copyObject(edgeConstructor::invoke);
+
+        List<Edge> edges = edgeGeneratorMethod.generate(values);
         return findPath(beginObject, finalObject, edges, copyObject);
+    }
+
+    private @NotNull Pair<Object, EdgeConstructor> buildBeginObjectAndMethodCall(Object finalObject, @NotNull List<EdgeConstructor> edges) {
+        Node finalNode = ClassFieldExtractor.extract(finalObject);
+        throwIf(edges.isEmpty(), new RuntimeException(NO_CONSTRUCTORS));
+        EdgeConstructor edgeConstructor = edges.get(0);
+        Object currObject = edgeConstructor.invoke();
+        Node currNode = ClassFieldExtractor.extract(currObject);
+        for (int i = 1, length = edges.size(); i < length; i++) {
+            EdgeConstructor tempEdgeConstructor = edges.get(i);
+            Object tempObject = tempEdgeConstructor.invoke();
+            Node tempNode = ClassFieldExtractor.extract(tempObject);
+            if (finalNode.diff(currNode) > finalNode.diff(tempNode)) {
+                edgeConstructor = tempEdgeConstructor;
+                currObject = tempObject;
+                currNode = tempNode;
+            }
+        }
+        return new Pair<>(currObject, edgeConstructor);
     }
 
     private @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject) {
@@ -114,6 +145,18 @@ public class StateGraph {
         }
     }
 
+    @Contract(pure = true)
+    private @NotNull Function<Object, Object> copyObject(@NotNull Supplier<Object> supplier) {
+        return (o) -> {
+            Object instance = callSupplierWrapper(supplier::get);
+            for (Field field : clazz.getDeclaredFields()) {
+                field.setAccessible(true);
+                callRunnableWrapper(() -> field.set(instance, callSupplierWrapper(() -> field.get(o))));
+            }
+            return instance;
+        };
+    }
+
     private static final class PathNode {
         private final PathNode prevPathNode;
         private final Edge edge;
@@ -133,4 +176,6 @@ public class StateGraph {
             this.depth = depth;
         }
     }
+
+    private static final String NO_CONSTRUCTORS = "No constructors found";
 }
