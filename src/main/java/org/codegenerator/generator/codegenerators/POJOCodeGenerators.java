@@ -3,6 +3,7 @@ package org.codegenerator.generator.codegenerators;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import org.codegenerator.generator.codegenerators.buildables.MethodCall;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

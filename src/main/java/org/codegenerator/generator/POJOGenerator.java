@@ -1,8 +1,8 @@
 package org.codegenerator.generator;
 
-import org.codegenerator.generator.codegenerators.MethodCall;
 import org.codegenerator.generator.codegenerators.POJOCodeGenerators;
 import org.codegenerator.generator.codegenerators.POJOGraphPathSearch;
+import org.codegenerator.generator.codegenerators.buildables.MethodCall;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcDatabase;
 import org.jacodb.api.JcMethod;

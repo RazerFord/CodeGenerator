@@ -3,6 +3,7 @@ package org.codegenerator.generator.codegenerators;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import org.codegenerator.generator.codegenerators.buildables.MethodCall;
 import org.codegenerator.generator.converters.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +38,7 @@ public class POJOMethodCodeGenerator {
     private void generateCodeBlock(@NotNull MethodCall methodCall,
                                    TypeSpec.@NotNull Builder typeBuilder,
                                    MethodSpec.@NotNull Builder methodBuilder) {
-        methodCall.buildMethod(converter, typeBuilder, methodBuilder);
+        methodCall.build(converter, typeBuilder, methodBuilder);
     }
 
     @Contract(" -> new")

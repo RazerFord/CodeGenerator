@@ -1,5 +1,6 @@
 package org.codegenerator.generator.codegenerators;
 
+import org.codegenerator.generator.codegenerators.buildables.MethodCall;
 import org.codegenerator.generator.graph.StateGraph;
 import org.jetbrains.annotations.NotNull;
 
