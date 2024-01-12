@@ -18,15 +18,15 @@ import static org.codegenerator.Utils.callSupplierWrapper;
 
 public class StateGraph {
     private final Class<?> clazz;
-    private final EdgeGenerator edgeGenerator;
+    private final EdgeGeneratorMethod edgeGeneratorMethod;
 
     public StateGraph(Class<?> clazz) {
         this.clazz = clazz;
-        edgeGenerator = new EdgeGenerator(clazz);
+        edgeGeneratorMethod = new EdgeGeneratorMethod(clazz);
     }
 
     public @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, Function<Object, Object> copyObject) {
-        List<Edge> edges = edgeGenerator.generate(prepareTypeToValues(finalObject));
+        List<Edge> edges = edgeGeneratorMethod.generate(prepareTypeToValues(finalObject));
         return findPath(beginObject, finalObject, edges, copyObject);
     }
 

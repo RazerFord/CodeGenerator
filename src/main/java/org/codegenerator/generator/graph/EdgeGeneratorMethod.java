@@ -6,10 +6,10 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class EdgeGenerator {
+public class EdgeGeneratorMethod {
     private final Class<?> clazz;
 
-    public EdgeGenerator(@NotNull Class<?> clazz) {
+    public EdgeGeneratorMethod(@NotNull Class<?> clazz) {
         this.clazz = clazz;
     }
 
