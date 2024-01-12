@@ -1,6 +1,6 @@
 package org.codegenerator.generator.codegenerators;
 
-import org.codegenerator.generator.codegenerators.buildables.MethodCall;
+import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.graph.StateGraph;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,7 +22,7 @@ public class POJOGraphPathSearch {
         checkInvariants();
     }
 
-    public List<MethodCall> find(@NotNull Object finalObject) {
+    public List<Buildable> find(@NotNull Object finalObject) {
         return stateGraph.findPath(finalObject);
     }
 

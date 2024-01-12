@@ -5,6 +5,7 @@ import kotlin.Triple;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
+import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.codegenerators.buildables.MethodCall;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public class StateGraph {
         edgeGeneratorConstructor = new EdgeGeneratorConstructor(clazz);
     }
 
-    public @NotNull List<MethodCall> findPath(Object finalObject) {
+    public @NotNull List<Buildable> findPath(Object finalObject) {
         @NotNull Map<Class<?>, List<Object>> values = prepareTypeToValues(finalObject);
         List<EdgeConstructor> edgeConstructors = edgeGeneratorConstructor.generate(values);
 
@@ -61,7 +62,7 @@ public class StateGraph {
         return new Pair<>(currObject, edgeConstructor);
     }
 
-    private @NotNull List<MethodCall> findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject) {
+    private @NotNull List<Buildable> findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
         triple = bfs(triple, finalNode, edges, copyObject);

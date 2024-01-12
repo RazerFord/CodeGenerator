@@ -2,9 +2,9 @@ package org.codegenerator.generator.converters;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import org.codegenerator.generator.codegenerators.buildables.MethodCall;
 import org.codegenerator.generator.codegenerators.POJOGraphPathSearch;
 import org.codegenerator.generator.codegenerators.POJOMethodCodeGenerator;
+import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ public class POJOObjectConverter implements Converter {
     public String convert(@NotNull Object o, TypeSpec.@NotNull Builder typeBuilder, MethodSpec.@NotNull Builder methodBuilder) {
         Class<?> clazz = o.getClass();
         POJOGraphPathSearch pojoGraphPathSearch = new POJOGraphPathSearch(clazz);
-        List<MethodCall> pathNode = pojoGraphPathSearch.find(o);
+        List<Buildable> pathNode = pojoGraphPathSearch.find(o);
         POJOMethodCodeGenerator pojoMethodCodeGenerator = new POJOMethodCodeGenerator(clazz);
         MethodSpec.Builder methodBuilder1 = MethodSpec.constructorBuilder();
         pojoMethodCodeGenerator.generate(pathNode, typeBuilder, methodBuilder1);

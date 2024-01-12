@@ -3,7 +3,7 @@ package org.codegenerator.generator.codegenerators;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import org.codegenerator.generator.codegenerators.buildables.MethodCall;
+import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -27,11 +27,11 @@ public class POJOCodeGenerators {
         pojoMethodCodeGenerator = new POJOMethodCodeGenerator(clazz);
     }
 
-    public void generate(@NotNull List<MethodCall> methodCalls, Path path) {
+    public void generate(@NotNull List<Buildable> methodCalls, Path path) {
         generateCode(methodCalls, path);
     }
 
-    private void generateCode(@NotNull List<MethodCall> methodCalls, Path path) {
+    private void generateCode(@NotNull List<Buildable> methodCalls, Path path) {
         TypeSpec.Builder generatedClassBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(clazz);
 

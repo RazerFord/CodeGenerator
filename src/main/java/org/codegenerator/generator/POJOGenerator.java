@@ -2,7 +2,7 @@ package org.codegenerator.generator;
 
 import org.codegenerator.generator.codegenerators.POJOCodeGenerators;
 import org.codegenerator.generator.codegenerators.POJOGraphPathSearch;
-import org.codegenerator.generator.codegenerators.buildables.MethodCall;
+import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcDatabase;
 import org.jacodb.api.JcMethod;
@@ -42,7 +42,7 @@ public class POJOGenerator<T> {
     }
 
     public void generate(@NotNull T finalObject, Path path) {
-        List<MethodCall> pathNode = pojoGraphPathSearch.find(finalObject);
+        List<Buildable> pathNode = pojoGraphPathSearch.find(finalObject);
         pojoCodeGenerators.generate(pathNode, path);
     }
 
