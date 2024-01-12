@@ -235,6 +235,39 @@ public class CodeGeneratorPOJOTest {
         assertEquals(classWithOtherPOJO, other);
     }
 
+    @Test
+    public void setterWithManyPOJOTest() {
+        final String generatedClassName = "GeneratedClassWithManyPOJOClass";
+        POJOGenerator<ClassWithManyPOJO> generator = new POJOGenerator<>(ClassWithManyPOJO.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        ClassWithManyPOJO classWithManyPOJO = new ClassWithManyPOJO();
+
+        Point point = new Point();
+        point.setX(1);
+        point.setY(4);
+        point.setZ(9);
+        ClassWithOtherPOJO classWithOtherPOJO = new ClassWithOtherPOJO();
+        classWithOtherPOJO.setPoint(point);
+        classWithManyPOJO.setClassWithOtherPOJO(classWithOtherPOJO);
+
+        User user = new User();
+        user.setAge(13);
+        user.setName("John Doe");
+        user.setWeight(43);
+        classWithManyPOJO.setUser(user);
+
+        AllPrimitiveTypes allPrimitiveTypes = new AllPrimitiveTypes();
+        allPrimitiveTypes.setBoolean(true);
+        allPrimitiveTypes.setChar('c');
+        allPrimitiveTypes.setInt(42);
+        classWithManyPOJO.setAllPrimitiveTypes(allPrimitiveTypes);
+
+        generator.generate(classWithManyPOJO, Paths.get(OUTPUT_DIRECTORY));
+
+        ClassWithManyPOJO other = createObject(generatedClassName);
+        assertEquals(classWithManyPOJO, other);
+    }
+
     @SuppressWarnings("unchecked")
     public <R> R createObject(String generatedClassName) {
         try {
