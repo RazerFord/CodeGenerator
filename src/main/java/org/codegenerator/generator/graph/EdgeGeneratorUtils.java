@@ -35,6 +35,22 @@ public class EdgeGeneratorUtils {
         return args;
     }
 
+    /*
+     * This method builds a graph
+     *
+     * Let the type of the method be `void(int, int)`, and the map contains a pair [int => {1, 2, 3}].
+     * Then the graph will be built:
+     *
+     * (int, 0) ---> (int, 0)
+     *           |
+     * (int, 1) ---> (int, 1)
+     *           |
+     * (int, 2) ---> (int, 2)
+     *
+     * @param method that can be executed. Usually this is an example `Constructor<?>` or `Method`
+     * @param map of types to their value
+     * @return returns a list of starting vertices of the graph
+     */
     public static <T extends Executable> @NotNull List<Node> buildGraph(@NotNull T executable, Map<Class<?>, List<Object>> typeToValues) {
         List<List<Node>> levels = new ArrayList<>();
 
