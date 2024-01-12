@@ -70,7 +70,11 @@ public class StateGraph {
 
             for (Edge edge : edges) {
                 Object instance = copyObject.apply(triple.getFirst());
-                edge.invoke(instance);
+                try {
+                    edge.invoke(instance);
+                } catch (Throwable ignored) {
+                    continue;
+                }
                 lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instance), new PathNode(prevPath, edge)));
             }
             List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
