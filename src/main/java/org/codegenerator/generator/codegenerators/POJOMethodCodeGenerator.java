@@ -8,9 +8,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class POJOMethodCodeGenerator {
     private final Converter converter = createPipeline();
@@ -39,19 +37,7 @@ public class POJOMethodCodeGenerator {
     private void generateCodeBlock(@NotNull MethodCall methodCall,
                                    TypeSpec.@NotNull Builder typeBuilder,
                                    MethodSpec.@NotNull Builder methodBuilder) {
-        Map<String, String> args = new HashMap<>();
-        args.put(PREFIX_METHOD, methodCall.getMethod().getName());
-        StringBuilder format = new StringBuilder("object.$func:L(");
-        Object[] methodArgs = methodCall.getArgs();
-        for (int i = 0; i < methodArgs.length; i++) {
-            String argFormat = String.format("%s%s", PREFIX_ARG, i);
-            args.put(argFormat, converter.convert(methodArgs[i], typeBuilder, methodBuilder));
-            format.append(String.format("$%s:L,", argFormat));
-        }
-        if (methodCall.getArgs().length > 0) {
-            format.setCharAt(format.length() - 1, ')');
-        }
-        methodBuilder.addStatement(CodeBlock.builder().addNamed(format.toString(), args).build());
+        methodCall.buildMethod(converter, typeBuilder, methodBuilder);
     }
 
     @Contract(" -> new")
@@ -66,6 +52,4 @@ public class POJOMethodCodeGenerator {
     }
 
     private static final String METHOD_NAME = "createPojo";
-    private static final String PREFIX_METHOD = "func";
-    private static final String PREFIX_ARG = "arg";
 }

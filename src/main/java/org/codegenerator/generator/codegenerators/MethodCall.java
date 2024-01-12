@@ -1,6 +1,14 @@
 package org.codegenerator.generator.codegenerators;
 
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
+import org.codegenerator.generator.converters.Converter;
+import org.jetbrains.annotations.NotNull;
+
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class MethodCall {
     private final Method method;
@@ -11,6 +19,24 @@ public final class MethodCall {
         this.args = args;
     }
 
+    public void buildMethod(@NotNull Converter converter,
+                            TypeSpec.@NotNull Builder typeBuilder,
+                            MethodSpec.@NotNull Builder methodBuilder) {
+        Map<String, String> argumentMap = new HashMap<>();
+        argumentMap.put(PREFIX_METHOD, method.getName());
+        StringBuilder format = new StringBuilder("object.$func:L(");
+        Object[] methodArgs = args;
+        for (int i = 0; i < methodArgs.length; i++) {
+            String argFormat = String.format("%s%s", PREFIX_ARG, i);
+            argumentMap.put(argFormat, converter.convert(methodArgs[i], typeBuilder, methodBuilder));
+            format.append(String.format("$%s:L,", argFormat));
+        }
+        if (args.length > 0) {
+            format.setCharAt(format.length() - 1, ')');
+        }
+        methodBuilder.addStatement(CodeBlock.builder().addNamed(format.toString(), argumentMap).build());
+    }
+
     public Method getMethod() {
         return method;
     }
@@ -18,5 +44,8 @@ public final class MethodCall {
     public Object[] getArgs() {
         return args;
     }
+
+    private static final String PREFIX_METHOD = "func";
+    private static final String PREFIX_ARG = "arg";
 }
 
