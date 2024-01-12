@@ -268,6 +268,21 @@ public class CodeGeneratorPOJOTest {
         assertEquals(classWithManyPOJO, other);
     }
 
+    @Test
+    public void nonDefaultConstructor() {
+        final String generatedClassName = "GeneratedUserComplexConstructorClass";
+        POJOGenerator<UserComplexConstructor> generator = new POJOGenerator<>(UserComplexConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        UserComplexConstructor userComplexConstructor = new UserComplexConstructor("Anonymous");
+        userComplexConstructor.setName("John Doe");
+        userComplexConstructor.setAge(42);
+        userComplexConstructor.setWeight(80);
+        generator.generate(userComplexConstructor, Paths.get(OUTPUT_DIRECTORY));
+
+        UserComplexConstructor other = createObject(generatedClassName);
+        assertEquals(userComplexConstructor, other);
+    }
+
     @SuppressWarnings("unchecked")
     public <R> R createObject(String generatedClassName) {
         try {
