@@ -6,26 +6,25 @@ import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.converters.Converter;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ConstructorCall implements Buildable {
-    private final Class<?> clazz;
-    private final String variableName;
+class MethodCallCreator {
+    private final Method method;
     private final Object[] args;
 
-    public ConstructorCall(Class<?> clazz, String variableName, Object... args) {
-        this.clazz = clazz;
-        this.variableName = variableName;
+    public MethodCallCreator(Method method, Object... args) {
+        this.method = method;
         this.args = args;
     }
 
-    @Override
-    public void build(@NotNull Converter converter,
+    public CodeBlock build(@NotNull Converter converter,
                       TypeSpec.@NotNull Builder typeBuilder,
                       MethodSpec.@NotNull Builder methodBuilder) {
         Map<String, String> argumentMap = new HashMap<>();
-        StringBuilder format = new StringBuilder("(");
+        argumentMap.put(PREFIX_METHOD, method.getName());
+        StringBuilder format = new StringBuilder("$func:L(");
         Object[] methodArgs = args;
         for (int i = 0; i < methodArgs.length; i++) {
             String argFormat = String.format("%s%s", PREFIX_ARG, i);
@@ -37,10 +36,9 @@ public final class ConstructorCall implements Buildable {
         } else {
             format.append(")");
         }
-        CodeBlock codeBlock = CodeBlock.builder().addNamed(format.toString(), argumentMap).build();
-        codeBlock = CodeBlock.builder().add("$T $L = new $T$L", clazz, variableName, clazz, codeBlock).build();
-        methodBuilder.addStatement(codeBlock);
+        return CodeBlock.builder().addNamed(format.toString(), argumentMap).build();
     }
 
+    private static final String PREFIX_METHOD = "func";
     private static final String PREFIX_ARG = "arg";
 }

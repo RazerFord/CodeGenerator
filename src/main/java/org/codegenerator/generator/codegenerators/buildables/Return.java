@@ -20,4 +20,3 @@ public final class Return implements Buildable {
         methodBuilder.addStatement(CodeBlock.builder().add("return $L", variableName).build());
     }
 }
-

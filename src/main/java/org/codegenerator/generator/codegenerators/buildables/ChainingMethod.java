@@ -8,10 +8,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 
-public final class MethodCall implements Buildable {
+public final class ChainingMethod implements Buildable {
     private final MethodCallCreator methodCallCreator;
 
-    public MethodCall(Method method, Object... args) {
+    public ChainingMethod(Method method, Object... args) {
         methodCallCreator = new MethodCallCreator(method, args);
     }
 
@@ -23,7 +23,7 @@ public final class MethodCall implements Buildable {
                 .add(PREFIX_METHOD_CALL)
                 .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
                 .build();
-        methodBuilder.addStatement(codeBlock).build();
+        methodBuilder.addCode(codeBlock).build();
     }
 
     private static final String PREFIX_METHOD_CALL = "object.";
