@@ -1,5 +1,7 @@
 package org.codegenerator;
 
+import org.codegenerator.generator.BuilderGenerator;
+import org.codegenerator.resourcescodegeneratorbuilder.User;
 import org.junit.jupiter.api.Test;
 
 public class CodeGeneratorBuilderTest {
@@ -12,5 +14,8 @@ public class CodeGeneratorBuilderTest {
     @Test
     public void userBuilderTest() {
         final String generatedClassName = "GeneratedUserClass";
+
+        BuilderGenerator builderGenerator = new BuilderGenerator<>(User.class);
+
     }
 }

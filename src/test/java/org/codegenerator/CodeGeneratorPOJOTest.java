@@ -3,8 +3,10 @@ package org.codegenerator;
 import org.codegenerator.generator.POJOGenerator;
 import org.codegenerator.resourcescodegeneratorpojo.*;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.nio.file.Paths;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -281,6 +283,112 @@ public class CodeGeneratorPOJOTest {
 
         UserComplexConstructor other = createObject(generatedClassName);
         assertEquals(userComplexConstructor, other);
+    }
+
+    @Test
+    public void veryManySetterDefaultTest() {
+        final String generatedClassName = "GeneratedClassWithManyDefaultFieldsClass";
+        POJOGenerator<ClassWithManyFields> generator = new POJOGenerator<>(ClassWithManyFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        ClassWithManyFields classWithManyFields = new ClassWithManyFields();
+
+        generator.generate(classWithManyFields, Paths.get(OUTPUT_DIRECTORY));
+
+        ClassWithManyFields other = createObject(generatedClassName);
+        assertEquals(classWithManyFields, other);
+    }
+
+    @Test
+    public void veryManySetterTest() {
+        final String generatedClassName = "GeneratedClassWithManyFieldsClass";
+        POJOGenerator<ClassWithManyFields> generator = new POJOGenerator<>(ClassWithManyFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        ClassWithManyFields classWithManyFields = new ClassWithManyFields();
+        classWithManyFields.setField1("field1");
+        classWithManyFields.setField2("field2");
+        classWithManyFields.setField3("field3");
+        classWithManyFields.setField4("field4");
+        classWithManyFields.setField5("field5");
+        classWithManyFields.setField6("field6");
+        classWithManyFields.setField7("field7");
+        classWithManyFields.setField8("field8");
+        classWithManyFields.setField9("field9");
+        classWithManyFields.setField10("field10");
+        classWithManyFields.setField11("field11");
+        classWithManyFields.setField12("field12");
+        classWithManyFields.setField13("field13");
+        classWithManyFields.setField14("field14");
+        classWithManyFields.setField15("field15");
+        classWithManyFields.setField16("field16");
+        classWithManyFields.setField17("field17");
+        classWithManyFields.setField18("field18");
+        classWithManyFields.setField19("field19");
+        classWithManyFields.setField20("field20");
+        classWithManyFields.setField21("field21");
+        classWithManyFields.setField22("field22");
+        classWithManyFields.setField23("field23");
+        classWithManyFields.setField24("field24");
+        classWithManyFields.setField25("field25");
+        classWithManyFields.setField26("field26");
+        classWithManyFields.setField27("field27");
+        classWithManyFields.setField28("field28");
+        classWithManyFields.setField29("field29");
+        classWithManyFields.setField30("field30");
+        classWithManyFields.setField31("field31");
+        classWithManyFields.setField32("field32");
+        classWithManyFields.setField33("field33");
+
+        generator.generate(classWithManyFields, Paths.get(OUTPUT_DIRECTORY));
+
+        ClassWithManyFields other = createObject(generatedClassName);
+        assertEquals(classWithManyFields, other);
+    }
+
+    @Test
+    @Timeout(20)
+    public void veryManySetterComplexTest() {
+        final String generatedClassName = "GeneratedClassWithManyFieldsComplexClass";
+        POJOGenerator<ClassWithManyFieldsComplex> generator = new POJOGenerator<>(ClassWithManyFieldsComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        ClassWithManyFieldsComplex classWithManyFieldsComplex = new ClassWithManyFieldsComplex();
+        classWithManyFieldsComplex.setField1("field1");
+        classWithManyFieldsComplex.setField2("field2");
+        classWithManyFieldsComplex.setField3("field3");
+        classWithManyFieldsComplex.setField4("field4");
+        classWithManyFieldsComplex.setField5("field5");
+        classWithManyFieldsComplex.setField6("field6");
+        classWithManyFieldsComplex.setField7("field7");
+        classWithManyFieldsComplex.setField8("field8");
+        classWithManyFieldsComplex.setField9("field9");
+        classWithManyFieldsComplex.setField10("field10");
+        classWithManyFieldsComplex.setField11("field11");
+        classWithManyFieldsComplex.setField12("field12");
+        classWithManyFieldsComplex.setField13("field13");
+        classWithManyFieldsComplex.setField14("field14");
+        classWithManyFieldsComplex.setField15("field15");
+        classWithManyFieldsComplex.setField16("field16");
+        classWithManyFieldsComplex.setField17("field17");
+        classWithManyFieldsComplex.setField18("field18");
+        classWithManyFieldsComplex.setField19("field19");
+        classWithManyFieldsComplex.setField20("field20");
+        classWithManyFieldsComplex.setField21("field21");
+        classWithManyFieldsComplex.setField22("field22");
+        classWithManyFieldsComplex.setField23("field23");
+        classWithManyFieldsComplex.setField24("field24");
+        classWithManyFieldsComplex.setField25("field25");
+        classWithManyFieldsComplex.setField26("field26");
+        classWithManyFieldsComplex.setField27("field27");
+        classWithManyFieldsComplex.setField28("field28");
+        classWithManyFieldsComplex.setField29("field29");
+        classWithManyFieldsComplex.setField30("field30");
+        classWithManyFieldsComplex.setField31("field31");
+        classWithManyFieldsComplex.setField32("field32");
+        classWithManyFieldsComplex.setField33("field33");
+
+        generator.generate(classWithManyFieldsComplex, Paths.get(OUTPUT_DIRECTORY));
+
+        ClassWithManyFieldsComplex other = createObject(generatedClassName);
+        assertEquals(classWithManyFieldsComplex, other);
     }
 
     @SuppressWarnings("unchecked")

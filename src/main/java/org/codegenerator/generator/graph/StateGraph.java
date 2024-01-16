@@ -120,6 +120,7 @@ public class StateGraph {
             }
             List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
             int minDif = diffs.stream().min(Integer::compareTo).orElse(Integer.MAX_VALUE);
+            queue = queue.stream().filter(t -> t.getSecond().diff(finalNode) == minDif).collect(Collectors.toCollection(ArrayDeque::new));
             for (int i = 0; i < diffs.size(); i++) {
                 if (minDif == diffs.get(i)) {
                     queue.add(lowerLevel.get(i));

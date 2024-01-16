@@ -8,7 +8,7 @@ public class User {
     private int age;
     private long created;
 
-    User(String name, int age, long created) {
+    private User(String name, int age, long created) {
         this.name = name;
         this.age = age;
         this.created = created;
@@ -24,7 +24,7 @@ public class User {
         private int age;
         private long created;
 
-        UserBuilder() {
+        private UserBuilder() {
         }
 
         public UserBuilder created(long created) {
