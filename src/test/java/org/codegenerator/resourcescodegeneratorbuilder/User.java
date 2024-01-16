@@ -3,6 +3,8 @@ package org.codegenerator.resourcescodegeneratorbuilder;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 public class User {
     private String name;
     private int age;
@@ -50,5 +52,18 @@ public class User {
         public String toString() {
             return "User.BuilderExampleBuilder(created = " + this.created + ", name = " + this.name + ", age = " + this.age + ")";
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return age == user.age && created == user.created && Objects.equals(name, user.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, age, created);
     }
 }
