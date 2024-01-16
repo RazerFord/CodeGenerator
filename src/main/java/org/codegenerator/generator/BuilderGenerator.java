@@ -5,6 +5,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.POJOCodeGenerators;
 import org.codegenerator.generator.codegenerators.POJOGraphPathSearch;
+import org.codegenerator.generator.graphbuilder.StateGraph;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,6 +15,7 @@ import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.codegenerator.Utils.throwIf;
@@ -23,10 +25,12 @@ public class BuilderGenerator<T> implements Generator<T> {
     private static final String CLASS_NAME = "GeneratedClass";
     private static final String METHOD_NAME = "generate";
     private final Class<?> clazz;
-    private final Class<?> builderClazz;
-    private final Supplier<?> builderConstructor;
     private final POJOCodeGenerators pojoCodeGenerators;
     private final POJOGraphPathSearch pojoGraphPathSearch;
+    private final StateGraph stateGraph;
+    private final Class<?> builderClazz;
+    private final Supplier<?> builderConstructor;
+    private final Method buildMethod;
 
     @Contract(pure = true)
     public BuilderGenerator(@NotNull Class<?> clazz) {
@@ -37,28 +41,29 @@ public class BuilderGenerator<T> implements Generator<T> {
         this.clazz = clazz;
         pojoCodeGenerators = new POJOCodeGenerators(clazz, packageName, className, methodName);
         pojoGraphPathSearch = new POJOGraphPathSearch(clazz);
+        stateGraph = new StateGraph(clazz);
         builderClazz = findBuilder();
         builderConstructor = findBuilderConstructor();
+        buildMethod = findBuildMethod(builderClazz);
         checkInvariants();
     }
 
 
     @Override
     public void generate(@NotNull T finalObject, Path path) {
-
+        stateGraph.findPath(finalObject);
     }
 
     private Class<?> findBuilder() {
         return Arrays.stream(ArrayUtils.addAll(clazz.getClasses()))
-                .filter(cls -> findBuilder(cls) != null)
+                .filter(cls -> findBuildMethod(cls) != null)
                 .findFirst().orElse(null);
     }
 
-    private Class<?> findBuilder(@NotNull Class<?> cls) {
+    private Method findBuildMethod(@NotNull Class<?> cls) {
         return Arrays.stream(cls.getMethods())
-                .map(Method::getReturnType)
-                .filter(returnType -> ClassUtils.isAssignable(clazz, returnType))
-                .findFirst().orElse(null);
+                .filter(m -> ClassUtils.isAssignable(clazz, m.getReturnType()))
+                .findFirst().orElseThrow(() -> new RuntimeException(BUILDER_NOT_FOUND));
     }
 
     private @NotNull Supplier<?> findBuilderConstructor() {
