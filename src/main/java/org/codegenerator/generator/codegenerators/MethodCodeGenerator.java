@@ -10,32 +10,20 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
 import java.util.List;
 
-public class POJOMethodCodeGenerator {
+public class MethodCodeGenerator {
     private final Converter converter = createPipeline();
     private final Class<?> clazz;
 
-    public POJOMethodCodeGenerator(@NotNull Class<?> clazz) {
+    public MethodCodeGenerator(@NotNull Class<?> clazz) {
         this.clazz = clazz;
     }
 
     public void generate(@NotNull List<Buildable> methodCalls,
                          TypeSpec.@NotNull Builder typeBuilder,
                          MethodSpec.@NotNull Builder methodBuilder) {
-        generateCodeBlocks(methodCalls, typeBuilder, methodBuilder);
-    }
-
-    private void generateCodeBlocks(@NotNull List<Buildable> methodCalls,
-                                    TypeSpec.Builder typeBuilder,
-                                    MethodSpec.@NotNull Builder methodBuilder) {
         for (Buildable methodCall : methodCalls) {
-            generateCodeBlock(methodCall, typeBuilder, methodBuilder);
+            methodCall.build(converter, typeBuilder, methodBuilder);
         }
-    }
-
-    private void generateCodeBlock(@NotNull Buildable methodCall,
-                                   TypeSpec.@NotNull Builder typeBuilder,
-                                   MethodSpec.@NotNull Builder methodBuilder) {
-        methodCall.build(converter, typeBuilder, methodBuilder);
     }
 
     @Contract(" -> new")

@@ -12,30 +12,26 @@ import java.util.List;
 
 import static javax.lang.model.element.Modifier.*;
 
-public class POJOCodeGenerators {
+public class ClassCodeGenerators {
     private final Class<?> clazz;
     private final String packageName;
     private final String className;
     private final String methodName;
-    private final POJOMethodCodeGenerator pojoMethodCodeGenerator;
+    private final MethodCodeGenerator methodCodeGenerator;
 
-    public POJOCodeGenerators(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
+    public ClassCodeGenerators(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
         this.clazz = clazz;
         this.packageName = packageName;
         this.className = className;
         this.methodName = methodName;
-        pojoMethodCodeGenerator = new POJOMethodCodeGenerator(clazz);
+        methodCodeGenerator = new MethodCodeGenerator(clazz);
     }
 
     public void generate(@NotNull List<Buildable> methodCalls, Path path) {
-        generateCode(methodCalls, path);
-    }
-
-    private void generateCode(@NotNull List<Buildable> methodCalls, Path path) {
         TypeSpec.Builder generatedClassBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(clazz);
 
-        pojoMethodCodeGenerator.generate(methodCalls, generatedClassBuilder, methodBuilder);
+        methodCodeGenerator.generate(methodCalls, generatedClassBuilder, methodBuilder);
 
         MethodSpec method = methodBuilder.build();
         TypeSpec type = generatedClassBuilder.addMethod(method).build();

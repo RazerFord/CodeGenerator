@@ -3,7 +3,7 @@ package org.codegenerator.generator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
-import org.codegenerator.generator.codegenerators.POJOCodeGenerators;
+import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.POJOGraphPathSearch;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graphbuilder.EdgeMethod;
@@ -23,7 +23,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     private static final String CLASS_NAME = "GeneratedClass";
     private static final String METHOD_NAME = "generate";
     private final Class<?> clazz;
-    private final POJOCodeGenerators pojoCodeGenerators;
+    private final ClassCodeGenerators classCodeGenerators;
     private final POJOGraphPathSearch pojoGraphPathSearch;
     private final Class<?> builderClazz;
     private final Supplier<?> constructorBuilder;
@@ -38,7 +38,7 @@ public class BuilderGenerator<T> implements Generator<T> {
 
     public BuilderGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
         this.clazz = clazz;
-        pojoCodeGenerators = new POJOCodeGenerators(clazz, packageName, className, methodName);
+        classCodeGenerators = new ClassCodeGenerators(clazz, packageName, className, methodName);
         pojoGraphPathSearch = new POJOGraphPathSearch(clazz);
         builderClazz = findBuilder();
         constructorExecutableBuilder = findBuilderConstructor();
@@ -73,7 +73,7 @@ public class BuilderGenerator<T> implements Generator<T> {
             }
         }
         buildableList.add(new Return(String.format("object.%s()", builderMethodBuild.getName())));
-        pojoCodeGenerators.generate(buildableList, path);
+        classCodeGenerators.generate(buildableList, path);
         // todo: Select builder constructor!!!
         // todo: User.builder()
         // todo: or
