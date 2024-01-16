@@ -57,13 +57,13 @@ public class BuilderGenerator<T> implements Generator<T> {
     private Class<?> findBuilder() {
         return Arrays.stream(ArrayUtils.addAll(clazz.getClasses()))
                 .filter(cls -> findBuildMethod(cls) != null)
-                .findFirst().orElse(null);
+                .findFirst().orElseThrow(() -> new RuntimeException(BUILDER_NOT_FOUND));
     }
 
     private Method findBuildMethod(@NotNull Class<?> cls) {
         return Arrays.stream(cls.getMethods())
                 .filter(m -> ClassUtils.isAssignable(clazz, m.getReturnType()))
-                .findFirst().orElseThrow(() -> new RuntimeException(BUILDER_NOT_FOUND));
+                .findFirst().orElse(null);
     }
 
     private @NotNull Supplier<?> findBuilderConstructor() {
