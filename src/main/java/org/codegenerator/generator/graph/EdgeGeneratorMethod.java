@@ -13,16 +13,16 @@ public class EdgeGeneratorMethod {
         this.clazz = clazz;
     }
 
-    public List<Edge> generate(Map<Class<?>, List<Object>> typeToValues) {
+    public List<EdgeMethod> generate(Map<Class<?>, List<Object>> typeToValues) {
         typeToValues = new HashMap<>(typeToValues);
-        List<Edge> edges = new ArrayList<>();
+        List<EdgeMethod> edgeMethods = new ArrayList<>();
         for (Method method : clazz.getDeclaredMethods()) {
             List<Node> roots = EdgeGeneratorUtils.buildGraph(method, typeToValues);
             List<List<Node>> listArguments = EdgeGeneratorUtils.generatePossibleArguments(roots);
             for (List<Node> arguments : listArguments) {
-                edges.add(new Edge(method, EdgeGeneratorUtils.extractArgs(arguments, typeToValues)));
+                edgeMethods.add(new EdgeMethod(method, EdgeGeneratorUtils.extractArgs(arguments, typeToValues)));
             }
         }
-        return edges;
+        return edgeMethods;
     }
 }

@@ -45,8 +45,8 @@ public class StateGraph {
 
         List<Buildable> results = new ArrayList<>(Collections.singleton(constructorCall));
 
-        List<Edge> edges = edgeGeneratorMethod.generate(values);
-        findPath(beginObject, finalObject, edges, copyObject, results);
+        List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(values);
+        findPath(beginObject, finalObject, edgeMethods, copyObject, results);
 
         results.add(new Return(VARIABLE_NAME));
         return results;
@@ -71,25 +71,25 @@ public class StateGraph {
         return new Pair<>(currObject, edgeConstructor);
     }
 
-    private void findPath(Object beginObject, Object finalObject, List<Edge> edges, Function<Object, Object> copyObject, @NotNull List<Buildable> results) {
+    private void findPath(Object beginObject, Object finalObject, List<EdgeMethod> edgeMethods, Function<Object, Object> copyObject, @NotNull List<Buildable> results) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
-        triple = bfs(triple, finalNode, edges, copyObject);
+        triple = bfs(triple, finalNode, edgeMethods, copyObject);
         if (triple == null) {
             return;
         }
 
         PathNode finalPathNode = triple.getThird();
-        Deque<Edge> path = new ArrayDeque<>();
-        while (finalPathNode != null && finalPathNode.edge != null) {
-            path.addFirst(finalPathNode.edge);
+        Deque<EdgeMethod> path = new ArrayDeque<>();
+        while (finalPathNode != null && finalPathNode.edgeMethod != null) {
+            path.addFirst(finalPathNode.edgeMethod);
             finalPathNode = finalPathNode.prevPathNode;
         }
 
         path.forEach(e -> results.add(new MethodCall(e.getMethod(), e.getArgs())));
     }
 
-    private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode, List<Edge> edges, Function<Object, Object> copyObject) {
+    private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode, List<EdgeMethod> edgeMethods, Function<Object, Object> copyObject) {
         Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
 
@@ -109,14 +109,14 @@ public class StateGraph {
 
             List<Triple<Object, Node, PathNode>> lowerLevel = new ArrayList<>();
 
-            for (Edge edge : edges) {
+            for (EdgeMethod edgeMethod : edgeMethods) {
                 Object instance = copyObject.apply(triple.getFirst());
                 try {
-                    edge.invoke(instance);
+                    edgeMethod.invoke(instance);
                 } catch (Throwable ignored) {
                     continue;
                 }
-                lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instance), new PathNode(prevPath, edge)));
+                lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instance), new PathNode(prevPath, edgeMethod)));
             }
             List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
             int minDif = diffs.stream().min(Integer::compareTo).orElse(Integer.MAX_VALUE);
@@ -170,20 +170,20 @@ public class StateGraph {
 
     private static final class PathNode {
         private final PathNode prevPathNode;
-        private final Edge edge;
+        private final EdgeMethod edgeMethod;
         private final int depth;
 
         @Contract(pure = true)
-        private PathNode(@NotNull PathNode prevPathNode, Edge edge) {
+        private PathNode(@NotNull PathNode prevPathNode, EdgeMethod edgeMethod) {
             this.prevPathNode = prevPathNode;
-            this.edge = edge;
+            this.edgeMethod = edgeMethod;
             depth = prevPathNode.depth + 1;
         }
 
         @Contract(pure = true)
-        private PathNode(PathNode prevPathNode, Edge edge, int depth) {
+        private PathNode(PathNode prevPathNode, EdgeMethod edgeMethod, int depth) {
             this.prevPathNode = prevPathNode;
-            this.edge = edge;
+            this.edgeMethod = edgeMethod;
             this.depth = depth;
         }
     }

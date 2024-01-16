@@ -4,11 +4,11 @@ import java.lang.reflect.Method;
 
 import static org.codegenerator.Utils.callSupplierWrapper;
 
-public final class Edge {
+public final class EdgeMethod {
     private final Method method;
     private final Object[] args;
 
-    public Edge(Method method, Object... args) {
+    public EdgeMethod(Method method, Object... args) {
         this.method = method;
         this.args = args;
     }
