@@ -22,10 +22,12 @@ public class FinalChainingMethod implements Buildable {
                       MethodSpec.@NotNull Builder methodBuilder) {
         CodeBlock codeBlock = CodeBlock.builder()
                 .add(INDENT)
+                .add(DOT)
                 .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
                 .build();
         methodBuilder.addStatement(codeBlock);
     }
 
     private static final String INDENT = String.join("", Collections.nCopies(8, " "));
+    private static final String DOT = ".";
 }

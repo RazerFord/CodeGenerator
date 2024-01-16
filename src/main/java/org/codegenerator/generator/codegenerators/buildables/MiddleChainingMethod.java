@@ -22,10 +22,14 @@ public class MiddleChainingMethod implements Buildable {
                       MethodSpec.@NotNull Builder methodBuilder) {
         CodeBlock codeBlock = CodeBlock.builder()
                 .add(INDENT)
+                .add(DOT)
                 .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
+                .add(NEW_LINE)
                 .build();
         methodBuilder.addCode(codeBlock);
     }
 
     private static final String INDENT = String.join("", Collections.nCopies(8, " "));
+    private static final String DOT = ".";
+    private static final String NEW_LINE = "\n";
 }

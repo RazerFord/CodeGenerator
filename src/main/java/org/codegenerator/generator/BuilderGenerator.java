@@ -28,7 +28,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     private final Class<?> builderClazz;
     private final Supplier<?> constructorBuilder;
     private final Executable constructorExecutableBuilder;
-    private final Method methodBuildBuilder;
+    private final Method builderMethodBuild;
     private final StateGraph stateGraph;
 
     @Contract(pure = true)
@@ -43,8 +43,8 @@ public class BuilderGenerator<T> implements Generator<T> {
         builderClazz = findBuilder();
         constructorExecutableBuilder = findBuilderConstructor();
         constructorBuilder = createConstructorSupplier(constructorExecutableBuilder);
-        methodBuildBuilder = findBuildMethod(builderClazz);
-        stateGraph = new StateGraph(builderClazz, constructorBuilder, methodBuildBuilder);
+        builderMethodBuild = findBuildMethod(builderClazz);
+        stateGraph = new StateGraph(builderClazz, constructorBuilder, builderMethodBuild);
         checkInvariants();
     }
 
@@ -56,14 +56,14 @@ public class BuilderGenerator<T> implements Generator<T> {
             Deque<EdgeMethod> methodCalls = stateGraph.findPath(finalObject);
             edgeMethods = new ArrayList<>(methodCalls);
         }
-        Buildable constructor = new BeginChainingMethod(clazz, "object", constructorExecutableBuilder);
+        Buildable constructor = new BeginChainingMethod(builderClazz, "object", constructorExecutableBuilder);
 
         List<Buildable> buildableList = new ArrayList<>(Collections.singleton(constructor));
         boolean end = false;
 
         for (int i = 0; i < edgeMethods.size(); i++) {
             EdgeMethod edgeMethod = edgeMethods.get(i);
-            if (!end && edgeMethod.getMethod().getReturnType() == builderClazz && i == edgeMethods.size() - 1) {
+            if (!end && edgeMethod.getMethod().getReturnType() == builderClazz && i < edgeMethods.size() - 1) {
                 buildableList.add(new MiddleChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
             } else if (!end) {
                 buildableList.add(new FinalChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
@@ -72,7 +72,7 @@ public class BuilderGenerator<T> implements Generator<T> {
                 buildableList.add(new MethodCall(edgeMethod.getMethod(), edgeMethod.getArgs()));
             }
         }
-        buildableList.add(new Return("object"));
+        buildableList.add(new Return(String.format("object.%s()", builderMethodBuild.getName())));
         pojoCodeGenerators.generate(buildableList, path);
         // todo: Select builder constructor!!!
         // todo: User.builder()
