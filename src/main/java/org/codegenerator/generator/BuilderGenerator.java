@@ -4,7 +4,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
-import org.codegenerator.generator.codegenerators.POJOGraphPathSearch;
+import org.codegenerator.generator.codegenerators.POJOSearchSequenceMethod;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.BuilderStateGraph;
 import org.codegenerator.generator.graph.EdgeMethod;
@@ -24,7 +24,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     private static final String METHOD_NAME = "generate";
     private final Class<?> clazz;
     private final ClassCodeGenerators classCodeGenerators;
-    private final POJOGraphPathSearch pojoGraphPathSearch;
+    private final POJOSearchSequenceMethod pojoSearchSequenceMethod;
     private final Class<?> builderClazz;
     private final Supplier<?> constructorBuilder;
     private final Executable constructorExecutableBuilder;
@@ -39,7 +39,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     public BuilderGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
         this.clazz = clazz;
         classCodeGenerators = new ClassCodeGenerators(clazz, packageName, className, methodName);
-        pojoGraphPathSearch = new POJOGraphPathSearch(clazz);
+        pojoSearchSequenceMethod = new POJOSearchSequenceMethod(clazz);
         builderClazz = findBuilder();
         constructorExecutableBuilder = findBuilderConstructor();
         constructorBuilder = createConstructorSupplier(constructorExecutableBuilder);

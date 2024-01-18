@@ -1,7 +1,7 @@
 package org.codegenerator.generator;
 
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
-import org.codegenerator.generator.codegenerators.POJOGraphPathSearch;
+import org.codegenerator.generator.codegenerators.POJOSearchSequenceMethod;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcDatabase;
@@ -28,7 +28,7 @@ public class POJOGenerator<T> implements Generator<T> {
     private final Class<?> clazz;
     private final String dbname = POJOGenerator.class.getCanonicalName();
     private final ClassCodeGenerators classCodeGenerators;
-    private final POJOGraphPathSearch pojoGraphPathSearch;
+    private final POJOSearchSequenceMethod pojoSearchSequenceMethod;
 
     @Contract(pure = true)
     public POJOGenerator(@NotNull Class<?> clazz) {
@@ -38,11 +38,11 @@ public class POJOGenerator<T> implements Generator<T> {
     public POJOGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
         this.clazz = clazz;
         classCodeGenerators = new ClassCodeGenerators(clazz, packageName, className, methodName);
-        pojoGraphPathSearch = new POJOGraphPathSearch(clazz);
+        pojoSearchSequenceMethod = new POJOSearchSequenceMethod(clazz);
     }
 
     public void generate(@NotNull T finalObject, Path path) {
-        List<Buildable> pathNode = pojoGraphPathSearch.find(finalObject);
+        List<Buildable> pathNode = pojoSearchSequenceMethod.find(finalObject);
         classCodeGenerators.generate(pathNode, path);
     }
 

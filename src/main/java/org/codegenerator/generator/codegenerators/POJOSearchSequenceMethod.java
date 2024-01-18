@@ -12,11 +12,11 @@ import java.util.List;
 
 import static org.codegenerator.Utils.throwIf;
 
-public class POJOGraphPathSearch {
+public class POJOSearchSequenceMethod {
     private final Class<?> clazz;
     private final PojoStateGraph pojoStateGraph;
 
-    public POJOGraphPathSearch(@NotNull Class<?> clazz) {
+    public POJOSearchSequenceMethod(@NotNull Class<?> clazz) {
         this.clazz = clazz;
         pojoStateGraph = new PojoStateGraph(clazz);
         checkInvariants();
