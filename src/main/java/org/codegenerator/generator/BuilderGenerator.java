@@ -6,14 +6,17 @@ import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.POJOSearchSequenceMethod;
 import org.codegenerator.generator.codegenerators.buildables.*;
+import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.BuilderStateGraph;
 import org.codegenerator.generator.graph.EdgeMethod;
+import org.codegenerator.generator.graph.PojoStateGraph;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.*;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.codegenerator.Utils.throwIf;
@@ -26,10 +29,11 @@ public class BuilderGenerator<T> implements Generator<T> {
     private final ClassCodeGenerators classCodeGenerators;
     private final POJOSearchSequenceMethod pojoSearchSequenceMethod;
     private final Class<?> builderClazz;
-    private final Supplier<?> constructorBuilder;
+    private final Supplier<Object> constructorBuilder;
     private final Executable constructorExecutableBuilder;
     private final Method builderMethodBuild;
     private final BuilderStateGraph builderStateGraph;
+    private final PojoStateGraph pojoStateGraph;
 
     @Contract(pure = true)
     public BuilderGenerator(@NotNull Class<?> clazz) {
@@ -45,6 +49,7 @@ public class BuilderGenerator<T> implements Generator<T> {
         constructorBuilder = createConstructorSupplier(constructorExecutableBuilder);
         builderMethodBuild = findBuildMethod(builderClazz);
         builderStateGraph = new BuilderStateGraph(builderClazz, constructorBuilder, builderMethodBuild);
+        pojoStateGraph = new PojoStateGraph(builderClazz);
         checkInvariants();
     }
 
@@ -53,7 +58,13 @@ public class BuilderGenerator<T> implements Generator<T> {
     public void generate(@NotNull T finalObject, Path path) {
         ArrayList<EdgeMethod> edgeMethods;
         {
-            Deque<EdgeMethod> methodCalls = builderStateGraph.findPath(finalObject);
+            Function<Object, Object> termination = o -> Utils.callSupplierWrapper(() -> builderMethodBuild.invoke(o));
+            AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+            @NotNull List<EdgeMethod> methodCalls = pojoStateGraph.findPath(
+                    assignableTypePropertyGrouper,
+                    constructorBuilder,
+                    termination
+            );
             edgeMethods = new ArrayList<>(methodCalls);
         }
         Buildable constructor = new BeginChainingMethod(builderClazz, "object", constructorExecutableBuilder);
@@ -105,7 +116,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Contract(pure = true)
-    private @NotNull Supplier<?> createConstructorSupplier(Executable executable) {
+    private @NotNull Supplier<Object> createConstructorSupplier(Executable executable) {
         if (executable instanceof Method) {
             return () -> Utils.callSupplierWrapper(() -> ((Method) executable).invoke(null));
         }

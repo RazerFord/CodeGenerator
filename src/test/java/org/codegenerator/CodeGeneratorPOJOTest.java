@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import java.nio.file.Paths;
-import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -196,7 +195,7 @@ public class CodeGeneratorPOJOTest {
 
     @Test
     public void setterBoxingUnboxingWithDefaultArgsTest() {
-        final String generatedClassName = "GeneratedOneFieldBoxingUnboxingClass";
+        final String generatedClassName = "GeneratedOneFieldBoxingUnboxingDefaultClass";
         POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         OneFieldBoxingUnboxing oneFieldBoxingUnboxing = new OneFieldBoxingUnboxing();

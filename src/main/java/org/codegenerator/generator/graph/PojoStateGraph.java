@@ -1,6 +1,7 @@
 package org.codegenerator.generator.graph;
 
 import kotlin.Triple;
+import org.codegenerator.Utils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
 import org.jetbrains.annotations.Contract;
@@ -27,33 +28,37 @@ public class PojoStateGraph {
 
     public @NotNull List<EdgeMethod> findPath(
             @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
-            @NotNull Supplier<?> constructor,
-            @NotNull Function<?, ?> termination
+            @NotNull Supplier<Object> constructor,
+            @NotNull Function<Object, Object> termination
     ) {
         Object beginObject = constructor.get();
         Function<Object, Object> copyObject = copyObject(constructor);
+        Object finalObject = assignableTypePropertyGrouper.getObject();
+        Map<Class<?>, List<Object>> typeToValues = assignableTypePropertyGrouper.get();
 
-        return findPath(beginObject, assignableTypePropertyGrouper, copyObject);
+        return findPath(beginObject, finalObject, typeToValues, copyObject, termination);
     }
 
     public @NotNull List<EdgeMethod> findPath(
             @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
-            @NotNull Supplier<?> constructor
+            @NotNull Supplier<Object> constructor
     ) {
         return findPath(assignableTypePropertyGrouper, constructor, Function.identity());
     }
 
-    private @NotNull List<EdgeMethod> findPath(
-            Object beginObject,
-            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
-            Function<Object, Object> copyObject
+    public @NotNull List<EdgeMethod> findPath(
+            @NotNull Object beginObject,
+            @NotNull Object finalObject,
+            @NotNull Map<Class<?>, List<Object>> typeToValues,
+            @NotNull Function<Object, Object> copyObject,
+            @NotNull Function<Object, Object> termination
     ) {
-        List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(assignableTypePropertyGrouper.get());
-        Object finalObject = assignableTypePropertyGrouper.getObject();
+        List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(typeToValues);
 
         Node finalNode = ClassFieldExtractor.extract(finalObject);
-        Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
-        triple = bfs(triple, finalNode, edgeMethods, copyObject);
+        Object beginObjectBuilt = termination.apply(beginObject);
+        Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObjectBuilt), new PathNode(null, null, 0));
+        triple = bfs(triple, finalNode, edgeMethods, copyObject, termination);
         if (triple == null) {
             return Collections.emptyList();
         }
@@ -70,10 +75,11 @@ public class PojoStateGraph {
 
 
     private @Nullable Triple<Object, Node, PathNode> bfs(
-            Triple<Object, Node, PathNode> triple,
-            Node finalNode,
-            List<EdgeMethod> edgeMethods,
-            Function<Object, Object> copyObject
+            @NotNull Triple<Object, Node, PathNode> triple,
+            @NotNull Node finalNode,
+            @NotNull List<EdgeMethod> edgeMethods,
+            @NotNull Function<Object, Object> copyObject,
+            @NotNull Function<Object, Object> termination
     ) {
         Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
@@ -101,7 +107,8 @@ public class PojoStateGraph {
                 } catch (Throwable ignored) {
                     continue;
                 }
-                lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instance), new PathNode(prevPath, edgeMethod)));
+                Object instanceBuilt = Utils.callSupplierWrapper(() -> termination.apply(instance));
+                lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instanceBuilt), new PathNode(prevPath, edgeMethod)));
             }
             List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
             int minDif = diffs.stream().min(Integer::compareTo).orElse(Integer.MAX_VALUE);
