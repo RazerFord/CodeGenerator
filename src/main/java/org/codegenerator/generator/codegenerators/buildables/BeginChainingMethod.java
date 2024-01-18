@@ -33,9 +33,11 @@ public class BeginChainingMethod implements Buildable {
         if (executable instanceof Method) {
             Method method = (Method) executable;
             Class<?> declaringClass = method.getDeclaringClass();
-            codeBlock = CodeBlock.builder().add("$T $L = $T.$L()", clazz, variableName, declaringClass, method.getName()).build();
+            codeBlock = CodeBlock.builder()
+                    .add("$T $L = $T.$L()\n", clazz, variableName, declaringClass, method.getName())
+                    .build();
         }
-        methodBuilder.addStatement(Objects.requireNonNull(codeBlock, ERROR_CONSTRUCT_CODE_BLOCK));
+        methodBuilder.addCode(Objects.requireNonNull(codeBlock, ERROR_CONSTRUCT_CODE_BLOCK));
     }
 
     private static final String ERROR_CONSTRUCT_CODE_BLOCK = "The code block was not built";

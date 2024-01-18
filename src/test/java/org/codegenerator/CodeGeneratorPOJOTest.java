@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Timeout;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CodeGeneratorPOJOTest {
     private static final String OUTPUT_DIRECTORY = "./";
@@ -16,6 +15,7 @@ public class CodeGeneratorPOJOTest {
     private static final String METHOD_NAME = "generate";
     private static final String CLASS_PATH_PREFIX = "./generatedclass/";
     private static final String CLASS_NAME_PREFIX = "generatedclass.";
+    private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
 
     @Test
     public void setterPointTest() {
@@ -390,20 +390,7 @@ public class CodeGeneratorPOJOTest {
         assertEquals(classWithManyFieldsComplex, other);
     }
 
-    @SuppressWarnings("unchecked")
     public <R> R createObject(String generatedClassName) {
-        try {
-            String absolutePathToClass = Paths.get(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, generatedClassName + ".java").toAbsolutePath().normalize().toString();
-            String className = CLASS_NAME_PREFIX + generatedClassName;
-
-            GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler();
-            assertTrue(generatedCodeCompiler.compile(OUTPUT_DIRECTORY, absolutePathToClass));
-
-            Class<?> clazz = generatedCodeCompiler.loadClass(OUTPUT_DIRECTORY, className);
-            Object o = clazz.getConstructors()[0].newInstance();
-            return (R) clazz.getMethod(METHOD_NAME).invoke(o);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
-        }
+        return generatedCodeCompiler.createObject(generatedClassName);
     }
 }

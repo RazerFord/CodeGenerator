@@ -13,11 +13,42 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class GeneratedCodeCompiler {
     private final JavaCompiler javaCompiler;
+    private final String outputDirectory;
+    private final String classPathPrefix;
+    private final String classNamePrefix;
+    private final String methodName;
 
-    public GeneratedCodeCompiler() {
+    public GeneratedCodeCompiler(
+            String outputDirectory,
+            String classPathPrefix,
+            String classNamePrefix,
+            String methodName
+    ) {
         javaCompiler = ToolProvider.getSystemJavaCompiler();
+        this.outputDirectory = outputDirectory;
+        this.classPathPrefix = classPathPrefix;
+        this.classNamePrefix = classNamePrefix;
+        this.methodName = methodName;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <R> R createObject(String generatedClassName) {
+        try {
+            String absolutePathToClass = Paths.get(outputDirectory, classPathPrefix, generatedClassName + ".java").toAbsolutePath().normalize().toString();
+            String className = classNamePrefix + generatedClassName;
+
+            assertTrue(compile(outputDirectory, absolutePathToClass));
+
+            Class<?> clazz = loadClass(outputDirectory, className);
+            Object o = clazz.getConstructors()[0].newInstance();
+            return (R) clazz.getMethod(methodName).invoke(o);
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 
     public boolean compile(String classPath, String absolutePathToClass) throws IOException {
