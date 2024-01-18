@@ -2,6 +2,7 @@ package org.codegenerator;
 
 import org.codegenerator.generator.BuilderGenerator;
 import org.codegenerator.resourcescodegeneratorbuilder.User;
+import org.codegenerator.resourcescodegeneratorbuilder.UserBuilderWithConstructor;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
@@ -31,6 +32,24 @@ public class CodeGeneratorBuilderTest {
         builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
 
         User that = createObject(generatedClassName);
+        assertEquals(user, that);
+    }
+
+    @Test
+    public void userBuilderWithConstructorTest() {
+        final String generatedClassName = "GeneratedUserBuilderWithConstructorClass";
+
+        BuilderGenerator<UserBuilderWithConstructor> builderGenerator = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        UserBuilderWithConstructor user = new UserBuilderWithConstructor.UserBuilder()
+                .created(42)
+                .name("John Doe")
+                .age(17)
+                .build();
+
+        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+
+        UserBuilderWithConstructor that = createObject(generatedClassName);
         assertEquals(user, that);
     }
 

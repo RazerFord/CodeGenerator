@@ -28,17 +28,22 @@ public class BeginChainingMethod implements Buildable {
                       MethodSpec.@NotNull Builder methodBuilder) {
         CodeBlock codeBlock = null;
         if (executable instanceof Constructor<?>) {
-            codeBlock = CodeBlock.builder().add("$T $L = new $T()", clazz, variableName, clazz).build();
+            codeBlock = CodeBlock.builder()
+                    .add("$T $L = new $T()", clazz, variableName, clazz)
+                    .add(NEW_LINE)
+                    .build();
         }
         if (executable instanceof Method) {
             Method method = (Method) executable;
             Class<?> declaringClass = method.getDeclaringClass();
             codeBlock = CodeBlock.builder()
-                    .add("$T $L = $T.$L()\n", clazz, variableName, declaringClass, method.getName())
+                    .add("$T $L = $T.$L()", clazz, variableName, declaringClass, method.getName())
+                    .add(NEW_LINE)
                     .build();
         }
         methodBuilder.addCode(Objects.requireNonNull(codeBlock, ERROR_CONSTRUCT_CODE_BLOCK));
     }
 
     private static final String ERROR_CONSTRUCT_CODE_BLOCK = "The code block was not built";
+    private static final String NEW_LINE = "\n";
 }
