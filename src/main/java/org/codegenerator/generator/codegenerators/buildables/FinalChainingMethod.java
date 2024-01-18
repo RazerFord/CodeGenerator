@@ -13,7 +13,7 @@ public class FinalChainingMethod implements Buildable {
     private final Method method;
     private final MethodCallCreator methodCallCreator;
 
-    public FinalChainingMethod(Method method, Object[] args) {
+    public FinalChainingMethod(Method method, Object... args) {
         this.method = method;
         methodCallCreator = new MethodCallCreator(args);
     }

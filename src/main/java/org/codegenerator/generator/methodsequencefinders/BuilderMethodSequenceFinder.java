@@ -27,6 +27,7 @@ public class BuilderMethodSequenceFinder {
     private final Executable constructorExecutableBuilder;
     private final Method builderMethodBuild;
     private final StateGraph stateGraph;
+
     public BuilderMethodSequenceFinder(@NotNull Class<?> clazz) {
         this.clazz = clazz;
         builderClazz = findBuilder();
@@ -38,29 +39,52 @@ public class BuilderMethodSequenceFinder {
     }
 
     public List<Buildable> find(@NotNull Object finalObject) {
-        ArrayList<EdgeMethod> edgeMethods;
-        {
-            Function<Object, Object> termination = o -> Utils.callSupplierWrapper(() -> builderMethodBuild.invoke(o));
-            AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-            @NotNull List<EdgeMethod> methodCalls = stateGraph.findPath(
-                    assignableTypePropertyGrouper,
-                    constructorBuilder,
-                    termination
-            );
-            edgeMethods = new ArrayList<>(methodCalls);
+        Function<Object, Object> termination = createTerminationFunction(builderMethodBuild);
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+        List<EdgeMethod> edgeMethods = stateGraph.findPath(assignableTypePropertyGrouper, constructorBuilder, termination);
+
+
+        List<Buildable> buildableList = new ArrayList<>();
+
+        if (edgeMethods.isEmpty()) {
+            buildableList.add(new ReturnBeginChainingMethod(builderClazz, constructorExecutableBuilder));
+            buildableList.add(new FinalChainingMethod(builderMethodBuild));
+            return buildableList;
         }
-        Buildable constructor = new BeginChainingMethod(builderClazz, VARIABLE_NAME, constructorExecutableBuilder);
 
-        List<Buildable> buildableList = new ArrayList<>(Collections.singleton(constructor));
-        boolean end = false;
+        int lastBeginChain = -1;
 
-        for (int i = 0; i < edgeMethods.size(); i++) {
+        if (edgeMethods.get(0).getMethod().getReturnType() == builderClazz) {
+            buildableList.add(new BeginChainingMethod(builderClazz, VARIABLE_NAME, constructorExecutableBuilder));
+            for (int i = 0; i < edgeMethods.size(); i++) {
+                EdgeMethod edgeMethod = edgeMethods.get(i);
+                if (edgeMethod.getMethod().getReturnType() == builderClazz) {
+                    buildableList.add(new MiddleChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
+                } else {
+                    lastBeginChain = i - 1;
+                    break;
+                }
+            }
+            if (lastBeginChain == -1) {
+                buildableList.set(0, new ReturnBeginChainingMethod(builderClazz, constructorExecutableBuilder));
+                buildableList.add(new FinalChainingMethod(builderMethodBuild));
+                return buildableList;
+            } else {
+                EdgeMethod edgeMethod = edgeMethods.get(lastBeginChain);
+                buildableList.set(lastBeginChain, new FinalChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
+            }
+        } else {
+            buildableList.add(new BuilderCreationMethod(builderClazz, VARIABLE_NAME, constructorExecutableBuilder));
+        }
+        boolean beginChain = true;
+        for (int i = lastBeginChain + 1; i < edgeMethods.size(); i++) {
             EdgeMethod edgeMethod = edgeMethods.get(i);
-            if (!end && edgeMethod.getMethod().getReturnType() == builderClazz && i < edgeMethods.size() - 1) {
+            if (beginChain && edgeMethod.getMethod().getReturnType() == builderClazz) {
                 buildableList.add(new MiddleChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
-            } else if (!end) {
+                beginChain = false;
+            } else if (!beginChain) {
                 buildableList.add(new FinalChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
-                end = true;
+                beginChain = true;
             } else {
                 buildableList.add(new MethodCall(edgeMethod.getMethod(), edgeMethod.getArgs()));
             }
@@ -92,6 +116,14 @@ public class BuilderMethodSequenceFinder {
                 .orElseThrow(() -> new RuntimeException(BUILDER_CONSTRUCTOR_FOUND));
     }
 
+    private Method findBuilderConstructor(@NotNull Class<?> clazz) {
+        return Arrays.stream(clazz.getMethods())
+                .filter(method -> Modifier.isStatic(method.getModifiers()))
+                .filter(method -> Modifier.isPublic(method.getModifiers()))
+                .filter(method -> ClassUtils.isAssignable(builderClazz, method.getReturnType()))
+                .findFirst().orElse(null);
+    }
+
     @Contract(pure = true)
     private @NotNull Supplier<Object> createConstructorSupplier(Executable executable) {
         if (executable instanceof Method) {
@@ -103,12 +135,9 @@ public class BuilderMethodSequenceFinder {
         throw new IllegalArgumentException();
     }
 
-    private Method findBuilderConstructor(@NotNull Class<?> clazz) {
-        return Arrays.stream(clazz.getMethods())
-                .filter(method -> Modifier.isStatic(method.getModifiers()))
-                .filter(method -> Modifier.isPublic(method.getModifiers()))
-                .filter(method -> ClassUtils.isAssignable(builderClazz, method.getReturnType()))
-                .findFirst().orElse(null);
+    @Contract(pure = true)
+    private @NotNull Function<Object, Object> createTerminationFunction(Method method) {
+        return o -> Utils.callSupplierWrapper(() -> method.invoke(o));
     }
 
     private void checkInvariants() {

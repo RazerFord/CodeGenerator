@@ -3,6 +3,7 @@ package org.codegenerator;
 import org.codegenerator.generator.BuilderGenerator;
 import org.codegenerator.resourcescodegeneratorbuilder.User;
 import org.codegenerator.resourcescodegeneratorbuilder.UserBuilderWithConstructor;
+import org.codegenerator.resourcescodegeneratorbuilder.UserWithDefect;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
@@ -36,6 +37,20 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
+    public void userBuilderDefaultTest() {
+        final String generatedClassName = "GeneratedUserDefaultClass";
+
+        BuilderGenerator<User> builderGenerator = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        User user = User.builder().build();
+
+        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+
+        User that = createObject(generatedClassName);
+        assertEquals(user, that);
+    }
+
+    @Test
     public void userBuilderWithConstructorTest() {
         final String generatedClassName = "GeneratedUserBuilderWithConstructorClass";
 
@@ -50,6 +65,38 @@ public class CodeGeneratorBuilderTest {
         builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserBuilderWithConstructor that = createObject(generatedClassName);
+        assertEquals(user, that);
+    }
+
+    @Test
+    public void userBuilderWithConstructorDefaultTest() {
+        final String generatedClassName = "GeneratedUserBuilderWithConstructorDefaultClass";
+
+        BuilderGenerator<UserBuilderWithConstructor> builderGenerator = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        UserBuilderWithConstructor user = new UserBuilderWithConstructor.UserBuilder().build();
+
+        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+
+        UserBuilderWithConstructor that = createObject(generatedClassName);
+        assertEquals(user, that);
+    }
+
+    @Test
+    public void userUserWithDefectTest() {
+        final String generatedClassName = "GeneratedUserWithDefectClass";
+
+        BuilderGenerator<UserWithDefect> builderGenerator = new BuilderGenerator<>(UserWithDefect.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        UserWithDefect.UserBuilder userBuilder = UserWithDefect.builder()
+                .name("John Doe");
+        userBuilder.age(17);
+        userBuilder.created(42);
+        UserWithDefect user = userBuilder.build();
+
+        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+
+        UserWithDefect that = createObject(generatedClassName);
         assertEquals(user, that);
     }
 

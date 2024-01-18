@@ -13,7 +13,7 @@ public class MiddleChainingMethod implements Buildable {
     private final Method method;
     private final MethodCallCreator methodCallCreator;
 
-    public MiddleChainingMethod(Method method, Object[] args) {
+    public MiddleChainingMethod(Method method, Object... args) {
         this.method = method;
         methodCallCreator = new MethodCallCreator(args);
     }
