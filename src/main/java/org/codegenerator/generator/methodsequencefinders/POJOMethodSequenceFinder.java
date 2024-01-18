@@ -1,4 +1,4 @@
-package org.codegenerator.generator.codegenerators;
+package org.codegenerator.generator.methodsequencefinders;
 
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.codegenerators.buildables.ConstructorCall;
@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.throwIf;
 
-public class POJOSearchSequenceMethod {
+public class POJOMethodSequenceFinder {
     private final Class<?> clazz;
     private final StateGraph stateGraph;
     private final PojoConstructorStateGraph pojoConstructorStateGraph;
 
-    public POJOSearchSequenceMethod(@NotNull Class<?> clazz) {
+    public POJOMethodSequenceFinder(@NotNull Class<?> clazz) {
         this.clazz = clazz;
         stateGraph = new StateGraph(clazz);
         pojoConstructorStateGraph = new PojoConstructorStateGraph(clazz);
