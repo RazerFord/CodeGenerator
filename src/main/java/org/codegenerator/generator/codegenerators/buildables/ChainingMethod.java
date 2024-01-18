@@ -9,10 +9,12 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Method;
 
 public final class ChainingMethod implements Buildable {
+    private final Method method;
     private final MethodCallCreator methodCallCreator;
 
     public ChainingMethod(Method method, Object... args) {
-        methodCallCreator = new MethodCallCreator(method, args);
+        this.method = method;
+        methodCallCreator = new MethodCallCreator(args);
     }
 
     @Override
@@ -21,6 +23,7 @@ public final class ChainingMethod implements Buildable {
                       MethodSpec.@NotNull Builder methodBuilder) {
         CodeBlock codeBlock = CodeBlock.builder()
                 .add(PREFIX_METHOD_CALL)
+                .add(method.getName())
                 .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
                 .build();
         methodBuilder.addCode(codeBlock).build();

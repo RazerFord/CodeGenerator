@@ -1,9 +1,6 @@
 package org.codegenerator.generator.methodsequencefinders;
 
-import org.codegenerator.generator.codegenerators.buildables.Buildable;
-import org.codegenerator.generator.codegenerators.buildables.ConstructorCall;
-import org.codegenerator.generator.codegenerators.buildables.MethodCall;
-import org.codegenerator.generator.codegenerators.buildables.Return;
+import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,9 +29,13 @@ public class POJOMethodSequenceFinder {
         List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
         return new ArrayList<Buildable>() {
             {
-                add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));
-                addAll(methodList.stream().map(e -> new MethodCall(e.getMethod(), e.getArgs())).collect(Collectors.toList()));
-                add(new Return(VARIABLE_NAME));
+                if (methodList.isEmpty()) {
+                    add(new ReturnConstructorCall(clazz, edgeConstructor.getArgs()));
+                } else {
+                    add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));
+                    addAll(methodList.stream().map(e -> new MethodCall(e.getMethod(), e.getArgs())).collect(Collectors.toList()));
+                    add(new Return(VARIABLE_NAME));
+                }
             }
         };
     }

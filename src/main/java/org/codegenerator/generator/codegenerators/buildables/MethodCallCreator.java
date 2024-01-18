@@ -6,16 +6,13 @@ import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.converters.Converter;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
 class MethodCallCreator {
-    private final Method method;
     private final Object[] args;
 
-    public MethodCallCreator(Method method, Object... args) {
-        this.method = method;
+    public MethodCallCreator(Object... args) {
         this.args = args;
     }
 
@@ -23,8 +20,7 @@ class MethodCallCreator {
                       TypeSpec.@NotNull Builder typeBuilder,
                       MethodSpec.@NotNull Builder methodBuilder) {
         Map<String, String> argumentMap = new HashMap<>();
-        argumentMap.put(PREFIX_METHOD, method.getName());
-        StringBuilder format = new StringBuilder("$func:L(");
+        StringBuilder format = new StringBuilder("(");
         Object[] methodArgs = args;
         for (int i = 0; i < methodArgs.length; i++) {
             String argFormat = String.format("%s%s", PREFIX_ARG, i);
@@ -39,6 +35,5 @@ class MethodCallCreator {
         return CodeBlock.builder().addNamed(format.toString(), argumentMap).build();
     }
 
-    private static final String PREFIX_METHOD = "func";
     private static final String PREFIX_ARG = "arg";
 }

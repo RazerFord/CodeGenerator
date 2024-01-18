@@ -6,14 +6,12 @@ import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.converters.Converter;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Method;
-
-public final class MethodCall implements Buildable {
-    private final Method method;
+public final class ReturnConstructorCall implements Buildable {
     private final MethodCallCreator methodCallCreator;
+    private final Class<?> clazz;
 
-    public MethodCall(Method method, Object... args) {
-        this.method = method;
+    public ReturnConstructorCall(Class<?> clazz, Object... args) {
+        this.clazz = clazz;
         methodCallCreator = new MethodCallCreator(args);
     }
 
@@ -21,13 +19,8 @@ public final class MethodCall implements Buildable {
     public void build(@NotNull Converter converter,
                       TypeSpec.@NotNull Builder typeBuilder,
                       MethodSpec.@NotNull Builder methodBuilder) {
-        CodeBlock codeBlock = CodeBlock.builder()
-                .add(PREFIX_METHOD_CALL)
-                .add(method.getName())
-                .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
-                .build();
-        methodBuilder.addStatement(codeBlock).build();
+        CodeBlock codeBlock = methodCallCreator.build(converter, typeBuilder, methodBuilder);
+        codeBlock = CodeBlock.builder().add("return new $T$L", clazz, codeBlock).build();
+        methodBuilder.addStatement(codeBlock);
     }
-
-    private static final String PREFIX_METHOD_CALL = "object.";
 }
