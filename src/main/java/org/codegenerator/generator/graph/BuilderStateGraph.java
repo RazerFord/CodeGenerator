@@ -1,7 +1,6 @@
 package org.codegenerator.generator.graph;
 
 import kotlin.Triple;
-import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
@@ -33,7 +32,8 @@ public class BuilderStateGraph {
     }
 
     public @NotNull Deque<EdgeMethod> findPath(Object finalObject) {
-        @NotNull Map<Class<?>, List<Object>> values = prepareTypeToValues(finalObject);
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+        @NotNull Map<Class<?>, List<Object>> values = assignableTypePropertyGrouper.get();
 
         Object beginObject = builderConstructor.get();
         Function<Object, Object> copyObject = copyObject(builderConstructor);
@@ -106,33 +106,6 @@ public class BuilderStateGraph {
             }
         }
         return null;
-    }
-
-    private @NotNull Map<Class<?>, List<Object>> prepareTypeToValues(@NotNull Object o) {
-        Class<?> clazz = o.getClass();
-        Map<Class<?>, List<Object>> typeToValues = new HashMap<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
-            field.setAccessible(true);
-            list.add(callSupplierWrapper(() -> field.get(o)));
-        }
-        mergeValuesOfSameTypes(typeToValues);
-        return typeToValues;
-    }
-
-    @Contract(pure = true)
-    private void mergeValuesOfSameTypes(@NotNull Map<Class<?>, List<Object>> typeToValues) {
-        for (Class<?> type : typeToValues.keySet()) {
-            for (Map.Entry<Class<?>, List<Object>> entry : typeToValues.entrySet()) {
-                if (ClassUtils.isAssignable(entry.getKey(), type)) {
-                    List<Object> list = typeToValues.get(type);
-                    Set<Object> set = new HashSet<>(list);
-                    set.addAll(entry.getValue());
-                    list.clear();
-                    list.addAll(set);
-                }
-            }
-        }
     }
 
     @Contract(pure = true)
