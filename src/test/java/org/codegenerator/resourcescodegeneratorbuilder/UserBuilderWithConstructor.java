@@ -42,7 +42,7 @@ public class UserBuilderWithConstructor {
 
         @Override
         public String toString() {
-            return "User.BuilderExampleBuilder(created = " + this.created + ", name = " + this.name + ", age = " + this.age + ")";
+            return "UserBuilder(created = " + this.created + ", name = " + this.name + ", age = " + this.age + ")";
         }
     }
 
