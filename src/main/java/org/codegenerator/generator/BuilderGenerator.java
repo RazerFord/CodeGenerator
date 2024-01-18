@@ -6,8 +6,8 @@ import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.POJOGraphPathSearch;
 import org.codegenerator.generator.codegenerators.buildables.*;
-import org.codegenerator.generator.graphbuilder.EdgeMethod;
-import org.codegenerator.generator.graphbuilder.StateGraph;
+import org.codegenerator.generator.graph.BuilderStateGraph;
+import org.codegenerator.generator.graph.EdgeMethod;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,7 +29,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     private final Supplier<?> constructorBuilder;
     private final Executable constructorExecutableBuilder;
     private final Method builderMethodBuild;
-    private final StateGraph stateGraph;
+    private final BuilderStateGraph builderStateGraph;
 
     @Contract(pure = true)
     public BuilderGenerator(@NotNull Class<?> clazz) {
@@ -44,7 +44,7 @@ public class BuilderGenerator<T> implements Generator<T> {
         constructorExecutableBuilder = findBuilderConstructor();
         constructorBuilder = createConstructorSupplier(constructorExecutableBuilder);
         builderMethodBuild = findBuildMethod(builderClazz);
-        stateGraph = new StateGraph(builderClazz, constructorBuilder, builderMethodBuild);
+        builderStateGraph = new BuilderStateGraph(builderClazz, constructorBuilder, builderMethodBuild);
         checkInvariants();
     }
 
@@ -53,7 +53,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     public void generate(@NotNull T finalObject, Path path) {
         ArrayList<EdgeMethod> edgeMethods;
         {
-            Deque<EdgeMethod> methodCalls = stateGraph.findPath(finalObject);
+            Deque<EdgeMethod> methodCalls = builderStateGraph.findPath(finalObject);
             edgeMethods = new ArrayList<>(methodCalls);
         }
         Buildable constructor = new BeginChainingMethod(builderClazz, "object", constructorExecutableBuilder);

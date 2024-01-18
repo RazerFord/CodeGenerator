@@ -21,13 +21,13 @@ import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.*;
 
-public class StateGraph {
+public class PojoStateGraph {
     private static final String VARIABLE_NAME = "object";
     private final Class<?> clazz;
     private final EdgeGeneratorMethod edgeGeneratorMethod;
     private final EdgeGeneratorConstructor edgeGeneratorConstructor;
 
-    public StateGraph(Class<?> clazz) {
+    public PojoStateGraph(Class<?> clazz) {
         this.clazz = clazz;
         edgeGeneratorMethod = new EdgeGeneratorMethod(clazz);
         edgeGeneratorConstructor = new EdgeGeneratorConstructor(clazz);

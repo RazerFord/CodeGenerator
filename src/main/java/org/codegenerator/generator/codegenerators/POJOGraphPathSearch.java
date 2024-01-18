@@ -1,7 +1,7 @@
 package org.codegenerator.generator.codegenerators;
 
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
-import org.codegenerator.generator.graph.StateGraph;
+import org.codegenerator.generator.graph.PojoStateGraph;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
@@ -14,16 +14,16 @@ import static org.codegenerator.Utils.throwIf;
 
 public class POJOGraphPathSearch {
     private final Class<?> clazz;
-    private final StateGraph stateGraph;
+    private final PojoStateGraph pojoStateGraph;
 
     public POJOGraphPathSearch(@NotNull Class<?> clazz) {
         this.clazz = clazz;
-        stateGraph = new StateGraph(clazz);
+        pojoStateGraph = new PojoStateGraph(clazz);
         checkInvariants();
     }
 
     public List<Buildable> find(@NotNull Object finalObject) {
-        return stateGraph.findPath(finalObject);
+        return pojoStateGraph.findPath(finalObject);
     }
 
     private void checkInvariants() {
