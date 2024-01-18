@@ -16,12 +16,12 @@ import static org.codegenerator.Utils.throwIf;
 
 public class POJOSearchSequenceMethod {
     private final Class<?> clazz;
-    private final PojoStateGraph pojoStateGraph;
+    private final StateGraph stateGraph;
     private final PojoConstructorStateGraph pojoConstructorStateGraph;
 
     public POJOSearchSequenceMethod(@NotNull Class<?> clazz) {
         this.clazz = clazz;
-        pojoStateGraph = new PojoStateGraph(clazz);
+        stateGraph = new StateGraph(clazz);
         pojoConstructorStateGraph = new PojoConstructorStateGraph(clazz);
         checkInvariants();
     }
@@ -29,7 +29,7 @@ public class POJOSearchSequenceMethod {
     public List<Buildable> find(@NotNull Object finalObject) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
         EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methodList = pojoStateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
+        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
         return new ArrayList<Buildable>() {
             {
                 add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));

@@ -4,12 +4,10 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
-import org.codegenerator.generator.codegenerators.POJOSearchSequenceMethod;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
-import org.codegenerator.generator.graph.BuilderStateGraph;
 import org.codegenerator.generator.graph.EdgeMethod;
-import org.codegenerator.generator.graph.PojoStateGraph;
+import org.codegenerator.generator.graph.StateGraph;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,13 +25,11 @@ public class BuilderGenerator<T> implements Generator<T> {
     private static final String METHOD_NAME = "generate";
     private final Class<?> clazz;
     private final ClassCodeGenerators classCodeGenerators;
-    private final POJOSearchSequenceMethod pojoSearchSequenceMethod;
     private final Class<?> builderClazz;
     private final Supplier<Object> constructorBuilder;
     private final Executable constructorExecutableBuilder;
     private final Method builderMethodBuild;
-    private final BuilderStateGraph builderStateGraph;
-    private final PojoStateGraph pojoStateGraph;
+    private final StateGraph stateGraph;
 
     @Contract(pure = true)
     public BuilderGenerator(@NotNull Class<?> clazz) {
@@ -43,13 +39,11 @@ public class BuilderGenerator<T> implements Generator<T> {
     public BuilderGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
         this.clazz = clazz;
         classCodeGenerators = new ClassCodeGenerators(clazz, packageName, className, methodName);
-        pojoSearchSequenceMethod = new POJOSearchSequenceMethod(clazz);
         builderClazz = findBuilder();
         constructorExecutableBuilder = findBuilderConstructor();
         constructorBuilder = createConstructorSupplier(constructorExecutableBuilder);
         builderMethodBuild = findBuildMethod(builderClazz);
-        builderStateGraph = new BuilderStateGraph(builderClazz, constructorBuilder, builderMethodBuild);
-        pojoStateGraph = new PojoStateGraph(builderClazz);
+        stateGraph = new StateGraph(builderClazz);
         checkInvariants();
     }
 
@@ -60,14 +54,14 @@ public class BuilderGenerator<T> implements Generator<T> {
         {
             Function<Object, Object> termination = o -> Utils.callSupplierWrapper(() -> builderMethodBuild.invoke(o));
             AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-            @NotNull List<EdgeMethod> methodCalls = pojoStateGraph.findPath(
+            @NotNull List<EdgeMethod> methodCalls = stateGraph.findPath(
                     assignableTypePropertyGrouper,
                     constructorBuilder,
                     termination
             );
             edgeMethods = new ArrayList<>(methodCalls);
         }
-        Buildable constructor = new BeginChainingMethod(builderClazz, "object", constructorExecutableBuilder);
+        Buildable constructor = new BeginChainingMethod(builderClazz, VARIABLE_NAME, constructorExecutableBuilder);
 
         List<Buildable> buildableList = new ArrayList<>(Collections.singleton(constructor));
         boolean end = false;
@@ -83,13 +77,8 @@ public class BuilderGenerator<T> implements Generator<T> {
                 buildableList.add(new MethodCall(edgeMethod.getMethod(), edgeMethod.getArgs()));
             }
         }
-        buildableList.add(new Return(String.format("object.%s()", builderMethodBuild.getName())));
+        buildableList.add(new Return(String.format("%s.%s()", VARIABLE_NAME, builderMethodBuild.getName())));
         classCodeGenerators.generate(buildableList, path);
-        // todo: Select builder constructor!!!
-        // todo: User.builder()
-        // todo: or
-        // todo: new UserBuilder()
-        // todo: generate begin chain method
     }
 
     private Class<?> findBuilder() {
@@ -139,6 +128,7 @@ public class BuilderGenerator<T> implements Generator<T> {
         throwIf(builderClazz == null, new RuntimeException(BUILDER_NOT_FOUND));
     }
 
+    private static final String VARIABLE_NAME = "object";
     private static final String CONSTRUCTOR_FOUND = "The constructor has been found. You can use a POJO generator";
     private static final String BUILDER_CONSTRUCTOR_FOUND = "Builder constructor not found";
     private static final String BUILDER_NOT_FOUND = "Builder not found";

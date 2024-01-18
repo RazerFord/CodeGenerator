@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -18,37 +17,50 @@ import java.util.stream.Collectors;
 import static org.codegenerator.Utils.callRunnableWrapper;
 import static org.codegenerator.Utils.callSupplierWrapper;
 
-public class BuilderStateGraph {
-    private final Class<?> builderClazz;
-    private final Supplier<?> builderConstructor;
-    private final Method builderMethodBuild;
+public class StateGraph {
+    private final Class<?> clazz;
     private final EdgeGeneratorMethod edgeGeneratorMethod;
 
-    public BuilderStateGraph(Class<?> builderClazz, Supplier<?> builderConstructor, Method builderMethodBuild) {
-        this.builderClazz = builderClazz;
-        this.builderConstructor = builderConstructor;
-        this.builderMethodBuild = builderMethodBuild;
-        edgeGeneratorMethod = new EdgeGeneratorMethod(builderClazz);
+    public StateGraph(Class<?> clazz) {
+        this.clazz = clazz;
+        edgeGeneratorMethod = new EdgeGeneratorMethod(clazz);
     }
 
-    public @NotNull Deque<EdgeMethod> findPath(Object finalObject) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        @NotNull Map<Class<?>, List<Object>> values = assignableTypePropertyGrouper.get();
+    public @NotNull List<EdgeMethod> findPath(
+            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
+            @NotNull Supplier<Object> constructor,
+            @NotNull Function<Object, Object> termination
+    ) {
+        Object beginObject = constructor.get();
+        Function<Object, Object> copyObject = copyObject(constructor);
+        Object finalObject = assignableTypePropertyGrouper.getObject();
+        Map<Class<?>, List<Object>> typeToValues = assignableTypePropertyGrouper.get();
 
-        Object beginObject = builderConstructor.get();
-        Function<Object, Object> copyObject = copyObject(builderConstructor);
-
-        List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(values);
-        return findPath(beginObject, finalObject, edgeMethods, copyObject);
+        return findPath(beginObject, finalObject, typeToValues, copyObject, termination);
     }
 
-    private @NotNull Deque<EdgeMethod> findPath(Object beginObject, Object finalObject, List<EdgeMethod> edgeMethods, Function<Object, Object> copyObject) {
+    public @NotNull List<EdgeMethod> findPath(
+            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
+            @NotNull Supplier<Object> constructor
+    ) {
+        return findPath(assignableTypePropertyGrouper, constructor, Function.identity());
+    }
+
+    public @NotNull List<EdgeMethod> findPath(
+            @NotNull Object beginObject,
+            @NotNull Object finalObject,
+            @NotNull Map<Class<?>, List<Object>> typeToValues,
+            @NotNull Function<Object, Object> copyObject,
+            @NotNull Function<Object, Object> termination
+    ) {
+        List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(typeToValues);
+
         Node finalNode = ClassFieldExtractor.extract(finalObject);
-        Object beginObjectBuilt = Utils.callSupplierWrapper(() -> builderMethodBuild.invoke(beginObject));
+        Object beginObjectBuilt = termination.apply(beginObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObjectBuilt), new PathNode(null, null, 0));
-        triple = bfs(triple, finalNode, edgeMethods, copyObject);
+        triple = bfs(triple, finalNode, edgeMethods, copyObject, termination);
         if (triple == null) {
-            return new ArrayDeque<>();
+            return Collections.emptyList();
         }
 
         PathNode finalPathNode = triple.getThird();
@@ -58,14 +70,16 @@ public class BuilderStateGraph {
             finalPathNode = finalPathNode.prevPathNode;
         }
 
-        return path;
+        return new ArrayList<>(path);
     }
 
+
     private @Nullable Triple<Object, Node, PathNode> bfs(
-            Triple<Object, Node, PathNode> triple,
-            Node finalNode,
-            List<EdgeMethod> edgeMethods,
-            Function<Object, Object> copyObject
+            @NotNull Triple<Object, Node, PathNode> triple,
+            @NotNull Node finalNode,
+            @NotNull List<EdgeMethod> edgeMethods,
+            @NotNull Function<Object, Object> copyObject,
+            @NotNull Function<Object, Object> termination
     ) {
         Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
@@ -93,7 +107,7 @@ public class BuilderStateGraph {
                 } catch (Throwable ignored) {
                     continue;
                 }
-                Object instanceBuilt = Utils.callSupplierWrapper(() -> builderMethodBuild.invoke(instance));
+                Object instanceBuilt = Utils.callSupplierWrapper(() -> termination.apply(instance));
                 lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instanceBuilt), new PathNode(prevPath, edgeMethod)));
             }
             List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
@@ -112,7 +126,7 @@ public class BuilderStateGraph {
     private @NotNull Function<Object, Object> copyObject(@NotNull Supplier<?> supplier) {
         return (o) -> {
             Object instance = callSupplierWrapper(supplier::get);
-            for (Field field : builderClazz.getDeclaredFields()) {
+            for (Field field : clazz.getDeclaredFields()) {
                 field.setAccessible(true);
                 callRunnableWrapper(() -> field.set(instance, callSupplierWrapper(() -> field.get(o))));
             }
@@ -139,5 +153,4 @@ public class BuilderStateGraph {
             this.depth = depth;
         }
     }
-
 }
