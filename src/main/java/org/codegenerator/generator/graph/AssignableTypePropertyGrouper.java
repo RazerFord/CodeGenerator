@@ -11,10 +11,12 @@ import java.util.function.Supplier;
 import static org.codegenerator.Utils.callSupplierWrapper;
 
 public class AssignableTypePropertyGrouper implements Supplier<Map<Class<?>, List<Object>>> {
+    private final Object o;
     private Supplier<Map<Class<?>, List<Object>>> supplier;
 
     @Contract(pure = true)
     public AssignableTypePropertyGrouper(@NotNull Object o) {
+        this.o = o;
         supplier = () -> {
             Map<Class<?>, List<Object>> result = prepareTypeToValues(o);
             supplier = () -> result;
@@ -24,6 +26,10 @@ public class AssignableTypePropertyGrouper implements Supplier<Map<Class<?>, Lis
 
     public Map<Class<?>, List<Object>> get() {
         return supplier.get();
+    }
+
+    public Object getObject() {
+        return o;
     }
 
     private @NotNull Map<Class<?>, List<Object>> prepareTypeToValues(@NotNull Object o) {

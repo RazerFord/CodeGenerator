@@ -1,13 +1,8 @@
 package org.codegenerator.generator.graph;
 
-import kotlin.Pair;
 import kotlin.Triple;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
-import org.codegenerator.generator.codegenerators.buildables.Buildable;
-import org.codegenerator.generator.codegenerators.buildables.ConstructorCall;
-import org.codegenerator.generator.codegenerators.buildables.MethodCall;
-import org.codegenerator.generator.codegenerators.buildables.Return;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,65 +13,49 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static org.codegenerator.Utils.*;
+import static org.codegenerator.Utils.callRunnableWrapper;
+import static org.codegenerator.Utils.callSupplierWrapper;
 
 public class PojoStateGraph {
-    private static final String VARIABLE_NAME = "object";
     private final Class<?> clazz;
     private final EdgeGeneratorMethod edgeGeneratorMethod;
-    private final EdgeGeneratorConstructor edgeGeneratorConstructor;
 
     public PojoStateGraph(Class<?> clazz) {
         this.clazz = clazz;
         edgeGeneratorMethod = new EdgeGeneratorMethod(clazz);
-        edgeGeneratorConstructor = new EdgeGeneratorConstructor(clazz);
     }
 
-    public @NotNull List<Buildable> findPath(Object finalObject) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        @NotNull Map<Class<?>, List<Object>> values = assignableTypePropertyGrouper.get();
-        List<EdgeConstructor> edgeConstructors = edgeGeneratorConstructor.generate(values);
+    public @NotNull List<EdgeMethod> findPath(
+            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
+            @NotNull Supplier<?> constructor,
+            @NotNull Function<?, ?> termination
+    ) {
+        Object beginObject = constructor.get();
+        Function<Object, Object> copyObject = copyObject(constructor);
 
-        Pair<Object, EdgeConstructor> objectEdgeConstructorPair = buildBeginObjectAndMethodCall(finalObject, edgeConstructors);
-        Object beginObject = objectEdgeConstructorPair.getFirst();
-        EdgeConstructor edgeConstructor = objectEdgeConstructorPair.getSecond();
-        Function<Object, Object> copyObject = copyObject(edgeConstructor::invoke);
-        ConstructorCall constructorCall = new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs());
-
-        List<Buildable> results = new ArrayList<>(Collections.singleton(constructorCall));
-
-        List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(values);
-        findPath(beginObject, finalObject, edgeMethods, copyObject, results);
-
-        results.add(new Return(VARIABLE_NAME));
-        return results;
+        return findPath(beginObject, assignableTypePropertyGrouper, copyObject);
     }
 
-    private @NotNull Pair<Object, EdgeConstructor> buildBeginObjectAndMethodCall(Object finalObject, @NotNull List<EdgeConstructor> edges) {
-        Node finalNode = ClassFieldExtractor.extract(finalObject);
-        throwIf(edges.isEmpty(), new RuntimeException(NO_CONSTRUCTORS));
-        EdgeConstructor edgeConstructor = edges.get(0);
-        Object currObject = edgeConstructor.invoke();
-        Node currNode = ClassFieldExtractor.extract(currObject);
-        for (int i = 1, length = edges.size(); i < length; i++) {
-            EdgeConstructor tempEdgeConstructor = edges.get(i);
-            Object tempObject = tempEdgeConstructor.invoke();
-            Node tempNode = ClassFieldExtractor.extract(tempObject);
-            if (finalNode.diff(currNode) > finalNode.diff(tempNode)) {
-                edgeConstructor = tempEdgeConstructor;
-                currObject = tempObject;
-                currNode = tempNode;
-            }
-        }
-        return new Pair<>(currObject, edgeConstructor);
+    public @NotNull List<EdgeMethod> findPath(
+            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
+            @NotNull Supplier<?> constructor
+    ) {
+        return findPath(assignableTypePropertyGrouper, constructor, Function.identity());
     }
 
-    private void findPath(Object beginObject, Object finalObject, List<EdgeMethod> edgeMethods, Function<Object, Object> copyObject, @NotNull List<Buildable> results) {
+    private @NotNull List<EdgeMethod> findPath(
+            Object beginObject,
+            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
+            Function<Object, Object> copyObject
+    ) {
+        List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(assignableTypePropertyGrouper.get());
+        Object finalObject = assignableTypePropertyGrouper.getObject();
+
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObject), new PathNode(null, null, 0));
         triple = bfs(triple, finalNode, edgeMethods, copyObject);
         if (triple == null) {
-            return;
+            return Collections.emptyList();
         }
 
         PathNode finalPathNode = triple.getThird();
@@ -86,10 +65,16 @@ public class PojoStateGraph {
             finalPathNode = finalPathNode.prevPathNode;
         }
 
-        path.forEach(e -> results.add(new MethodCall(e.getMethod(), e.getArgs())));
+        return new ArrayList<>(path);
     }
 
-    private @Nullable Triple<Object, Node, PathNode> bfs(Triple<Object, Node, PathNode> triple, Node finalNode, List<EdgeMethod> edgeMethods, Function<Object, Object> copyObject) {
+
+    private @Nullable Triple<Object, Node, PathNode> bfs(
+            Triple<Object, Node, PathNode> triple,
+            Node finalNode,
+            List<EdgeMethod> edgeMethods,
+            Function<Object, Object> copyObject
+    ) {
         Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
 
@@ -131,7 +116,7 @@ public class PojoStateGraph {
     }
 
     @Contract(pure = true)
-    private @NotNull Function<Object, Object> copyObject(@NotNull Supplier<Object> supplier) {
+    private @NotNull Function<Object, Object> copyObject(@NotNull Supplier<?> supplier) {
         return (o) -> {
             Object instance = callSupplierWrapper(supplier::get);
             for (Field field : clazz.getDeclaredFields()) {
@@ -161,6 +146,4 @@ public class PojoStateGraph {
             this.depth = depth;
         }
     }
-
-    private static final String NO_CONSTRUCTORS = "No constructors found";
 }
