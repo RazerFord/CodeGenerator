@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 public class InnerNode implements Node {
@@ -36,6 +37,10 @@ public class InnerNode implements Node {
         while (clz != null) {
             Field[] fields1 = clz.getDeclaredFields();
             for (Field field : fields1) {
+                int modifiers = field.getModifiers();
+                if (Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers)) {
+                    continue;
+                }
                 field.setAccessible(true);
                 Object o = field.get(value);
                 Node node = Node.createNode(field, o, visited);
