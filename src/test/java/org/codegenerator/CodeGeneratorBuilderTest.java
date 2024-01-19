@@ -104,7 +104,7 @@ public class CodeGeneratorBuilderTest {
 
         BuilderGenerator<SendingMoneyTransfer> builderGenerator = new BuilderGenerator<>(SendingMoneyTransfer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
-        User userFrom = User.builder().created(102).age(18).name("John Doe").build();
+        User userFrom = User.builder().created(102).age(18).name("John Doe").coins(new long[]{10, 20, 30}).build();
         User userTo = User.builder().created(56).age(42).name("Gordon Freeman").build();
         SendingMoneyTransfer sendingMoneyTransfer = SendingMoneyTransfer.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
 

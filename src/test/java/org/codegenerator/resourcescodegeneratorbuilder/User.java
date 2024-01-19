@@ -3,17 +3,20 @@ package org.codegenerator.resourcescodegeneratorbuilder;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class User {
     private String name;
     private int age;
     private long created;
+    private long[] coins;
 
-    private User(String name, int age, long created) {
+    private User(String name, int age, long created, long[] coins) {
         this.name = name;
         this.age = age;
         this.created = created;
+        this.coins = coins;
     }
 
     @Contract(value = " -> new", pure = true)
@@ -25,6 +28,7 @@ public class User {
         private String name;
         private int age;
         private long created;
+        private long[] coins;
 
         private UserBuilder() {
         }
@@ -44,8 +48,13 @@ public class User {
             return this;
         }
 
+        public UserBuilder coins(long[] coins) {
+            this.coins = coins;
+            return this;
+        }
+
         public User build() {
-            return new User(name, age, created);
+            return new User(name, age, created, coins);
         }
 
         @java.lang.Override
@@ -59,11 +68,11 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return age == user.age && created == user.created && Objects.equals(name, user.name);
+        return age == user.age && created == user.created && Objects.equals(name, user.name) && Arrays.equals(coins, user.coins);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, age, created);
+        return Objects.hash(name, age, created, coins);
     }
 }
