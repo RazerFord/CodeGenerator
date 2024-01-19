@@ -11,11 +11,11 @@ import java.util.Collections;
 
 public class FinalChainingMethod implements Buildable {
     private final Method method;
-    private final MethodCallCreator methodCallCreator;
+    private final CallCreator callCreator;
 
     public FinalChainingMethod(Method method, Object... args) {
         this.method = method;
-        methodCallCreator = new MethodCallCreator(args);
+        callCreator = new CallCreator(args);
     }
 
     @Override
@@ -26,7 +26,7 @@ public class FinalChainingMethod implements Buildable {
                 .add(INDENT)
                 .add(DOT)
                 .add(method.getName())
-                .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
+                .add(callCreator.build(converter, typeBuilder, methodBuilder))
                 .build();
         methodBuilder.addStatement(codeBlock);
     }

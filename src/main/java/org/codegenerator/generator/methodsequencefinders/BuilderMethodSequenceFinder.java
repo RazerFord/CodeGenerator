@@ -47,7 +47,7 @@ public class BuilderMethodSequenceFinder {
         List<Buildable> buildableList = new ArrayList<>();
 
         if (edgeMethods.isEmpty()) {
-            buildableList.add(new ReturnBeginChainingMethod(builderClazz, constructorExecutableBuilder));
+            buildableList.add(new ReturnCreatingChainingMethod(builderClazz, constructorExecutableBuilder));
             buildableList.add(new FinalChainingMethod(builderMethodBuild));
             return buildableList;
         }
@@ -60,7 +60,7 @@ public class BuilderMethodSequenceFinder {
             EdgeMethod edgeMethod = edgeMethods.get(i);
             if (!beginChain) {
                 if (edgeMethod.getMethod().getReturnType() == builderClazz) {
-                    buildableList.add(new ChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
+                    buildableList.add(new InitialChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
                     beginChain = true;
                     lastIndex = i + 1;
                 } else {
@@ -79,10 +79,10 @@ public class BuilderMethodSequenceFinder {
 
         if (lastIndex != -1) {
             EdgeMethod edgeMethod = edgeMethods.get(lastIndex - 1);
-            buildableList.set(lastIndex, new ReturnChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
+            buildableList.set(lastIndex, new ReturnMiddleChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
             buildableList.add(new FinalChainingMethod(builderMethodBuild));
         } else {
-            buildableList.add(new Return(String.format("return %s.%s()", VARIABLE_NAME, builderMethodBuild.getName())));
+            buildableList.add(new ReturnExpression(String.format("return %s.%s()", VARIABLE_NAME, builderMethodBuild.getName())));
         }
 
         return buildableList;

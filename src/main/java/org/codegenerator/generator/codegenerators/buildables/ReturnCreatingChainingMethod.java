@@ -11,11 +11,11 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-public class ReturnBeginChainingMethod implements Buildable {
+public class ReturnCreatingChainingMethod implements Buildable {
     private final Class<?> clazz;
     private final Executable executable;
 
-    public ReturnBeginChainingMethod(Class<?> clazz, Executable executable) {
+    public ReturnCreatingChainingMethod(Class<?> clazz, Executable executable) {
         this.clazz = clazz;
         this.executable = executable;
     }

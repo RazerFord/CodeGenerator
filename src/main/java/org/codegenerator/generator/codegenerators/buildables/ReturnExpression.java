@@ -6,10 +6,10 @@ import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.converters.Converter;
 import org.jetbrains.annotations.NotNull;
 
-public final class Return implements Buildable {
+public final class ReturnExpression implements Buildable {
     private final String variableName;
 
-    public Return(String variableName) {
+    public ReturnExpression(String variableName) {
         this.variableName = variableName;
     }
 

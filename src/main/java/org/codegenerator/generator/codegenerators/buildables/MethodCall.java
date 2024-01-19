@@ -10,11 +10,11 @@ import java.lang.reflect.Method;
 
 public final class MethodCall implements Buildable {
     private final Method method;
-    private final MethodCallCreator methodCallCreator;
+    private final CallCreator callCreator;
 
     public MethodCall(Method method, Object... args) {
         this.method = method;
-        methodCallCreator = new MethodCallCreator(args);
+        callCreator = new CallCreator(args);
     }
 
     @Override
@@ -24,7 +24,7 @@ public final class MethodCall implements Buildable {
         CodeBlock codeBlock = CodeBlock.builder()
                 .add(PREFIX_METHOD_CALL)
                 .add(method.getName())
-                .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
+                .add(callCreator.build(converter, typeBuilder, methodBuilder))
                 .build();
         methodBuilder.addStatement(codeBlock).build();
     }

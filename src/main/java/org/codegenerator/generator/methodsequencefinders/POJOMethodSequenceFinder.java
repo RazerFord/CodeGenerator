@@ -34,7 +34,7 @@ public class POJOMethodSequenceFinder {
                 } else {
                     add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));
                     addAll(methodList.stream().map(e -> new MethodCall(e.getMethod(), e.getArgs())).collect(Collectors.toList()));
-                    add(new Return(VARIABLE_NAME));
+                    add(new ReturnExpression(VARIABLE_NAME));
                 }
             }
         };

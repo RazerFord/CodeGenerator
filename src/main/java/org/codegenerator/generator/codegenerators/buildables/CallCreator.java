@@ -9,10 +9,10 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-class MethodCallCreator {
+public class CallCreator {
     private final Object[] args;
 
-    public MethodCallCreator(Object... args) {
+    public CallCreator(Object... args) {
         this.args = args;
     }
 

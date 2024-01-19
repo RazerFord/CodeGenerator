@@ -8,17 +8,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 
-public class ReturnChainingMethod implements Buildable {
+public class ReturnMiddleChainingMethod implements Buildable {
     private final Method method;
     private final String variableName;
-    private final Object[] args;
-    private final MethodCallCreator methodCallCreator;
+    private final CallCreator callCreator;
 
-    public ReturnChainingMethod(Method method, String variableName, Object... args) {
+    public ReturnMiddleChainingMethod(Method method, String variableName, Object... args) {
         this.method = method;
         this.variableName = variableName;
-        this.args = args;
-        methodCallCreator = new MethodCallCreator(args);
+        callCreator = new CallCreator(args);
     }
 
     @Override
@@ -27,7 +25,7 @@ public class ReturnChainingMethod implements Buildable {
                       MethodSpec.@NotNull Builder methodBuilder) {
         CodeBlock codeBlock = CodeBlock.builder()
                 .add("return $L.$L", variableName, method.getName())
-                .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
+                .add(callCreator.build(converter, typeBuilder, methodBuilder))
                 .add(NEW_LINE)
                 .build();
         methodBuilder.addCode(codeBlock);

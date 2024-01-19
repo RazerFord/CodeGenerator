@@ -8,15 +8,15 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 
-public final class ChainingMethod implements Buildable {
+public final class InitialChainingMethod implements Buildable {
     private final Method method;
     private final String variableName;
-    private final MethodCallCreator methodCallCreator;
+    private final CallCreator callCreator;
 
-    public ChainingMethod(Method method, String variableName, Object... args) {
+    public InitialChainingMethod(Method method, String variableName, Object... args) {
         this.method = method;
         this.variableName = variableName;
-        methodCallCreator = new MethodCallCreator(args);
+        callCreator = new CallCreator(args);
     }
 
     @Override
@@ -27,7 +27,7 @@ public final class ChainingMethod implements Buildable {
                 .add(variableName)
                 .add(DOT)
                 .add(method.getName())
-                .add(methodCallCreator.build(converter, typeBuilder, methodBuilder))
+                .add(callCreator.build(converter, typeBuilder, methodBuilder))
                 .add(NEW_LINE)
                 .build();
         methodBuilder.addCode(codeBlock).build();
