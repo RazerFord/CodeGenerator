@@ -4,18 +4,15 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.converters.*;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.List;
 
 public class MethodCodeGenerator {
-    private final Converter converter = createPipeline();
-    private final Class<?> clazz;
+    private final Converter converter = createPipeline(this);
 
-    public MethodCodeGenerator(@NotNull Class<?> clazz) {
-        this.clazz = clazz;
+    public MethodCodeGenerator() {
     }
 
     public void generate(@NotNull List<Buildable> methodCalls,
@@ -26,16 +23,17 @@ public class MethodCodeGenerator {
         }
     }
 
-    @Contract(" -> new")
-    private static @NotNull Converter createPipeline() {
+    private static @NotNull Converter createPipeline(MethodCodeGenerator methodCodeGenerator) {
         List<Converter> converters = Arrays.asList(
                 new ConverterPrimitiveTypesAndString(),
                 new PrimitiveTypeArrayConverter(),
-                new POJOObjectConverter(METHOD_NAME),
+                new POJOConverter(METHOD_NAME_POJO, methodCodeGenerator),
+                new BuilderConverter(METHOD_NAME_BUILDER, methodCodeGenerator),
                 new FailedConverter()
         );
         return new ConverterPipeline(converters);
     }
 
-    private static final String METHOD_NAME = "createPojo";
+    private static final String METHOD_NAME_POJO = "createPojo";
+    private static final String METHOD_NAME_BUILDER = "createBuilder";
 }

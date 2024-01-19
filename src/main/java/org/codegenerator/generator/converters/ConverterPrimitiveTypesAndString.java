@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import static org.codegenerator.Utils.throwIf;
+
 public class ConverterPrimitiveTypesAndString implements Converter {
     private final Map<Class<?>, Function<Object, String>> converter = new HashMap<>();
 
@@ -40,9 +42,7 @@ public class ConverterPrimitiveTypesAndString implements Converter {
     @Override
     public String convert(@NotNull Object o, TypeSpec.@NotNull Builder ignored0, MethodSpec.@NotNull Builder ignored1) {
         Class<?> clazz = o.getClass();
-        if (!canConvert(o)) {
-            throw new IllegalArgumentException();
-        }
+        throwIf(!canConvert(o), new IllegalArgumentException());
         return converter.getOrDefault(clazz, Object::toString).apply(o);
     }
 }

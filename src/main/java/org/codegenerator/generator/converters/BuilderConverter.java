@@ -2,22 +2,22 @@ package org.codegenerator.generator.converters;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import org.codegenerator.generator.methodsequencefinders.POJOMethodSequenceFinder;
 import org.codegenerator.generator.codegenerators.MethodCodeGenerator;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
+import org.codegenerator.generator.methodsequencefinders.BuilderMethodSequenceFinder;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import javax.lang.model.element.Modifier;
 import java.util.List;
 
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.element.Modifier.STATIC;
-
-public class POJOObjectConverter implements Converter {
+public class BuilderConverter implements Converter {
     private final String methodName;
+    private final MethodCodeGenerator methodCodeGenerator;
 
-    public POJOObjectConverter(String methodName) {
+    public BuilderConverter(String methodName, MethodCodeGenerator methodCodeGenerator) {
         this.methodName = methodName;
+        this.methodCodeGenerator = methodCodeGenerator;
     }
 
     @Override
@@ -28,13 +28,12 @@ public class POJOObjectConverter implements Converter {
     @Override
     public String convert(@NotNull Object o, TypeSpec.@NotNull Builder typeBuilder, MethodSpec.@NotNull Builder methodBuilder) {
         Class<?> clazz = o.getClass();
-        POJOMethodSequenceFinder pojoMethodSequenceFinder = new POJOMethodSequenceFinder(clazz);
-        List<Buildable> pathNode = pojoMethodSequenceFinder.find(o);
-        MethodCodeGenerator methodCodeGenerator = new MethodCodeGenerator(clazz);
+        BuilderMethodSequenceFinder builderMethodSequenceFinder = new BuilderMethodSequenceFinder(clazz);
+        List<Buildable> buildableList = builderMethodSequenceFinder.find(o);
         MethodSpec.Builder methodBuilder1 = MethodSpec.constructorBuilder();
-        methodCodeGenerator.generate(pathNode, typeBuilder, methodBuilder1);
+        methodCodeGenerator.generate(buildableList, typeBuilder, methodBuilder1);
         String newMethodName = methodName + clazz.getSimpleName() + typeBuilder.methodSpecs.size();
-        methodBuilder1.setName(newMethodName).addModifiers(PUBLIC, STATIC).returns(clazz);
+        methodBuilder1.setName(newMethodName).addModifiers(Modifier.PUBLIC, Modifier.STATIC).returns(clazz);
         typeBuilder.addMethod(methodBuilder1.build());
         return buildMethodCall(newMethodName);
     }

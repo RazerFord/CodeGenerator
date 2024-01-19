@@ -1,6 +1,7 @@
 package org.codegenerator;
 
 import org.codegenerator.generator.BuilderGenerator;
+import org.codegenerator.resourcescodegeneratorbuilder.SendingMoneyTransfer;
 import org.codegenerator.resourcescodegeneratorbuilder.User;
 import org.codegenerator.resourcescodegeneratorbuilder.UserBuilderWithConstructor;
 import org.codegenerator.resourcescodegeneratorbuilder.UserWithDefect;
@@ -83,7 +84,7 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
-    public void userUserWithDefectTest() {
+    public void userWithDefectTest() {
         final String generatedClassName = "GeneratedUserWithDefectClass";
 
         BuilderGenerator<UserWithDefect> builderGenerator = new BuilderGenerator<>(UserWithDefect.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
@@ -99,6 +100,28 @@ public class CodeGeneratorBuilderTest {
         UserWithDefect that = createObject(generatedClassName);
         assertEquals(user, that);
     }
+
+    @Test
+    public void fieldsCanBeCreatedUsingBuildersTest() {
+        final String generatedClassName = "GeneratedFieldsCanBeCreatedUsingBuildersClass";
+
+        BuilderGenerator<SendingMoneyTransfer> builderGenerator = new BuilderGenerator<>(SendingMoneyTransfer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        User userFrom = User.builder().created(102).age(18).name("John Doe").build();
+        User userTo = User.builder().created(56).age(42).name("Alex Gordon").build();
+        SendingMoneyTransfer sendingMoneyTransfer = SendingMoneyTransfer.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
+
+        builderGenerator.generate(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
+
+        SendingMoneyTransfer that = createObject(generatedClassName);
+        assertEquals(sendingMoneyTransfer, that);
+    }
+
+    /*
+     * TODO: Add generation for recursion
+     * TODO: Test with protobuf
+     * TODO: Add constraint metrics
+     */
 
     public <R> R createObject(String generatedClassName) {
         return generatedCodeCompiler.createObject(generatedClassName);

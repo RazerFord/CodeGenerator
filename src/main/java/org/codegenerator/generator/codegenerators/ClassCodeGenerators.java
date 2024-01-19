@@ -24,7 +24,7 @@ public class ClassCodeGenerators {
         this.packageName = packageName;
         this.className = className;
         this.methodName = methodName;
-        methodCodeGenerator = new MethodCodeGenerator(clazz);
+        methodCodeGenerator = new MethodCodeGenerator();
     }
 
     public void generate(@NotNull List<Buildable> methodCalls, Path path) {

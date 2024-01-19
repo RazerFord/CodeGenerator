@@ -6,6 +6,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
 
+import static org.codegenerator.Utils.throwIf;
+
 public class PrimitiveTypeArrayConverter implements Converter {
     private final ConverterPrimitiveTypesAndString converterPrimitiveTypesAndString = new ConverterPrimitiveTypesAndString();
 
@@ -18,9 +20,7 @@ public class PrimitiveTypeArrayConverter implements Converter {
     @Override
     public String convert(@NotNull Object o, TypeSpec.@NotNull Builder generatedClassBuilder, MethodSpec.@NotNull Builder methodBuilder) {
         Class<?> clazz = o.getClass();
-        if (!canConvert(o)) {
-            throw new IllegalArgumentException();
-        }
+        throwIf(!canConvert(o), new IllegalArgumentException());
         Class<?> componentType = clazz.getComponentType();
         StringBuilder stringBuilder = new StringBuilder(String.format("new %s[]{", componentType.getSimpleName()));
         int length = Array.getLength(o);
