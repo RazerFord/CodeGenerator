@@ -11,12 +11,12 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-public class BeginChainingMethod implements Buildable {
+public class CreationChainingMethod implements Buildable {
     private final Class<?> clazz;
     private final String variableName;
     private final Executable executable;
 
-    public BeginChainingMethod(Class<?> clazz, String variableName, Executable executable) {
+    public CreationChainingMethod(Class<?> clazz, String variableName, Executable executable) {
         this.clazz = clazz;
         this.variableName = variableName;
         this.executable = executable;

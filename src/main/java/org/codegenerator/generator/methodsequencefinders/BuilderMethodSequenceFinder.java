@@ -52,44 +52,39 @@ public class BuilderMethodSequenceFinder {
             return buildableList;
         }
 
-        int lastBeginChain = -1;
+        buildableList.add(new BuilderCreationMethod(builderClazz, VARIABLE_NAME, constructorExecutableBuilder));
 
-        if (edgeMethods.get(0).getMethod().getReturnType() == builderClazz) {
-            buildableList.add(new BeginChainingMethod(builderClazz, VARIABLE_NAME, constructorExecutableBuilder));
-            for (int i = 0; i < edgeMethods.size(); i++) {
-                EdgeMethod edgeMethod = edgeMethods.get(i);
+        boolean beginChain = false;
+        int lastIndex = 0;
+        for (int i = 0; i < edgeMethods.size(); i++) {
+            EdgeMethod edgeMethod = edgeMethods.get(i);
+            if (!beginChain) {
+                if (edgeMethod.getMethod().getReturnType() == builderClazz) {
+                    buildableList.add(new ChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
+                    beginChain = true;
+                    lastIndex = i + 1;
+                } else {
+                    buildableList.add(new MethodCall(edgeMethod.getMethod(), edgeMethod.getArgs()));
+                }
+            } else {
                 if (edgeMethod.getMethod().getReturnType() == builderClazz) {
                     buildableList.add(new MiddleChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
                 } else {
-                    lastBeginChain = i - 1;
-                    break;
+                    buildableList.add(new FinalChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
+                    beginChain = false;
+                    lastIndex = -1;
                 }
             }
-            if (lastBeginChain == -1) {
-                buildableList.set(0, new ReturnBeginChainingMethod(builderClazz, constructorExecutableBuilder));
-                buildableList.add(new FinalChainingMethod(builderMethodBuild));
-                return buildableList;
-            } else {
-                EdgeMethod edgeMethod = edgeMethods.get(lastBeginChain);
-                buildableList.set(lastBeginChain, new FinalChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
-            }
+        }
+
+        if (lastIndex != -1) {
+            EdgeMethod edgeMethod = edgeMethods.get(lastIndex - 1);
+            buildableList.set(lastIndex, new ReturnChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
+            buildableList.add(new FinalChainingMethod(builderMethodBuild));
         } else {
-            buildableList.add(new BuilderCreationMethod(builderClazz, VARIABLE_NAME, constructorExecutableBuilder));
+            buildableList.add(new Return(String.format("return %s.%s()", VARIABLE_NAME, builderMethodBuild.getName())));
         }
-        boolean beginChain = true;
-        for (int i = lastBeginChain + 1; i < edgeMethods.size(); i++) {
-            EdgeMethod edgeMethod = edgeMethods.get(i);
-            if (beginChain && edgeMethod.getMethod().getReturnType() == builderClazz) {
-                buildableList.add(new MiddleChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
-                beginChain = false;
-            } else if (!beginChain) {
-                buildableList.add(new FinalChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
-                beginChain = true;
-            } else {
-                buildableList.add(new MethodCall(edgeMethod.getMethod(), edgeMethod.getArgs()));
-            }
-        }
-        buildableList.add(new Return(String.format("%s.%s()", VARIABLE_NAME, builderMethodBuild.getName())));
+
         return buildableList;
     }
 

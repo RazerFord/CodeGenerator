@@ -29,8 +29,9 @@ public class UserWithDefect {
         private UserBuilder() {
         }
 
-        public void created(long created) {
+        public UserBuilder created(long created) {
             this.created = created;
+            return this;
         }
 
         public UserBuilder name(String name) {
