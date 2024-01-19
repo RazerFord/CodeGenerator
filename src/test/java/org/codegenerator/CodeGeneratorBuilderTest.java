@@ -1,10 +1,7 @@
 package org.codegenerator;
 
 import org.codegenerator.generator.BuilderGenerator;
-import org.codegenerator.resourcescodegeneratorbuilder.SendingMoneyTransfer;
-import org.codegenerator.resourcescodegeneratorbuilder.User;
-import org.codegenerator.resourcescodegeneratorbuilder.UserBuilderWithConstructor;
-import org.codegenerator.resourcescodegeneratorbuilder.UserWithDefect;
+import org.codegenerator.resourcescodegeneratorbuilder.*;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
@@ -108,12 +105,28 @@ public class CodeGeneratorBuilderTest {
         BuilderGenerator<SendingMoneyTransfer> builderGenerator = new BuilderGenerator<>(SendingMoneyTransfer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User userFrom = User.builder().created(102).age(18).name("John Doe").build();
-        User userTo = User.builder().created(56).age(42).name("Alex Gordon").build();
+        User userTo = User.builder().created(56).age(42).name("Gordon Freeman").build();
         SendingMoneyTransfer sendingMoneyTransfer = SendingMoneyTransfer.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
 
         builderGenerator.generate(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
 
         SendingMoneyTransfer that = createObject(generatedClassName);
+        assertEquals(sendingMoneyTransfer, that);
+    }
+
+    @Test
+    public void fieldsCanBeCreatedUsingBuildersWithPojoTest() {
+        final String generatedClassName = "GeneratedFieldsCanBeCreatedUsingBuildersWithPojoClass";
+
+        BuilderGenerator<SendingMoneyTransferWithPojo> builderGenerator = new BuilderGenerator<>(SendingMoneyTransferWithPojo.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        User userFrom = User.builder().created(102).age(18).name("John Doe").build();
+        UserPojo userTo = new UserPojo("Gordon Freeman", 56, 42);
+        SendingMoneyTransferWithPojo sendingMoneyTransfer = SendingMoneyTransferWithPojo.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
+
+        builderGenerator.generate(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
+
+        SendingMoneyTransferWithPojo that = createObject(generatedClassName);
         assertEquals(sendingMoneyTransfer, that);
     }
 

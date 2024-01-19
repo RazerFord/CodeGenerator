@@ -7,12 +7,12 @@ import java.util.Objects;
 
 public class SendingMoneyTransferWithPojo {
     private final User from;
-    private final User to;
+    private final UserPojo to;
     private final int amount;
 
     private SendingMoneyTransferWithPojo(
             User from,
-            User to,
+            UserPojo to,
             int amount
     ) {
         this.from = from;
@@ -24,7 +24,7 @@ public class SendingMoneyTransferWithPojo {
         return from;
     }
 
-    public User getTo() {
+    public UserPojo getTo() {
         return to;
     }
 
@@ -39,7 +39,7 @@ public class SendingMoneyTransferWithPojo {
 
     public static class Builder {
         private User from;
-        private User to;
+        private UserPojo to;
         private int amount;
 
         private Builder() {
@@ -49,7 +49,7 @@ public class SendingMoneyTransferWithPojo {
             return from;
         }
 
-        public User getTo() {
+        public UserPojo getTo() {
             return to;
         }
 
@@ -62,7 +62,7 @@ public class SendingMoneyTransferWithPojo {
             return this;
         }
 
-        public Builder setTo(User to) {
+        public Builder setTo(UserPojo to) {
             this.to = to;
             return this;
         }
