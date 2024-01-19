@@ -70,7 +70,7 @@ public class POJOGenerator<T> implements Generator<T> {
                     }
                 }
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

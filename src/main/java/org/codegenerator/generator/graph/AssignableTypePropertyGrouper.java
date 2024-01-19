@@ -46,12 +46,13 @@ public class AssignableTypePropertyGrouper implements Supplier<Map<Class<?>, Lis
 
     @Contract(pure = true)
     private void mergeValuesOfSameTypes(@NotNull Map<Class<?>, List<Object>> typeToValues) {
-        for (Class<?> type : typeToValues.keySet()) {
-            for (Map.Entry<Class<?>, List<Object>> entry : typeToValues.entrySet()) {
-                if (ClassUtils.isAssignable(entry.getKey(), type)) {
-                    List<Object> list = typeToValues.get(type);
+        for (Map.Entry<Class<?>, List<Object>> entry : typeToValues.entrySet()) {
+            for (Map.Entry<Class<?>, List<Object>> entryInner : typeToValues.entrySet()) {
+                Class<?> type = entry.getKey();
+                if (ClassUtils.isAssignable(entryInner.getKey(), type)) {
+                    List<Object> list = entry.getValue();
                     Set<Object> set = new HashSet<>(list);
-                    set.addAll(entry.getValue());
+                    set.addAll(entryInner.getValue());
                     list.clear();
                     list.addAll(set);
                 }

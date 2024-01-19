@@ -12,9 +12,6 @@ import java.util.List;
 public class MethodCodeGenerator {
     private final Converter converter = createPipeline(this);
 
-    public MethodCodeGenerator() {
-    }
-
     public void generate(@NotNull List<Buildable> methodCalls,
                          TypeSpec.@NotNull Builder typeBuilder,
                          MethodSpec.@NotNull Builder methodBuilder) {

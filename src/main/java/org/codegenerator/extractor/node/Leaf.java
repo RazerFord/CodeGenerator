@@ -28,6 +28,7 @@ public class Leaf implements Node {
 
     @Override
     public void extract() {
+        // this code block must be empty
     }
 
     @Override
@@ -85,6 +86,7 @@ public class Leaf implements Node {
 
     @Override
     public void clear() {
+        // this code block must be empty
     }
 
     @NotNull

@@ -7,6 +7,8 @@ import java.lang.reflect.Executable;
 import java.util.*;
 
 public class EdgeGeneratorUtils {
+    private EdgeGeneratorUtils() {
+    }
 
     public static @NotNull List<List<Node>> generatePossibleArguments(@NotNull List<Node> roots) {
         List<List<Node>> results = new ArrayList<>();
@@ -81,9 +83,10 @@ public class EdgeGeneratorUtils {
     }
 
     public static List<Object> computeValues(Class<?> nKey, @NotNull Map<Class<?>, List<Object>> map) {
-        for (Class<?> key : map.keySet()) {
+        for (Map.Entry<Class<?>, List<Object>> entry : map.entrySet()) {
+            Class<?> key = entry.getKey();
             if (ClassUtils.isAssignable(nKey, key)) {
-                return map.get(key);
+                return entry.getValue();
             }
         }
         return Collections.emptyList();

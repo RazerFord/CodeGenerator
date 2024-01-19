@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ClassFieldExtractor {
+    private ClassFieldExtractor() {
+    }
+
     public static @NotNull Node extract(@NotNull Object o) {
         Map<Object, Node> visited = new HashMap<>();
 

@@ -15,22 +15,22 @@ public class ConverterPrimitiveTypesAndString implements Converter {
     private final Map<Class<?>, Function<Object, String>> converter = new HashMap<>();
 
     public ConverterPrimitiveTypesAndString() {
-        converter.put(byte.class, (o) -> String.format("(byte) %s", o));
-        converter.put(Byte.class, (o) -> String.format("(byte) %s", o));
+        converter.put(byte.class, o -> String.format("(byte) %s", o));
+        converter.put(Byte.class, o -> String.format("(byte) %s", o));
 
-        converter.put(short.class, (o) -> String.format("(short) %s", o));
-        converter.put(Short.class, (o) -> String.format("(short) %s", o));
+        converter.put(short.class, o -> String.format("(short) %s", o));
+        converter.put(Short.class, o -> String.format("(short) %s", o));
 
-        converter.put(long.class, (o) -> String.format("%sL", o));
-        converter.put(Long.class, (o) -> String.format("%sL", o));
+        converter.put(long.class, o -> String.format("%sL", o));
+        converter.put(Long.class, o -> String.format("%sL", o));
 
-        converter.put(float.class, (o) -> String.format("%sF", o));
-        converter.put(Float.class, (o) -> String.format("%sF", o));
+        converter.put(float.class, o -> String.format("%sF", o));
+        converter.put(Float.class, o -> String.format("%sF", o));
 
-        converter.put(char.class, (o) -> String.format("'%s'", o));
-        converter.put(Character.class, (o) -> String.format("'%s'", o));
+        converter.put(char.class, o -> String.format("'%s'", o));
+        converter.put(Character.class, o -> String.format("'%s'", o));
 
-        converter.put(String.class, (o) -> String.format("\"%s\"", o));
+        converter.put(String.class, o -> String.format("\"%s\"", o));
     }
 
     @Override

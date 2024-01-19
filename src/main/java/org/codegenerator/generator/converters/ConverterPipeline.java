@@ -32,7 +32,8 @@ public class ConverterPipeline implements Converter {
                 if (converter.canConvert(o)) return converter.convert(o, generatedClassBuilder, methodBuilder);
             } catch (FailedConvert e) {
                 throw e;
-            } catch (Throwable ignored) {
+            } catch (Exception ignored) {
+                // this code block is empty
             }
         }
         return null;

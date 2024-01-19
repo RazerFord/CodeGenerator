@@ -124,7 +124,7 @@ public class StateGraph {
 
     @Contract(pure = true)
     private @NotNull Function<Object, Object> copyObject(@NotNull Supplier<?> supplier) {
-        return (o) -> {
+        return o -> {
             Object instance = callSupplierWrapper(supplier::get);
             for (Field field : clazz.getDeclaredFields()) {
                 field.setAccessible(true);

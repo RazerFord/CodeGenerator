@@ -21,27 +21,27 @@ public class Utils {
     public static <E> E callSupplierWrapper(SupplierWrapper<E> supplierWrapper) {
         try {
             return supplierWrapper.get();
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw new RuntimeException(t);
         }
     }
 
     @FunctionalInterface
     public interface SupplierWrapper<T> {
-        T get() throws Throwable;
+        T get() throws Exception;
     }
 
     public static <E> void callRunnableWrapper(RunnableWrapper<E> runnableWrapper) {
         try {
             runnableWrapper.run();
-        } catch (Throwable t) {
+        } catch (Exception t) {
             throw new RuntimeException(t);
         }
     }
 
     @FunctionalInterface
     public interface RunnableWrapper<T> {
-        void run() throws Throwable;
+        void run() throws Exception;
     }
 
     public static @NotNull List<List<Integer>> combinations(List<Integer> inputSet, int k) {
