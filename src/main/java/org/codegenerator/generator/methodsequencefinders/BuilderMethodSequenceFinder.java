@@ -31,9 +31,9 @@ public class BuilderMethodSequenceFinder {
     public BuilderMethodSequenceFinder(@NotNull Class<?> clazz) {
         this.clazz = clazz;
         builderClazz = findBuilder();
+        builderMethodBuild = findBuildMethod(builderClazz);
         constructorExecutableBuilder = findBuilderConstructor();
         constructorBuilder = createConstructorSupplier(constructorExecutableBuilder);
-        builderMethodBuild = findBuildMethod(builderClazz);
         stateGraph = new StateGraph(builderClazz);
         checkInvariants();
     }
@@ -96,6 +96,7 @@ public class BuilderMethodSequenceFinder {
 
     private Method findBuildMethod(@NotNull Class<?> cls) {
         return Arrays.stream(cls.getMethods())
+                .filter(m -> m.getParameterCount() == 0)
                 .filter(m -> ClassUtils.isAssignable(clazz, m.getReturnType()))
                 .findFirst().orElse(null);
     }
@@ -113,6 +114,7 @@ public class BuilderMethodSequenceFinder {
 
     private Method findBuilderConstructor(@NotNull Class<?> clazz) {
         return Arrays.stream(clazz.getMethods())
+                .filter(method -> method.getParameterCount() == 0)
                 .filter(method -> Modifier.isStatic(method.getModifiers()))
                 .filter(method -> Modifier.isPublic(method.getModifiers()))
                 .filter(method -> ClassUtils.isAssignable(builderClazz, method.getReturnType()))

@@ -12,6 +12,7 @@ public class InnerNode implements Node {
     private final Object value;
     private final Map<Object, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
+    private final Set<Object> visitedDuringEquals = new HashSet<>();
 
     public InnerNode(Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
@@ -153,7 +154,13 @@ public class InnerNode implements Node {
     public boolean equals(Object o) {
         if (!(o instanceof InnerNode)) return false;
         InnerNode innerNode = (InnerNode) o;
-        return Objects.equals(value, innerNode.value) && innerNode.fields.equals(fields);
+        // If recursion is detected, true should be returned.
+        // Since recursion could occur if `equals` of objects returned true
+        if (visitedDuringEquals.contains(o)) return true;
+        visitedDuringEquals.add(o);
+        boolean result = Objects.equals(value, innerNode.value) && innerNode.fields.equals(fields);
+        visitedDuringEquals.remove(o);
+        return result;
     }
 
     @Override
