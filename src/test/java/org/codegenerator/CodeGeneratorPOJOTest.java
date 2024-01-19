@@ -206,7 +206,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterWithArrayTest() {
+    public void setterWithArrayPrimitiveTypesTest() {
         final String generatedClassName = "GeneratedClassWithArrayOfPrimitiveTypesClass";
         POJOGenerator<ClassWithArrayOfPrimitiveTypes> generator = new POJOGenerator<>(ClassWithArrayOfPrimitiveTypes.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -217,6 +217,31 @@ public class CodeGeneratorPOJOTest {
 
         ClassWithArrayOfPrimitiveTypes other = createObject(generatedClassName);
         assertEquals(classWithArrayOfPrimitiveTypes, other);
+    }
+
+    @Test
+    public void setterWithArrayNonPrimitiveTypesTest() {
+        final String generatedClassName = "GeneratedClassWithArrayOfNonPrimitiveTypesClass";
+        POJOGenerator<Points> generator = new POJOGenerator<>(Points.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        Points points = new Points();
+        Point[] array = new Point[5];
+
+        array[0] = new Point();
+        array[0].setX(42);
+        array[0].setY(42);
+
+        array[2] = new Point();
+        array[2].setX(14);
+
+        array[4] = new Point();
+        array[4].setX(17);
+
+        points.setPoints(array);
+        generator.generate(points, Paths.get(OUTPUT_DIRECTORY));
+
+        Points other = createObject(generatedClassName);
+        assertEquals(points, other);
     }
 
     @Test

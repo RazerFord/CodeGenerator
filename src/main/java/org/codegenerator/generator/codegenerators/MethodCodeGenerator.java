@@ -22,8 +22,10 @@ public class MethodCodeGenerator {
 
     private static @NotNull Converter createPipeline(MethodCodeGenerator methodCodeGenerator) {
         List<Converter> converters = Arrays.asList(
+                new NullConverter(),
                 new ConverterPrimitiveTypesAndString(),
                 new PrimitiveTypeArrayConverter(),
+                new ArrayConverter(METHOD_NAME_ARRAY, methodCodeGenerator),
                 new POJOConverter(METHOD_NAME_POJO, methodCodeGenerator),
                 new BuilderConverter(METHOD_NAME_BUILDER, methodCodeGenerator),
                 new FailedConverter()
@@ -31,6 +33,7 @@ public class MethodCodeGenerator {
         return new ConverterPipeline(converters);
     }
 
+    private static final String METHOD_NAME_ARRAY = "createArray";
     private static final String METHOD_NAME_POJO = "createPojo";
     private static final String METHOD_NAME_BUILDER = "createBuilder";
 }
