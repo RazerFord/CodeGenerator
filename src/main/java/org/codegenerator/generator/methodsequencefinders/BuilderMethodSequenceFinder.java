@@ -1,5 +1,6 @@
 package org.codegenerator.generator.methodsequencefinders;
 
+import kotlin.sequences.Sequence;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
@@ -7,20 +8,33 @@ import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.EdgeMethod;
 import org.codegenerator.generator.graph.StateGraph;
+import org.jacodb.api.JcClassOrInterface;
+import org.jacodb.api.JcClasspath;
+import org.jacodb.api.JcDatabase;
+import org.jacodb.api.JcMethod;
+import org.jacodb.impl.JacoDB;
+import org.jacodb.impl.JcSettings;
+import org.jacodb.impl.features.Builders;
+import org.jacodb.impl.features.BuildersExtension;
+import org.jacodb.impl.features.InMemoryHierarchy;
+import org.jacodb.impl.features.JcHierarchies;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.codegenerator.Utils.throwIf;
 
 public class BuilderMethodSequenceFinder {
+    private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
     private final Class<?> clazz;
     private final Class<?> builderClazz;
     private final Supplier<Object> constructorBuilder;
@@ -30,6 +44,7 @@ public class BuilderMethodSequenceFinder {
 
     public BuilderMethodSequenceFinder(@NotNull Class<?> clazz) {
         this.clazz = clazz;
+        extractClassOrInterface();
         builderClazz = findBuilder();
         builderMethodBuild = findBuildMethod(builderClazz);
         constructorExecutableBuilder = findBuilderConstructor();
@@ -140,6 +155,31 @@ public class BuilderMethodSequenceFinder {
     private void checkInvariants() {
         throwIf(clazz.getConstructors().length > 0, new RuntimeException(CONSTRUCTOR_FOUND));
         throwIf(builderClazz == null, new RuntimeException(BUILDER_NOT_FOUND));
+    }
+
+    private void extractClassOrInterface() {
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+            List<File> fileList = Arrays.asList(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
+            JcClasspath classpath = db.asyncClasspath(fileList).get();
+            JcClassOrInterface needle = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
+            BuildersExtension haystack = new BuildersExtension(classpath, JcHierarchies.asyncHierarchy(classpath).get());
+
+            Sequence<JcMethod> jcMethodSequence = haystack.findBuildMethods(needle, true);
+            Iterator<JcMethod> iterator = jcMethodSequence.iterator();
+            while (iterator.hasNext()) {
+                System.out.println(iterator.next());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
+        return JacoDB.async(new JcSettings()
+                .useProcessJavaRuntime()
+                .persistent(dbname)
+                .installFeatures(Builders.INSTANCE, InMemoryHierarchy.INSTANCE)
+        ).get();
     }
 
     private static final String VARIABLE_NAME = "object";
