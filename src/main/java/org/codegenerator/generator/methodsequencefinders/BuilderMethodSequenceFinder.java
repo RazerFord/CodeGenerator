@@ -44,7 +44,6 @@ public class BuilderMethodSequenceFinder {
 
     public BuilderMethodSequenceFinder(@NotNull Class<?> clazz) {
         this.clazz = clazz;
-        extractClassOrInterface();
         builderClazz = findBuilder();
         builderMethodBuild = findBuildMethod(builderClazz);
         constructorExecutableBuilder = findBuilderConstructor();
