@@ -4,6 +4,7 @@ import kotlin.sequences.Sequence;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
+import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.EdgeMethod;
@@ -22,6 +23,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
@@ -30,20 +32,23 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.throwIf;
 
 public class BuilderMethodSequenceFinder {
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
     private final Class<?> clazz;
+    private final Class<?>[] classes;
     private final Class<?> builderClazz;
     private final Supplier<Object> constructorBuilder;
     private final Executable constructorExecutableBuilder;
     private final Method builderMethodBuild;
     private final StateGraph stateGraph;
 
-    public BuilderMethodSequenceFinder(@NotNull Class<?> clazz) {
+    public BuilderMethodSequenceFinder(@NotNull Class<?> clazz, Class<?>... classes) {
         this.clazz = clazz;
+        this.classes = classes;
         builderClazz = findBuilder();
         builderMethodBuild = findBuildMethod(builderClazz);
         constructorExecutableBuilder = findBuilderConstructor();
@@ -156,20 +161,26 @@ public class BuilderMethodSequenceFinder {
         throwIf(builderClazz == null, new RuntimeException(BUILDER_NOT_FOUND));
     }
 
-    private void extractClassOrInterface() {
+    public List<Class<?>> findBuilders() {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            List<File> fileList = Arrays.asList(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
+            List<File> fileList = Arrays.stream(ArrayUtils.addAll(classes, clazz)).map(it ->
+                    Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
+            ).collect(Collectors.toList());
             JcClasspath classpath = db.asyncClasspath(fileList).get();
             JcClassOrInterface needle = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
             BuildersExtension haystack = new BuildersExtension(classpath, JcHierarchies.asyncHierarchy(classpath).get());
 
             Sequence<JcMethod> jcMethodSequence = haystack.findBuildMethods(needle, true);
             Iterator<JcMethod> iterator = jcMethodSequence.iterator();
-            while (iterator.hasNext()) {
-                System.out.println(iterator.next());
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            List<JcMethod> methods = new ArrayList<>();
+            iterator.forEachRemaining(methods::add);
+            ClassLoader classLoader = clazz.getClassLoader();
+            return methods.stream()
+                    .map(it -> Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getEnclosingClass().getName())))
+                    .collect(Collectors.toList());
+        } catch (IOException | ExecutionException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
         }
     }
 

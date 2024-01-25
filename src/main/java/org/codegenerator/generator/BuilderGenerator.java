@@ -17,12 +17,12 @@ public class BuilderGenerator<T> implements Generator<T> {
     private final BuilderMethodSequenceFinder builderMethodSequenceFinder;
 
     @Contract(pure = true)
-    public BuilderGenerator(@NotNull Class<?> clazz) {
+    public BuilderGenerator(@NotNull Class<?> clazz, Class<?>... classes) {
         this(clazz, PACKAGE_NAME, CLASS_NAME, METHOD_NAME);
     }
 
-    public BuilderGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
-        builderMethodSequenceFinder = new BuilderMethodSequenceFinder(clazz);
+    public BuilderGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName, Class<?>... classes) {
+        builderMethodSequenceFinder = new BuilderMethodSequenceFinder(clazz, classes);
         classCodeGenerators = new ClassCodeGenerators(clazz, packageName, className, methodName);
     }
 
