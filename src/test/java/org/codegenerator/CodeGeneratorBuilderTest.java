@@ -2,6 +2,7 @@ package org.codegenerator;
 
 import org.codegenerator.generator.BuilderGenerator;
 import org.codegenerator.resourcescodegeneratorbuilder.*;
+import org.codegenerator.resourcescodegeneratorbuilder.otherpackage.UserBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Paths;
@@ -130,11 +131,19 @@ public class CodeGeneratorBuilderTest {
         assertEquals(sendingMoneyTransfer, that);
     }
 
-    /*
-     * TODO: Add generation for recursion
-     * TODO: Test with protobuf
-     * TODO: Add constraint metrics
-     */
+    @Test
+    public void builderInAnotherPackageTest() {
+        final String generatedClassName = "GeneratedBuilderInAnotherPackageClass";
+
+        BuilderGenerator<UserWithBuilderInAnotherPackage> builderGenerator = new BuilderGenerator<>(UserWithBuilderInAnotherPackage.class, PACKAGE_NAME, generatedClassName, METHOD_NAME, UserBuilder.class);
+
+        UserWithBuilderInAnotherPackage user = new UserBuilder().created(102).age(18).name("John Doe").build();
+
+        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+
+        UserWithBuilderInAnotherPackage that = createObject(generatedClassName);
+        assertEquals(user, that);
+    }
 
     public <R> R createObject(String generatedClassName) {
         return generatedCodeCompiler.createObject(generatedClassName);

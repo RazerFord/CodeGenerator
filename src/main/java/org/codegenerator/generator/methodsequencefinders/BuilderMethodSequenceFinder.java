@@ -5,29 +5,24 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
+import org.codegenerator.exceptions.PathNotFindException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.EdgeMethod;
 import org.codegenerator.generator.graph.StateGraph;
-import org.jacodb.api.JcClassOrInterface;
-import org.jacodb.api.JcClasspath;
-import org.jacodb.api.JcDatabase;
-import org.jacodb.api.JcMethod;
+import org.jacodb.api.*;
 import org.jacodb.impl.JacoDB;
 import org.jacodb.impl.JcSettings;
-import org.jacodb.impl.features.Builders;
-import org.jacodb.impl.features.BuildersExtension;
-import org.jacodb.impl.features.InMemoryHierarchy;
-import org.jacodb.impl.features.JcHierarchies;
+import org.jacodb.impl.features.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -40,38 +35,54 @@ public class BuilderMethodSequenceFinder {
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
     private final Class<?> clazz;
     private final Class<?>[] classes;
-    private final Class<?> builderClazz;
-    private final Supplier<Object> constructorBuilder;
-    private final Executable constructorExecutableBuilder;
-    private final Method builderMethodBuild;
-    private final StateGraph stateGraph;
+    private final List<BuilderInfo> builderInfoList = new ArrayList<>();
 
     public BuilderMethodSequenceFinder(@NotNull Class<?> clazz, Class<?>... classes) {
         this.clazz = clazz;
         this.classes = classes;
-        builderClazz = findBuilder();
-        builderMethodBuild = findBuildMethod(builderClazz);
-        constructorExecutableBuilder = findBuilderConstructor();
-        constructorBuilder = createConstructorSupplier(constructorExecutableBuilder);
-        stateGraph = new StateGraph(builderClazz);
+        List<Class<?>> builderClasses = findBuilders();
+        for (Class<?> builderClass : builderClasses) {
+            Method buildMethod = findBuildMethod(builderClass);
+            if (buildMethod == null) continue;
+            Executable builderConstructor = findBuilderConstructor(builderClass);
+            StateGraph stateGraph = new StateGraph(builderClass);
+            builderInfoList.add(new BuilderInfo(builderClass, builderConstructor, buildMethod, stateGraph));
+        }
         checkInvariants();
     }
 
     public List<Buildable> find(@NotNull Object finalObject) {
-        Function<Object, Object> termination = createTerminationFunction(builderMethodBuild);
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        List<EdgeMethod> edgeMethods = stateGraph.findPath(assignableTypePropertyGrouper, constructorBuilder, termination);
+        for (BuilderInfo builderInfo : builderInfoList) {
+            try {
+                Method builderBuildMethod = builderInfo.builderBuildMethod;
+                StateGraph stateGraph = builderInfo.stateGraph;
+                Executable builderConstructor = builderInfo.builderConstructor;
 
+                Function<Object, Object> termination = createTerminationFunction(builderBuildMethod);
+                AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+                List<EdgeMethod> edgeMethods = stateGraph.findPath(assignableTypePropertyGrouper, createConstructorSupplier(builderConstructor), termination);
 
+                return createBuildableList(edgeMethods, builderInfo);
+            } catch (Exception e) {
+                // this block must be empty
+            }
+        }
+        throw new PathNotFindException();
+    }
+
+    private @NotNull List<Buildable> createBuildableList(@NotNull List<EdgeMethod> edgeMethods, @NotNull BuilderInfo builderInfo) {
         List<Buildable> buildableList = new ArrayList<>();
+        Class<?> builderClazz = builderInfo.builderClazz;
+        Method builderBuildMethod = builderInfo.builderBuildMethod;
+        Executable builderConstructor = builderInfo.builderConstructor;
 
         if (edgeMethods.isEmpty()) {
-            buildableList.add(new ReturnCreatingChainingMethod(builderClazz, constructorExecutableBuilder));
-            buildableList.add(new FinalChainingMethod(builderMethodBuild));
+            buildableList.add(new ReturnCreatingChainingMethod(builderClazz, builderConstructor));
+            buildableList.add(new FinalChainingMethod(builderBuildMethod));
             return buildableList;
         }
 
-        buildableList.add(new BuilderCreationMethod(builderClazz, VARIABLE_NAME, constructorExecutableBuilder));
+        buildableList.add(new BuilderCreationMethod(builderClazz, VARIABLE_NAME, builderConstructor));
 
         boolean beginChain = false;
         int lastIndex = 0;
@@ -99,18 +110,12 @@ public class BuilderMethodSequenceFinder {
         if (lastIndex != -1) {
             EdgeMethod edgeMethod = edgeMethods.get(lastIndex - 1);
             buildableList.set(lastIndex, new ReturnMiddleChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
-            buildableList.add(new FinalChainingMethod(builderMethodBuild));
+            buildableList.add(new FinalChainingMethod(builderBuildMethod));
         } else {
-            buildableList.add(new ReturnExpression(String.format("return %s.%s()", VARIABLE_NAME, builderMethodBuild.getName())));
+            buildableList.add(new ReturnExpression(String.format("return %s.%s()", VARIABLE_NAME, builderBuildMethod.getName())));
         }
 
         return buildableList;
-    }
-
-    private Class<?> findBuilder() {
-        return Arrays.stream(ArrayUtils.addAll(clazz.getClasses()))
-                .filter(cls -> findBuildMethod(cls) != null)
-                .findFirst().orElseThrow(() -> new RuntimeException(BUILDER_NOT_FOUND));
     }
 
     private Method findBuildMethod(@NotNull Class<?> cls) {
@@ -120,24 +125,53 @@ public class BuilderMethodSequenceFinder {
                 .findFirst().orElse(null);
     }
 
-    private Executable findBuilderConstructor() {
+    private @Nullable Executable findBuilderConstructor(@NotNull Class<?> builderClazz) {
         for (Constructor<?> constructor : builderClazz.getConstructors()) {
             if (constructor.getParameterCount() == 0) return constructor;
         }
-        return Arrays.stream(ArrayUtils.addAll(clazz.getClasses(), clazz))
-                .map(this::findBuilderConstructor)
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException(BUILDER_CONSTRUCTOR_FOUND));
+        try (JcDatabase db = loadOrCreateDataBase(dbname, Usages.INSTANCE, InMemoryHierarchy.INSTANCE)) {
+            Class<?>[] localClasses = ArrayUtils.add(classes, builderClazz);
+            localClasses = ArrayUtils.add(localClasses, clazz);
+            List<File> fileList = Arrays.stream(localClasses).map(it ->
+                    Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
+            ).collect(Collectors.toList());
+            JcClasspath classpath = db.asyncClasspath(fileList).get();
+            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
+
+            SyncUsagesExtension haystack = new SyncUsagesExtension(JcHierarchies.asyncHierarchy(classpath).get(), classpath);
+            List<JcMethod> needles = jcClassOrInterface.getDeclaredMethods().stream()
+                    .filter(it -> it.isConstructor() && !it.isSynthetic()).collect(Collectors.toList());
+
+            JcMethod jcMethod = findMethodCreatingBuilder(haystack, needles);
+            ClassLoader classLoader = clazz.getClassLoader();
+            Class<?> loadedClass = classLoader.loadClass(jcMethod.getEnclosingClass().getName());
+
+            int[] index = new int[]{0};
+            Class<?>[] classes1 = new Class[jcMethod.getParameters().size()];
+            jcMethod.getParameters()
+                    .forEach(it -> classes1[index[0]++] = Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getName())));
+
+            return loadedClass.getMethod(jcMethod.getName(), classes1);
+        } catch (IOException | ExecutionException | InterruptedException | ClassNotFoundException |
+                 NoSuchMethodException e) {
+            Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        }
     }
 
-    private Method findBuilderConstructor(@NotNull Class<?> clazz) {
-        return Arrays.stream(clazz.getMethods())
-                .filter(method -> method.getParameterCount() == 0)
-                .filter(method -> Modifier.isStatic(method.getModifiers()))
-                .filter(method -> Modifier.isPublic(method.getModifiers()))
-                .filter(method -> ClassUtils.isAssignable(builderClazz, method.getReturnType()))
-                .findFirst().orElse(null);
+    private JcMethod findMethodCreatingBuilder(SyncUsagesExtension haystack, @NotNull List<JcMethod> needles) {
+        List<JcMethod> usages = new ArrayList<>();
+        for (JcMethod needle : needles) {
+            Sequence<JcMethod> jcMethodSequence = haystack.findUsages(needle);
+            Iterator<JcMethod> it = jcMethodSequence.iterator();
+
+            while (it.hasNext()) {
+                usages.add(it.next());
+            }
+        }
+        throwIf(usages.isEmpty(), new IllegalStateException(BUILDER_CONSTRUCTOR_FOUND));
+        @NotNull List<JcMethod> finalNeedles = usages.stream().filter(JcMethod::isConstructor).collect(Collectors.toList());
+        return usages.stream().filter(JcAccessible::isPublic).findFirst().orElseGet(() -> findMethodCreatingBuilder(haystack, finalNeedles));
     }
 
     @Contract(pure = true)
@@ -157,12 +191,11 @@ public class BuilderMethodSequenceFinder {
     }
 
     private void checkInvariants() {
-        throwIf(clazz.getConstructors().length > 0, new RuntimeException(CONSTRUCTOR_FOUND));
-        throwIf(builderClazz == null, new RuntimeException(BUILDER_NOT_FOUND));
+        throwIf(builderInfoList.isEmpty(), new RuntimeException(BUILDER_NOT_FOUND));
     }
 
     public List<Class<?>> findBuilders() {
-        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+        try (JcDatabase db = loadOrCreateDataBase(dbname, Builders.INSTANCE, InMemoryHierarchy.INSTANCE)) {
             List<File> fileList = Arrays.stream(ArrayUtils.addAll(classes, clazz)).map(it ->
                     Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
             ).collect(Collectors.toList());
@@ -184,16 +217,34 @@ public class BuilderMethodSequenceFinder {
         }
     }
 
-    private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
+    private JcDatabase loadOrCreateDataBase(String dbname, JcFeature<?, ?>... jcFeatures) throws ExecutionException, InterruptedException {
         return JacoDB.async(new JcSettings()
                 .useProcessJavaRuntime()
                 .persistent(dbname)
-                .installFeatures(Builders.INSTANCE, InMemoryHierarchy.INSTANCE)
+                .installFeatures(jcFeatures)
         ).get();
     }
 
+    private static class BuilderInfo {
+        private final Class<?> builderClazz;
+        private final Executable builderConstructor;
+        private final Method builderBuildMethod;
+        private final StateGraph stateGraph;
+
+        private BuilderInfo(
+                Class<?> builderClazz,
+                Executable builderConstructor,
+                Method builderBuildMethod,
+                StateGraph stateGraph
+        ) {
+            this.builderClazz = builderClazz;
+            this.builderConstructor = builderConstructor;
+            this.builderBuildMethod = builderBuildMethod;
+            this.stateGraph = stateGraph;
+        }
+    }
+
     private static final String VARIABLE_NAME = "object";
-    private static final String CONSTRUCTOR_FOUND = "The constructor has been found. You can use a POJO generator";
     private static final String BUILDER_CONSTRUCTOR_FOUND = "Builder constructor not found";
     private static final String BUILDER_NOT_FOUND = "Builder not found";
 }
