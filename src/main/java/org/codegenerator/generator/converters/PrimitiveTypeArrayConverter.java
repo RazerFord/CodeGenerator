@@ -51,7 +51,7 @@ public class PrimitiveTypeArrayConverter implements Converter {
         MethodSpec.Builder methodBuilder1 = MethodSpec.constructorBuilder().addStatement(codeBlock);
         for (int i = 0, length = Array.getLength(o); i < length; i++) {
             Object element = Array.get(o, i);
-            String call = createCallRecursively(componentType, element, typeBuilder, methodBuilder);
+            String call = createCallRecursively(componentType, element, typeBuilder, methodBuilder1);
             methodBuilder1.addStatement("$L[$L] = $L", variableName, i, call);
         }
         methodBuilder1.addStatement("return $L", variableName);
@@ -71,7 +71,7 @@ public class PrimitiveTypeArrayConverter implements Converter {
     ) {
         return CodeBlock.builder()
                 .add(
-                        "$T $L = new $L[$L]$L",
+                        "$T $L = new $T[$L]$L",
                         typeVariable,
                         variableName,
                         typeArray,
@@ -83,8 +83,8 @@ public class PrimitiveTypeArrayConverter implements Converter {
 
     private Class<?> getArrayType(Class<?> clazz) {
         Class<?> typeArray = null;
-        for (Class<?> cls = clazz; cls != null; cls = cls.getComponentType()) {
-            typeArray = cls;
+        for (; clazz != null; clazz = clazz.getComponentType()) {
+            typeArray = clazz;
         }
         return typeArray;
     }

@@ -27,7 +27,7 @@ public class MethodCodeGenerator {
                 new NullConverter(),
                 new ConverterPrimitiveTypesAndString(),
                 new PrimitiveTypeArrayConverter(ARRAY_VARIABLE_NAME, METHOD_NAME_ARRAY),
-                new ArrayConverter(METHOD_NAME_ARRAY, methodCodeGenerator),
+                new ArrayConverter(ARRAY_VARIABLE_NAME, METHOD_NAME_ARRAY, methodCodeGenerator),
                 new POJOConverter(METHOD_NAME_POJO, methodCodeGenerator),
                 new BuilderConverter(METHOD_NAME_BUILDER, methodCodeGenerator),
                 new FailedConverter()

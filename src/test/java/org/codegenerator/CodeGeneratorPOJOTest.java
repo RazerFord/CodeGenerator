@@ -429,6 +429,19 @@ public class CodeGeneratorPOJOTest {
         assertEquals(multidimensionalIntArray, other);
     }
 
+    @Test
+    public void setterMultidimensionalPointArrayTest() {
+        final String generatedClassName = "GeneratedClassMultidimensionalPointArrayClass";
+        POJOGenerator<MultidimensionalPointArray> generator = new POJOGenerator<>(MultidimensionalPointArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        MultidimensionalPointArray multidimensionalPointArray = getMultidimensionalPointArray();
+
+        generator.generate(multidimensionalPointArray, Paths.get(OUTPUT_DIRECTORY));
+
+        MultidimensionalPointArray other = createObject(generatedClassName);
+        assertEquals(multidimensionalPointArray, other);
+    }
+
     @NotNull
     private static MultidimensionalIntArray getMultidimensionalIntArray() {
         MultidimensionalIntArray multidimensionalIntArray = new MultidimensionalIntArray();
@@ -451,6 +464,29 @@ public class CodeGeneratorPOJOTest {
 
         multidimensionalIntArray.setInts(array);
         return multidimensionalIntArray;
+    }
+
+    @NotNull
+    private static MultidimensionalPointArray getMultidimensionalPointArray() {
+        MultidimensionalPointArray multidimensionalPointArray = new MultidimensionalPointArray();
+
+        Point p = new Point();
+        p.setX(12);
+        p.setY(17);
+        p.setZ(42);
+
+        Point[][][] array = new Point[][][]{
+                new Point[][]{
+                        new Point[]{p, p}
+                },
+                new Point[][]{
+                        new Point[]{p}
+                },
+                new Point[][]{}
+        };
+
+        multidimensionalPointArray.setPoints(array);
+        return multidimensionalPointArray;
     }
 
     public <R> R createObject(String generatedClassName) {
