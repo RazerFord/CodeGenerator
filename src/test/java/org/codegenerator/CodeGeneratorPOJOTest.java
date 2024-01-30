@@ -2,6 +2,7 @@ package org.codegenerator;
 
 import org.codegenerator.generator.POJOGenerator;
 import org.codegenerator.resourcescodegeneratorpojo.*;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
@@ -413,6 +414,43 @@ public class CodeGeneratorPOJOTest {
 
         ClassWithManyFieldsComplex other = createObject(generatedClassName);
         assertEquals(classWithManyFieldsComplex, other);
+    }
+
+    @Test
+    public void setterMultidimensionalIntArrayTest() {
+        final String generatedClassName = "GeneratedClassMultidimensionalIntArrayClass";
+        POJOGenerator<MultidimensionalIntArray> generator = new POJOGenerator<>(MultidimensionalIntArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        MultidimensionalIntArray multidimensionalIntArray = getMultidimensionalIntArray();
+
+        generator.generate(multidimensionalIntArray, Paths.get(OUTPUT_DIRECTORY));
+
+        MultidimensionalIntArray other = createObject(generatedClassName);
+        assertEquals(multidimensionalIntArray, other);
+    }
+
+    @NotNull
+    private static MultidimensionalIntArray getMultidimensionalIntArray() {
+        MultidimensionalIntArray multidimensionalIntArray = new MultidimensionalIntArray();
+
+        int[][][] array = new int[][][]{
+                new int[][]{
+                        new int[]{
+                                1, 2, 3
+                        },
+                        new int[]{
+                                4
+                        }
+                },
+                new int[][]{
+                        new int[]{
+                                5
+                        }
+                }
+        };
+
+        multidimensionalIntArray.setInts(array);
+        return multidimensionalIntArray;
     }
 
     public <R> R createObject(String generatedClassName) {

@@ -12,9 +12,11 @@ import java.util.List;
 public class MethodCodeGenerator {
     private final Converter converter = createPipeline(this);
 
-    public void generate(@NotNull List<Buildable> methodCalls,
-                         TypeSpec.@NotNull Builder typeBuilder,
-                         MethodSpec.@NotNull Builder methodBuilder) {
+    public void generate(
+            @NotNull List<Buildable> methodCalls,
+            TypeSpec.@NotNull Builder typeBuilder,
+            MethodSpec.@NotNull Builder methodBuilder
+    ) {
         for (Buildable methodCall : methodCalls) {
             methodCall.build(converter, typeBuilder, methodBuilder);
         }
@@ -24,7 +26,7 @@ public class MethodCodeGenerator {
         List<Converter> converters = Arrays.asList(
                 new NullConverter(),
                 new ConverterPrimitiveTypesAndString(),
-                new PrimitiveTypeArrayConverter(),
+                new PrimitiveTypeArrayConverter(ARRAY_VARIABLE_NAME, METHOD_NAME_ARRAY),
                 new ArrayConverter(METHOD_NAME_ARRAY, methodCodeGenerator),
                 new POJOConverter(METHOD_NAME_POJO, methodCodeGenerator),
                 new BuilderConverter(METHOD_NAME_BUILDER, methodCodeGenerator),
@@ -33,6 +35,7 @@ public class MethodCodeGenerator {
         return new ConverterPipeline(converters);
     }
 
+    private static final String ARRAY_VARIABLE_NAME = "array";
     private static final String METHOD_NAME_ARRAY = "createArray";
     private static final String METHOD_NAME_POJO = "createPojo";
     private static final String METHOD_NAME_BUILDER = "createBuilder";
