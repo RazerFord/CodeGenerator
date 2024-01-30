@@ -18,7 +18,7 @@ public class BuilderGenerator<T> implements Generator<T> {
 
     @Contract(pure = true)
     public BuilderGenerator(@NotNull Class<?> clazz, Class<?>... classes) {
-        this(clazz, PACKAGE_NAME, CLASS_NAME, METHOD_NAME);
+        this(clazz, PACKAGE_NAME, CLASS_NAME, METHOD_NAME, classes);
     }
 
     public BuilderGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName, Class<?>... classes) {
