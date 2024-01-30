@@ -49,11 +49,14 @@ public class EdgeGeneratorUtils {
      *           |
      * (int, 2) ---> (int, 2)
      *
-     * @param method that can be executed. Usually this is an example `Constructor<?>` or `Method`
+     * @param executable method that can be executed. Usually this is an example `Constructor<?>` or `Method`
      * @param map of types to their value
-     * @return returns a list of starting vertices of the graph
+     * @return typeToValues a list of starting vertices of the graph
      */
-    public static <T extends Executable> @NotNull List<Node> buildGraph(@NotNull T executable, Map<Class<?>, List<Object>> typeToValues) {
+    public static <T extends Executable> @NotNull List<Node> buildGraph(
+            @NotNull T executable,
+            Map<Class<?>, List<Object>> typeToValues
+    ) {
         List<List<Node>> levels = new ArrayList<>();
 
         for (Class<?> type : executable.getParameterTypes()) {
@@ -82,14 +85,25 @@ public class EdgeGeneratorUtils {
         }
     }
 
-    public static List<Object> computeValues(Class<?> nKey, @NotNull Map<Class<?>, List<Object>> map) {
-        for (Map.Entry<Class<?>, List<Object>> entry : map.entrySet()) {
-            Class<?> key = entry.getKey();
-            if (ClassUtils.isAssignable(nKey, key)) {
-                return entry.getValue();
+    /*
+     * There are all such values in `map` that `from` can be
+     * cast to the type of these values
+     *
+     * @param from a type for which all values to which it can be cast are sought
+     * @param typeToValues mapping a class to its values
+     */
+    public static @NotNull List<Object> computeValues(
+            Class<?> from,
+            @NotNull Map<Class<?>, List<Object>> typeToValues
+    ) {
+        List<Object> values = new ArrayList<>();
+        for (Map.Entry<Class<?>, List<Object>> entry : typeToValues.entrySet()) {
+            Class<?> to = entry.getKey();
+            if (ClassUtils.isAssignable(from, to)) {
+                values.addAll(entry.getValue());
             }
         }
-        return Collections.emptyList();
+        return values;
     }
 
     public static final class Node {

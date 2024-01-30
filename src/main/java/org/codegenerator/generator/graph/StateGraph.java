@@ -104,7 +104,7 @@ public class StateGraph {
                 Object instance = copyObject.apply(triple.getFirst());
                 try {
                     edgeMethod.invoke(instance);
-                } catch (Throwable ignored) {
+                } catch (Exception ignored) {
                     continue;
                 }
                 Object instanceBuilt = Utils.callSupplierWrapper(() -> termination.apply(instance));
