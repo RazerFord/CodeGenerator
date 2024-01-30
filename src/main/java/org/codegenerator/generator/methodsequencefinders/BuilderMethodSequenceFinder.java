@@ -152,9 +152,15 @@ public class BuilderMethodSequenceFinder {
                     .forEach(it -> classes1[index[0]++] = Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getName())));
 
             return loadedClass.getMethod(jcMethod.getName(), classes1);
-        } catch (IOException | ExecutionException | InterruptedException | ClassNotFoundException |
-                 NoSuchMethodException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        } catch (
+                IOException |
+                ExecutionException |
+                ClassNotFoundException |
+                NoSuchMethodException e
+        ) {
             throw new JacoDBException(e);
         }
     }
@@ -211,8 +217,10 @@ public class BuilderMethodSequenceFinder {
             return methods.stream()
                     .map(it -> Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getEnclosingClass().getName())))
                     .collect(Collectors.toList());
-        } catch (IOException | ExecutionException | InterruptedException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        } catch (IOException | ExecutionException e) {
             throw new JacoDBException(e);
         }
     }

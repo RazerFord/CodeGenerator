@@ -21,8 +21,8 @@ public class Utils {
     public static <E> E callSupplierWrapper(SupplierWrapper<E> supplierWrapper) {
         try {
             return supplierWrapper.get();
-        } catch (Exception t) {
-            throw new RuntimeException(t);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -34,8 +34,8 @@ public class Utils {
     public static <E> void callRunnableWrapper(RunnableWrapper<E> runnableWrapper) {
         try {
             runnableWrapper.run();
-        } catch (Exception t) {
-            throw new RuntimeException(t);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

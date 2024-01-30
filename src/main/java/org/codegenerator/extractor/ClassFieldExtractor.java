@@ -15,11 +15,7 @@ public class ClassFieldExtractor {
 
         Node node = Node.createNode(o, visited);
         visited.put(o, node);
-        try {
-            node.extract();
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        node.extract();
         return node;
     }
 }

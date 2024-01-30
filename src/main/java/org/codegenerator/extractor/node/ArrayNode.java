@@ -35,7 +35,7 @@ public class ArrayNode implements Node {
     }
 
     @Override
-    public void extract() throws IllegalAccessException {
+    public void extract() {
         for (int i = 0; i < value.length; i++) {
             if (visited.containsKey(value[i])) {
                 fields.put(i, visited.get(value[i]));

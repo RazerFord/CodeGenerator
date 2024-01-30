@@ -11,7 +11,7 @@ public interface Node extends Map<Object, Node> {
 
     Object getValue();
 
-    void extract() throws IllegalAccessException;
+    void extract();
 
     NodeType nodeType();
 

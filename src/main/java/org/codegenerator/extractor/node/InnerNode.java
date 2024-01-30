@@ -1,5 +1,6 @@
 package org.codegenerator.extractor.node;
 
+import org.codegenerator.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +32,7 @@ public class InnerNode implements Node {
     }
 
     @Override
-    public void extract() throws IllegalAccessException {
+    public void extract() {
         Class<?> clz = clazz;
         List<Node> unvisitedNodes = new ArrayList<>();
 
@@ -43,7 +44,7 @@ public class InnerNode implements Node {
                     continue;
                 }
                 field.setAccessible(true);
-                Object o = field.get(value);
+                Object o = Utils.callSupplierWrapper(() -> field.get(value));
                 Node node = Node.createNode(field, o, visited);
                 Node nextNode = visited.putIfAbsent(o, node);
                 if (nextNode != null) {

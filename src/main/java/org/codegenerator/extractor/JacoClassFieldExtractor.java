@@ -1,5 +1,6 @@
 package org.codegenerator.extractor;
 
+import org.codegenerator.exceptions.JacoDBException;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcClasspath;
 import org.jacodb.api.JcDatabase;
@@ -39,8 +40,11 @@ public class JacoClassFieldExtractor {
             dfs(jcClassOrInterface, db.asyncClasspath(fileList).get(), fields, visited);
 
             return fields;
-        } catch (IOException | ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        } catch (IOException | ExecutionException e) {
+            throw new JacoDBException(e);
         }
     }
 
