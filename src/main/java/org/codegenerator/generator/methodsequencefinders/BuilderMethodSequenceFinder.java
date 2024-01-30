@@ -112,7 +112,7 @@ public class BuilderMethodSequenceFinder {
             buildableList.set(lastIndex, new ReturnMiddleChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
             buildableList.add(new FinalChainingMethod(builderBuildMethod));
         } else {
-            buildableList.add(new ReturnExpression(String.format("return %s.%s()", VARIABLE_NAME, builderBuildMethod.getName())));
+            buildableList.add(new ReturnExpression(String.format("%s.%s()", VARIABLE_NAME, builderBuildMethod.getName())));
         }
 
         return buildableList;
@@ -129,7 +129,7 @@ public class BuilderMethodSequenceFinder {
         for (Constructor<?> constructor : builderClazz.getConstructors()) {
             if (constructor.getParameterCount() == 0) return constructor;
         }
-        try (JcDatabase db = loadOrCreateDataBase(dbname, Usages.INSTANCE, InMemoryHierarchy.INSTANCE)) {
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             Class<?>[] localClasses = ArrayUtils.add(classes, builderClazz);
             localClasses = ArrayUtils.add(localClasses, clazz);
             List<File> fileList = Arrays.stream(localClasses).map(it ->
@@ -195,7 +195,7 @@ public class BuilderMethodSequenceFinder {
     }
 
     public List<Class<?>> findBuilders() {
-        try (JcDatabase db = loadOrCreateDataBase(dbname, Builders.INSTANCE, InMemoryHierarchy.INSTANCE)) {
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             List<File> fileList = Arrays.stream(ArrayUtils.addAll(classes, clazz)).map(it ->
                     Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
             ).collect(Collectors.toList());
@@ -217,11 +217,11 @@ public class BuilderMethodSequenceFinder {
         }
     }
 
-    private JcDatabase loadOrCreateDataBase(String dbname, JcFeature<?, ?>... jcFeatures) throws ExecutionException, InterruptedException {
+    private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
         return JacoDB.async(new JcSettings()
                 .useProcessJavaRuntime()
                 .persistent(dbname)
-                .installFeatures(jcFeatures)
+                .installFeatures(Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE)
         ).get();
     }
 
