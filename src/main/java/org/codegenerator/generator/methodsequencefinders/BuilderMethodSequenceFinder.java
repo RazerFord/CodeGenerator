@@ -25,8 +25,8 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.throwIf;
@@ -58,7 +58,7 @@ public class BuilderMethodSequenceFinder {
                 StateGraph stateGraph = builderInfo.stateGraph;
                 Executable builderConstructor = builderInfo.builderConstructor;
 
-                Function<Object, Object> termination = createTerminationFunction(builderBuildMethod);
+                UnaryOperator<Object> termination = createTerminationFunction(builderBuildMethod);
                 AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
                 List<EdgeMethod> edgeMethods = stateGraph.findPath(assignableTypePropertyGrouper, createConstructorSupplier(builderConstructor), termination);
 
@@ -186,7 +186,7 @@ public class BuilderMethodSequenceFinder {
     }
 
     @Contract(pure = true)
-    private @NotNull Function<Object, Object> createTerminationFunction(Method method) {
+    private @NotNull UnaryOperator<Object> createTerminationFunction(Method method) {
         return o -> Utils.callSupplierWrapper(() -> method.invoke(o));
     }
 

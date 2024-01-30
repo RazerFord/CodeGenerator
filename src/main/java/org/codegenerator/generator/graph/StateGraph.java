@@ -10,8 +10,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.util.*;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.callRunnableWrapper;
@@ -29,10 +29,10 @@ public class StateGraph {
     public @NotNull List<EdgeMethod> findPath(
             @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
             @NotNull Supplier<Object> constructor,
-            @NotNull Function<Object, Object> termination
+            @NotNull UnaryOperator<Object> termination
     ) {
         Object beginObject = constructor.get();
-        Function<Object, Object> copyObject = copyObject(constructor);
+        UnaryOperator<Object> copyObject = copyObject(constructor);
         Object finalObject = assignableTypePropertyGrouper.getObject();
         Map<Class<?>, List<Object>> typeToValues = assignableTypePropertyGrouper.get();
 
@@ -43,15 +43,15 @@ public class StateGraph {
             @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
             @NotNull Supplier<Object> constructor
     ) {
-        return findPath(assignableTypePropertyGrouper, constructor, Function.identity());
+        return findPath(assignableTypePropertyGrouper, constructor, UnaryOperator.identity());
     }
 
     public @NotNull List<EdgeMethod> findPath(
             @NotNull Object beginObject,
             @NotNull Object finalObject,
             @NotNull Map<Class<?>, List<Object>> typeToValues,
-            @NotNull Function<Object, Object> copyObject,
-            @NotNull Function<Object, Object> termination
+            @NotNull UnaryOperator<Object> copyObject,
+            @NotNull UnaryOperator<Object> termination
     ) {
         List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(typeToValues);
 
@@ -78,8 +78,8 @@ public class StateGraph {
             @NotNull Triple<Object, Node, PathNode> triple,
             @NotNull Node finalNode,
             @NotNull List<EdgeMethod> edgeMethods,
-            @NotNull Function<Object, Object> copyObject,
-            @NotNull Function<Object, Object> termination
+            @NotNull UnaryOperator<Object> copyObject,
+            @NotNull UnaryOperator<Object> termination
     ) {
         Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
         Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
@@ -123,7 +123,7 @@ public class StateGraph {
     }
 
     @Contract(pure = true)
-    private @NotNull Function<Object, Object> copyObject(@NotNull Supplier<?> supplier) {
+    private @NotNull UnaryOperator<Object> copyObject(@NotNull Supplier<?> supplier) {
         return o -> {
             Object instance = callSupplierWrapper(supplier::get);
             for (Field field : clazz.getDeclaredFields()) {
