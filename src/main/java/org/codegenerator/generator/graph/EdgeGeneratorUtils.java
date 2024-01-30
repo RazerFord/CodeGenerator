@@ -41,6 +41,7 @@ public class EdgeGeneratorUtils {
      * This method builds a graph
      * Let the type of the method be `void(int, int)`, and the map contains a pair [int => {1, 2, 3}].
      * Then the graph will be built:
+     * <p>
      * (int, 0) ---> (int, 0)
      *           |
      * (int, 1) ---> (int, 1)
