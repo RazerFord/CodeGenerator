@@ -40,7 +40,7 @@ public class InnerNode implements Node {
             Field[] fields1 = clz.getDeclaredFields();
             for (Field field : fields1) {
                 int modifiers = field.getModifiers();
-                if (Modifier.isFinal(modifiers) && Modifier.isStatic(modifiers)) {
+                if (Modifier.isStatic(modifiers)) {
                     continue;
                 }
                 field.setAccessible(true);
