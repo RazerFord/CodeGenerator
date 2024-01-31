@@ -1,11 +1,13 @@
 package org.codegenerator.generator;
 
+import com.squareup.javapoet.JavaFile;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.POJOMethodSequenceFinder;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -26,8 +28,11 @@ public class POJOGenerator<T> implements Generator<T> {
         pojoMethodSequenceFinder = new POJOMethodSequenceFinder(clazz);
     }
 
-    public void generate(@NotNull T finalObject, Path path) {
+    public void generate(@NotNull T finalObject, Path path) throws IOException {
         List<Buildable> pathNode = pojoMethodSequenceFinder.find(finalObject);
-        classCodeGenerators.generate(pathNode, path);
+
+        JavaFile javaFile = classCodeGenerators.generate(pathNode);
+
+        javaFile.writeTo(path);
     }
 }

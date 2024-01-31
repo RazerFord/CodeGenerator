@@ -46,8 +46,8 @@ public class GeneratedCodeCompiler {
             Class<?> clazz = loadClass(outputDirectory, className);
             Object o = clazz.getConstructors()[0].newInstance();
             return (R) clazz.getMethod(methodName).invoke(o);
-        } catch (Throwable t) {
-            throw new RuntimeException(t);
+        } catch (Exception e) {
+            throw new ObjectCreationException(e);
         }
     }
 
@@ -78,5 +78,11 @@ public class GeneratedCodeCompiler {
 
     private @NotNull URL getUrl(String classPath) throws MalformedURLException {
         return Paths.get(classPath).normalize().toUri().toURL();
+    }
+
+    public static class ObjectCreationException extends RuntimeException {
+        public ObjectCreationException(Exception e) {
+            super(e);
+        }
     }
 }

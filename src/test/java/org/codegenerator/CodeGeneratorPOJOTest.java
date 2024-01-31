@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -19,7 +20,7 @@ public class CodeGeneratorPOJOTest {
     private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
 
     @Test
-    public void setterPointTest() {
+    public void setterPointTest() throws IOException {
         final String generatedClassName = "GeneratedPointClass";
         POJOGenerator<Point> generator = new POJOGenerator<>(Point.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -34,7 +35,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void defaultPointArgumentsTest() {
+    public void defaultPointArgumentsTest() throws IOException {
         final String generatedClassName = "GeneratedPointClass";
         POJOGenerator<Point> generator = new POJOGenerator<>(Point.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -49,7 +50,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterUserTest() {
+    public void setterUserTest() throws IOException {
         final String generatedClassName = "GeneratedUserClass";
         POJOGenerator<User> generator = new POJOGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -64,7 +65,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void defaultUserArgumentsTest() {
+    public void defaultUserArgumentsTest() throws IOException {
         final String generatedClassName = "GeneratedUserClass";
         POJOGenerator<User> generator = new POJOGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -76,7 +77,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterAllPrimitiveTypesTest() {
+    public void setterAllPrimitiveTypesTest() throws IOException {
         final String generatedClassName = "GeneratedAllPrimitiveTypesClass";
         POJOGenerator<AllPrimitiveTypes> generator = new POJOGenerator<>(AllPrimitiveTypes.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -95,7 +96,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterPointComplexTest() {
+    public void setterPointComplexTest() throws IOException {
         final String generatedClassName = "GeneratedPointComplexClass";
         POJOGenerator<PointComplex> generator = new POJOGenerator<>(PointComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -110,7 +111,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterUserComplexTest() {
+    public void setterUserComplexTest() throws IOException {
         final String generatedClassName = "GeneratedUserComplexClass";
         POJOGenerator<UserComplex> generator = new POJOGenerator<>(UserComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -123,7 +124,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterAllPrimitiveTypesComplexTest() {
+    public void setterAllPrimitiveTypesComplexTest() throws IOException {
         final String generatedClassName = "GeneratedAllPrimitiveTypesComplexClass";
         POJOGenerator<AllPrimitiveTypesComplex> generator = new POJOGenerator<>(AllPrimitiveTypesComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -142,7 +143,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterAllPrimitiveTypesMixedTest() {
+    public void setterAllPrimitiveTypesMixedTest() throws IOException {
         final String generatedClassName = "GeneratedAllPrimitiveTypesMixedClass";
         POJOGenerator<AllPrimitiveTypesMixed> generator = new POJOGenerator<>(AllPrimitiveTypesMixed.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -162,7 +163,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterAllPrimitiveTypesBoxedTest() {
+    public void setterAllPrimitiveTypesBoxedTest() throws IOException {
         final String generatedClassName = "GeneratedAllBoxedTypesMixedClass";
         POJOGenerator<AllBoxedTypesMixed> generator = new POJOGenerator<>(AllBoxedTypesMixed.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -182,7 +183,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterBoxingUnboxingTest() {
+    public void setterBoxingUnboxingTest() throws IOException {
         final String generatedClassName = "GeneratedOneFieldBoxingUnboxingClass";
         POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -195,7 +196,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterBoxingUnboxingWithDefaultArgsTest() {
+    public void setterBoxingUnboxingWithDefaultArgsTest() throws IOException {
         final String generatedClassName = "GeneratedOneFieldBoxingUnboxingDefaultClass";
         POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -207,7 +208,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterWithArrayPrimitiveTypesTest() {
+    public void setterWithArrayPrimitiveTypesTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithArrayOfPrimitiveTypesClass";
         POJOGenerator<ClassWithArrayOfPrimitiveTypes> generator = new POJOGenerator<>(ClassWithArrayOfPrimitiveTypes.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -221,7 +222,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterWithArrayNonPrimitiveTypesTest() {
+    public void setterWithArrayNonPrimitiveTypesTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithArrayOfNonPrimitiveTypesClass";
         POJOGenerator<Points> generator = new POJOGenerator<>(Points.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -246,7 +247,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterWithOtherPOJOTest() {
+    public void setterWithOtherPOJOTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithOtherPOJOClass";
         POJOGenerator<ClassWithOtherPOJO> generator = new POJOGenerator<>(ClassWithOtherPOJO.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -263,7 +264,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterWithManyPOJOTest() {
+    public void setterWithManyPOJOTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyPOJOClass";
         POJOGenerator<ClassWithManyPOJO> generator = new POJOGenerator<>(ClassWithManyPOJO.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -296,7 +297,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void nonDefaultConstructor() {
+    public void nonDefaultConstructor() throws IOException {
         final String generatedClassName = "GeneratedUserComplexConstructorClass";
         POJOGenerator<UserComplexConstructor> generator = new POJOGenerator<>(UserComplexConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -311,7 +312,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void veryManySetterDefaultTest() {
+    public void veryManySetterDefaultTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyDefaultFieldsClass";
         POJOGenerator<ClassWithManyFields> generator = new POJOGenerator<>(ClassWithManyFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -324,7 +325,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void veryManySetterTest() {
+    public void veryManySetterTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyFieldsClass";
         POJOGenerator<ClassWithManyFields> generator = new POJOGenerator<>(ClassWithManyFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -371,7 +372,7 @@ public class CodeGeneratorPOJOTest {
 
     @Test
     @Timeout(20)
-    public void veryManySetterComplexTest() {
+    public void veryManySetterComplexTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyFieldsComplexClass";
         POJOGenerator<ClassWithManyFieldsComplex> generator = new POJOGenerator<>(ClassWithManyFieldsComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -417,7 +418,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterMultidimensionalIntArrayTest() {
+    public void setterMultidimensionalIntArrayTest() throws IOException {
         final String generatedClassName = "GeneratedClassMultidimensionalIntArrayClass";
         POJOGenerator<MultidimensionalIntArray> generator = new POJOGenerator<>(MultidimensionalIntArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
@@ -430,7 +431,7 @@ public class CodeGeneratorPOJOTest {
     }
 
     @Test
-    public void setterMultidimensionalPointArrayTest() {
+    public void setterMultidimensionalPointArrayTest() throws IOException {
         final String generatedClassName = "GeneratedClassMultidimensionalPointArrayClass";
         POJOGenerator<MultidimensionalPointArray> generator = new POJOGenerator<>(MultidimensionalPointArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 

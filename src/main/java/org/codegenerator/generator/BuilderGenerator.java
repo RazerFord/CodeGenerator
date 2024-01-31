@@ -1,11 +1,13 @@
 package org.codegenerator.generator;
 
+import com.squareup.javapoet.JavaFile;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.BuilderMethodSequenceFinder;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -27,8 +29,11 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Override
-    public void generate(@NotNull T finalObject, Path path) {
+    public void generate(@NotNull T finalObject, Path path) throws IOException {
         List<Buildable> buildableList = builderMethodSequenceFinder.find(finalObject);
-        classCodeGenerators.generate(buildableList, path);
+
+        JavaFile javaFile = classCodeGenerators.generate(buildableList);
+
+        javaFile.writeTo(path);
     }
 }

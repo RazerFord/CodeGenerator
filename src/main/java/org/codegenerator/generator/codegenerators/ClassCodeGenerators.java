@@ -27,7 +27,7 @@ public class ClassCodeGenerators {
         methodCodeGenerator = new MethodCodeGenerator();
     }
 
-    public void generate(@NotNull List<Buildable> methodCalls, Path path) {
+    public JavaFile generate(@NotNull List<Buildable> methodCalls) {
         TypeSpec.Builder generatedClassBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(clazz);
 
@@ -35,12 +35,6 @@ public class ClassCodeGenerators {
 
         MethodSpec method = methodBuilder.build();
         TypeSpec type = generatedClassBuilder.addMethod(method).build();
-        JavaFile javaFile = JavaFile.builder(packageName, type).build();
-
-        try {
-            javaFile.writeTo(path);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return JavaFile.builder(packageName, type).build();
     }
 }
