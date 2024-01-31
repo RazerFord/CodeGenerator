@@ -1,5 +1,6 @@
 package org.codegenerator.generator.methodsequencefinders;
 
+import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.*;
 import org.jetbrains.annotations.NotNull;
@@ -44,7 +45,7 @@ public class POJOMethodSequenceFinder {
         int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
         int numberFields = clazz.getDeclaredFields().length;
 
-        throwIf(maxArguments > numberFields, new RuntimeException(NUM_ARG_GREATER_THEN_NUM_FIELDS));
+        throwIf(maxArguments > numberFields, new InvariantCheckingException(NUM_ARG_GREATER_THEN_NUM_FIELDS));
     }
 
     private static final String VARIABLE_NAME = "object";

@@ -4,6 +4,7 @@ import kotlin.sequences.Sequence;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
+import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.exceptions.PathNotFindException;
 import org.codegenerator.generator.codegenerators.buildables.*;
@@ -197,7 +198,7 @@ public class BuilderMethodSequenceFinder {
     }
 
     private void checkInvariants() {
-        throwIf(builderInfoList.isEmpty(), new RuntimeException(BUILDER_NOT_FOUND));
+        throwIf(builderInfoList.isEmpty(), new InvariantCheckingException(BUILDER_NOT_FOUND));
     }
 
     public List<Class<?>> findBuilders() {

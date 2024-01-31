@@ -1,5 +1,6 @@
 package org.codegenerator.generator.graph;
 
+import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +29,7 @@ public class PojoConstructorStateGraph {
 
     private @NotNull EdgeConstructor buildBeginObjectAndMethodCall(Object finalObject, @NotNull List<EdgeConstructor> edges) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
-        throwIf(edges.isEmpty(), new RuntimeException(NO_CONSTRUCTORS));
+        throwIf(edges.isEmpty(), new InvariantCheckingException(NO_CONSTRUCTORS));
         EdgeConstructor edgeConstructor = edges.get(0);
         Object currObject = edgeConstructor.invoke();
         Node currNode = ClassFieldExtractor.extract(currObject);
