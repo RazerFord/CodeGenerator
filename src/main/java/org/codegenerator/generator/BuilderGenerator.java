@@ -36,17 +36,17 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Override
-    public void generate(@NotNull T finalObject, Path path) throws IOException {
-        generate(finalObject, packageName, className, methodName, path);
+    public void generateCode(@NotNull T finalObject, Path path) throws IOException {
+        this.generateCode(finalObject, packageName, className, methodName, path);
     }
 
     @Override
-    public void generate(@NotNull T finalObject, String className, String methodName, Path path) throws IOException {
-        generate(finalObject, packageName, className, methodName, path);
+    public void generateCode(@NotNull T finalObject, String className, String methodName, Path path) throws IOException {
+        this.generateCode(finalObject, packageName, className, methodName, path);
     }
 
     @Override
-    public void generate(
+    public void generateCode(
             @NotNull T finalObject,
             String packageName,
             String className,

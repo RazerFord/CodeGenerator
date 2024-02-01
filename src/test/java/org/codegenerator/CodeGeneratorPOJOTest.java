@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class CodeGeneratorPOJOTest {
     private static final String OUTPUT_DIRECTORY = "./";
     private static final String PACKAGE_NAME = "generatedclass";
-    private static final String METHOD_NAME = "generate";
+    private static final String METHOD_NAME = "generateCode";
     private static final String CLASS_PATH_PREFIX = "./generatedclass/";
     private static final String CLASS_NAME_PREFIX = "generatedclass.";
     private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
@@ -28,7 +28,7 @@ public class CodeGeneratorPOJOTest {
         point.setX(100);
         point.setY(6);
         point.setZ(3);
-        generator.generate(point, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(point, Paths.get(OUTPUT_DIRECTORY));
 
         Point other = createObject(generatedClassName);
         assertEquals(point, other);
@@ -43,7 +43,7 @@ public class CodeGeneratorPOJOTest {
         point.setX(0);
         point.setY(0);
         point.setZ(0);
-        generator.generate(point, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(point, Paths.get(OUTPUT_DIRECTORY));
 
         Point other = createObject(generatedClassName);
         assertEquals(point, other);
@@ -58,7 +58,7 @@ public class CodeGeneratorPOJOTest {
         user.setName("Alex");
         user.setAge(12);
         user.setWeight(42);
-        generator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         User other = createObject(generatedClassName);
         assertEquals(user, other);
@@ -70,7 +70,7 @@ public class CodeGeneratorPOJOTest {
         POJOGenerator<User> generator = new POJOGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User user = new User();
-        generator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         User other = createObject(generatedClassName);
         assertEquals(user, other);
@@ -89,7 +89,7 @@ public class CodeGeneratorPOJOTest {
         allPrimitiveTypes.setFloat(42.0F);
         allPrimitiveTypes.setDouble(42.0);
         allPrimitiveTypes.setChar('b');
-        generator.generate(allPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(allPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
 
         AllPrimitiveTypes other = createObject(generatedClassName);
         assertEquals(allPrimitiveTypes, other);
@@ -104,7 +104,7 @@ public class CodeGeneratorPOJOTest {
         point.setX(100);
         point.setY(6);
         point.setZ(3);
-        generator.generate(point, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(point, Paths.get(OUTPUT_DIRECTORY));
 
         PointComplex other = createObject(generatedClassName);
         assertEquals(point, other);
@@ -117,7 +117,7 @@ public class CodeGeneratorPOJOTest {
 
         UserComplex user = new UserComplex();
         user.setNameAgeWeight("Alex", 12, 42);
-        generator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserComplex other = createObject(generatedClassName);
         assertEquals(user, other);
@@ -136,7 +136,7 @@ public class CodeGeneratorPOJOTest {
         allPrimitiveTypes.setFloat(42.0F);
         allPrimitiveTypes.setDouble(42.0);
         allPrimitiveTypes.setChar('b');
-        generator.generate(allPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(allPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
 
         AllPrimitiveTypesComplex other = createObject(generatedClassName);
         assertEquals(allPrimitiveTypes, other);
@@ -156,7 +156,7 @@ public class CodeGeneratorPOJOTest {
         allPrimitiveTypes.setDouble(42.0);
         allPrimitiveTypes.setChar('b');
         allPrimitiveTypes.setBoolean(true);
-        generator.generate(allPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(allPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
 
         AllPrimitiveTypesMixed other = createObject(generatedClassName);
         assertEquals(allPrimitiveTypes, other);
@@ -176,7 +176,7 @@ public class CodeGeneratorPOJOTest {
         allBoxedTypes.setDouble(42.0);
         allBoxedTypes.setChar('b');
         allBoxedTypes.setBoolean(true);
-        generator.generate(allBoxedTypes, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(allBoxedTypes, Paths.get(OUTPUT_DIRECTORY));
 
         AllBoxedTypesMixed other = createObject(generatedClassName);
         assertEquals(allBoxedTypes, other);
@@ -189,7 +189,7 @@ public class CodeGeneratorPOJOTest {
 
         OneFieldBoxingUnboxing oneFieldBoxingUnboxing = new OneFieldBoxingUnboxing();
         oneFieldBoxingUnboxing.setJ(42);
-        generator.generate(oneFieldBoxingUnboxing, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(oneFieldBoxingUnboxing, Paths.get(OUTPUT_DIRECTORY));
 
         OneFieldBoxingUnboxing other = createObject(generatedClassName);
         assertEquals(oneFieldBoxingUnboxing, other);
@@ -201,7 +201,7 @@ public class CodeGeneratorPOJOTest {
         POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         OneFieldBoxingUnboxing oneFieldBoxingUnboxing = new OneFieldBoxingUnboxing();
-        generator.generate(oneFieldBoxingUnboxing, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(oneFieldBoxingUnboxing, Paths.get(OUTPUT_DIRECTORY));
 
         OneFieldBoxingUnboxing other = createObject(generatedClassName);
         assertEquals(oneFieldBoxingUnboxing, other);
@@ -215,7 +215,7 @@ public class CodeGeneratorPOJOTest {
         ClassWithArrayOfPrimitiveTypes classWithArrayOfPrimitiveTypes = new ClassWithArrayOfPrimitiveTypes();
         int[] array = new int[]{1, 2, 4, 2, 5};
         classWithArrayOfPrimitiveTypes.setArrayOfInt(array);
-        generator.generate(classWithArrayOfPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(classWithArrayOfPrimitiveTypes, Paths.get(OUTPUT_DIRECTORY));
 
         ClassWithArrayOfPrimitiveTypes other = createObject(generatedClassName);
         assertEquals(classWithArrayOfPrimitiveTypes, other);
@@ -240,7 +240,7 @@ public class CodeGeneratorPOJOTest {
         array[4].setX(17);
 
         points.setPoints(array);
-        generator.generate(points, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(points, Paths.get(OUTPUT_DIRECTORY));
 
         Points other = createObject(generatedClassName);
         assertEquals(points, other);
@@ -257,7 +257,7 @@ public class CodeGeneratorPOJOTest {
         point.setY(4);
         point.setZ(9);
         classWithOtherPOJO.setPoint(point);
-        generator.generate(classWithOtherPOJO, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(classWithOtherPOJO, Paths.get(OUTPUT_DIRECTORY));
 
         ClassWithOtherPOJO other = createObject(generatedClassName);
         assertEquals(classWithOtherPOJO, other);
@@ -290,7 +290,7 @@ public class CodeGeneratorPOJOTest {
         allPrimitiveTypes.setInt(42);
         classWithManyPOJO.setAllPrimitiveTypes(allPrimitiveTypes);
 
-        generator.generate(classWithManyPOJO, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(classWithManyPOJO, Paths.get(OUTPUT_DIRECTORY));
 
         ClassWithManyPOJO other = createObject(generatedClassName);
         assertEquals(classWithManyPOJO, other);
@@ -305,7 +305,7 @@ public class CodeGeneratorPOJOTest {
         userComplexConstructor.setName("John Doe");
         userComplexConstructor.setAge(42);
         userComplexConstructor.setWeight(80);
-        generator.generate(userComplexConstructor, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(userComplexConstructor, Paths.get(OUTPUT_DIRECTORY));
 
         UserComplexConstructor other = createObject(generatedClassName);
         assertEquals(userComplexConstructor, other);
@@ -318,7 +318,7 @@ public class CodeGeneratorPOJOTest {
 
         ClassWithManyFields classWithManyFields = new ClassWithManyFields();
 
-        generator.generate(classWithManyFields, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(classWithManyFields, Paths.get(OUTPUT_DIRECTORY));
 
         ClassWithManyFields other = createObject(generatedClassName);
         assertEquals(classWithManyFields, other);
@@ -364,7 +364,7 @@ public class CodeGeneratorPOJOTest {
         classWithManyFields.setField32("field32");
         classWithManyFields.setField33("field33");
 
-        generator.generate(classWithManyFields, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(classWithManyFields, Paths.get(OUTPUT_DIRECTORY));
 
         ClassWithManyFields other = createObject(generatedClassName);
         assertEquals(classWithManyFields, other);
@@ -411,7 +411,7 @@ public class CodeGeneratorPOJOTest {
         classWithManyFieldsComplex.setField32("field32");
         classWithManyFieldsComplex.setField33("field33");
 
-        generator.generate(classWithManyFieldsComplex, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(classWithManyFieldsComplex, Paths.get(OUTPUT_DIRECTORY));
 
         ClassWithManyFieldsComplex other = createObject(generatedClassName);
         assertEquals(classWithManyFieldsComplex, other);
@@ -424,7 +424,7 @@ public class CodeGeneratorPOJOTest {
 
         MultidimensionalIntArray multidimensionalIntArray = getMultidimensionalIntArray();
 
-        generator.generate(multidimensionalIntArray, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(multidimensionalIntArray, Paths.get(OUTPUT_DIRECTORY));
 
         MultidimensionalIntArray other = createObject(generatedClassName);
         assertEquals(multidimensionalIntArray, other);
@@ -437,7 +437,7 @@ public class CodeGeneratorPOJOTest {
 
         MultidimensionalPointArray multidimensionalPointArray = getMultidimensionalPointArray();
 
-        generator.generate(multidimensionalPointArray, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(multidimensionalPointArray, Paths.get(OUTPUT_DIRECTORY));
 
         MultidimensionalPointArray other = createObject(generatedClassName);
         assertEquals(multidimensionalPointArray, other);

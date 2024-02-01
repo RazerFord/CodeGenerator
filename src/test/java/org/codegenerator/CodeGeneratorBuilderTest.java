@@ -30,7 +30,7 @@ public class CodeGeneratorBuilderTest {
                 .age(17)
                 .build();
 
-        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         User that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -44,7 +44,7 @@ public class CodeGeneratorBuilderTest {
 
         User user = User.builder().build();
 
-        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         User that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -62,7 +62,7 @@ public class CodeGeneratorBuilderTest {
                 .age(17)
                 .build();
 
-        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserBuilderWithConstructor that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -76,7 +76,7 @@ public class CodeGeneratorBuilderTest {
 
         UserBuilderWithConstructor user = new UserBuilderWithConstructor.UserBuilder().build();
 
-        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserBuilderWithConstructor that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -94,7 +94,7 @@ public class CodeGeneratorBuilderTest {
         userBuilder.created(42);
         UserWithDefect user = userBuilder.build();
 
-        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserWithDefect that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -110,7 +110,7 @@ public class CodeGeneratorBuilderTest {
         User userTo = User.builder().created(56).age(42).name("Gordon Freeman").build();
         SendingMoneyTransfer sendingMoneyTransfer = SendingMoneyTransfer.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
 
-        builderGenerator.generate(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
+        builderGenerator.generateCode(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
 
         SendingMoneyTransfer that = createObject(generatedClassName);
         assertEquals(sendingMoneyTransfer, that);
@@ -126,7 +126,7 @@ public class CodeGeneratorBuilderTest {
         UserPojo userTo = new UserPojo("Gordon Freeman", 56, 42);
         SendingMoneyTransferWithPojo sendingMoneyTransfer = SendingMoneyTransferWithPojo.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
 
-        builderGenerator.generate(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
+        builderGenerator.generateCode(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
 
         SendingMoneyTransferWithPojo that = createObject(generatedClassName);
         assertEquals(sendingMoneyTransfer, that);
@@ -140,7 +140,7 @@ public class CodeGeneratorBuilderTest {
 
         UserWithBuilderInAnotherPackage user = new UserBuilder().created(102).age(18).name("John Doe").build();
 
-        builderGenerator.generate(user, Paths.get(OUTPUT_DIRECTORY));
+        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserWithBuilderInAnotherPackage that = createObject(generatedClassName);
         assertEquals(user, that);
