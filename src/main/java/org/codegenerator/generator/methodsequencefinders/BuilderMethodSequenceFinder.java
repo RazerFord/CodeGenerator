@@ -36,19 +36,14 @@ public class BuilderMethodSequenceFinder {
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
     private final Class<?> clazz;
     private final Class<?>[] classes;
-    private final List<BuilderInfo> builderInfoList = new ArrayList<>();
+    private final List<BuilderInfo> builderInfoList;
 
     public BuilderMethodSequenceFinder(@NotNull Class<?> clazz, Class<?>... classes) {
         this.clazz = clazz;
         this.classes = classes;
-        List<Class<?>> builderClasses = findBuilders();
-        for (Class<?> builderClass : builderClasses) {
-            Method buildMethod = findBuildMethod(builderClass);
-            if (buildMethod == null) continue;
-            Executable builderConstructor = findBuilderConstructor(builderClass);
-            StateGraph stateGraph = new StateGraph(builderClass);
-            builderInfoList.add(new BuilderInfo(builderClass, builderConstructor, buildMethod, stateGraph));
-        }
+
+        builderInfoList = createBuilderInfoList();
+
         checkInvariants();
     }
 
@@ -69,6 +64,29 @@ public class BuilderMethodSequenceFinder {
             }
         }
         throw new PathNotFindException();
+    }
+
+    private @NotNull List<BuilderInfo> createBuilderInfoList() {
+        List<BuilderInfo> builderInfoList = new ArrayList<>();
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+            List<Class<?>> builderClasses = findBuilders(db);
+
+            for (Class<?> builderClass : builderClasses) {
+                Method buildMethod = findBuildMethod(builderClass);
+                if (buildMethod == null) continue;
+
+                Executable builderConstructor = findBuilderConstructor(db, builderClass);
+                StateGraph stateGraph = new StateGraph(builderClass);
+
+                builderInfoList.add(new BuilderInfo(builderClass, builderConstructor, buildMethod, stateGraph));
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        } catch (IOException | ExecutionException e) {
+            throw new JacoDBException(e);
+        }
+        return builderInfoList;
     }
 
     private @NotNull List<Buildable> createBuildableList(@NotNull List<EdgeMethod> edgeMethods, @NotNull BuilderInfo builderInfo) {
@@ -126,11 +144,11 @@ public class BuilderMethodSequenceFinder {
                 .findFirst().orElse(null);
     }
 
-    private @Nullable Executable findBuilderConstructor(@NotNull Class<?> builderClazz) {
+    private @Nullable Executable findBuilderConstructor(JcDatabase db, @NotNull Class<?> builderClazz) throws IOException, ExecutionException, InterruptedException {
         for (Constructor<?> constructor : builderClazz.getConstructors()) {
             if (constructor.getParameterCount() == 0) return constructor;
         }
-        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+        try {
             Class<?>[] localClasses = ArrayUtils.add(classes, builderClazz);
             localClasses = ArrayUtils.add(localClasses, clazz);
             List<File> fileList = Arrays.stream(localClasses).map(it ->
@@ -153,12 +171,7 @@ public class BuilderMethodSequenceFinder {
                     .forEach(it -> classes1[index[0]++] = Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getName())));
 
             return loadedClass.getMethod(jcMethod.getName(), classes1);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new JacoDBException(e);
         } catch (
-                IOException |
-                ExecutionException |
                 ClassNotFoundException |
                 NoSuchMethodException e
         ) {
@@ -201,29 +214,24 @@ public class BuilderMethodSequenceFinder {
         throwIf(builderInfoList.isEmpty(), new InvariantCheckingException(BUILDER_NOT_FOUND));
     }
 
-    public List<Class<?>> findBuilders() {
-        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            List<File> fileList = Arrays.stream(ArrayUtils.addAll(classes, clazz)).map(it ->
-                    Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
-            ).collect(Collectors.toList());
-            JcClasspath classpath = db.asyncClasspath(fileList).get();
-            JcClassOrInterface needle = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
-            BuildersExtension haystack = new BuildersExtension(classpath, JcHierarchies.asyncHierarchy(classpath).get());
+    public List<Class<?>> findBuilders(@NotNull JcDatabase db) throws IOException, ExecutionException, InterruptedException {
+        List<File> fileList = Arrays.stream(ArrayUtils.addAll(classes, clazz)).map(it ->
+                Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
+        ).collect(Collectors.toList());
+        JcClasspath classpath = db.asyncClasspath(fileList).get();
 
-            Sequence<JcMethod> jcMethodSequence = haystack.findBuildMethods(needle, true);
-            Iterator<JcMethod> iterator = jcMethodSequence.iterator();
-            List<JcMethod> methods = new ArrayList<>();
-            iterator.forEachRemaining(methods::add);
-            ClassLoader classLoader = clazz.getClassLoader();
-            return methods.stream()
-                    .map(it -> Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getEnclosingClass().getName())))
-                    .collect(Collectors.toList());
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new JacoDBException(e);
-        } catch (IOException | ExecutionException e) {
-            throw new JacoDBException(e);
-        }
+        JcClassOrInterface needle = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
+        BuildersExtension haystack = new BuildersExtension(classpath, JcHierarchies.asyncHierarchy(classpath).get());
+
+        Sequence<JcMethod> jcMethodSequence = haystack.findBuildMethods(needle, true);
+        Iterator<JcMethod> iterator = jcMethodSequence.iterator();
+
+        List<JcMethod> methods = new ArrayList<>();
+        iterator.forEachRemaining(methods::add);
+        ClassLoader classLoader = clazz.getClassLoader();
+        return methods.stream()
+                .map(it -> Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getEnclosingClass().getName())))
+                .collect(Collectors.toList());
     }
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
