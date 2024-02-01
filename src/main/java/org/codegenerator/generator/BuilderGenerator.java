@@ -15,6 +15,9 @@ public class BuilderGenerator<T> implements Generator<T> {
     private static final String PACKAGE_NAME = "generatedclass";
     private static final String CLASS_NAME = "GeneratedClass";
     private static final String METHOD_NAME = "generate";
+    private final String packageName;
+    private final String className;
+    private final String methodName;
     private final ClassCodeGenerators classCodeGenerators;
     private final BuilderMethodSequenceFinder builderMethodSequenceFinder;
 
@@ -24,15 +27,30 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     public BuilderGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName, Class<?>... classes) {
+        this.packageName = packageName;
+        this.className = className;
+        this.methodName = methodName;
+
         builderMethodSequenceFinder = new BuilderMethodSequenceFinder(clazz, classes);
-        classCodeGenerators = new ClassCodeGenerators(clazz, packageName, className, methodName);
+        classCodeGenerators = new ClassCodeGenerators(clazz);
     }
 
     @Override
     public void generate(@NotNull T finalObject, Path path) throws IOException {
+        generate(finalObject, packageName, className, methodName, path);
+    }
+
+    @Override
+    public void generate(
+            @NotNull T finalObject,
+            String packageName,
+            String className,
+            String methodName,
+            Path path
+    ) throws IOException {
         List<Buildable> buildableList = builderMethodSequenceFinder.find(finalObject);
 
-        JavaFile javaFile = classCodeGenerators.generate(buildableList);
+        JavaFile javaFile = classCodeGenerators.generate(buildableList, packageName, className, methodName);
 
         javaFile.writeTo(path);
     }

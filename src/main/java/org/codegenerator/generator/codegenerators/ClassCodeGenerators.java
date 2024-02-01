@@ -12,20 +12,19 @@ import static javax.lang.model.element.Modifier.*;
 
 public class ClassCodeGenerators {
     private final Class<?> clazz;
-    private final String packageName;
-    private final String className;
-    private final String methodName;
     private final MethodCodeGenerator methodCodeGenerator;
 
-    public ClassCodeGenerators(@NotNull Class<?> clazz, String packageName, String className, String methodName) {
+    public ClassCodeGenerators(@NotNull Class<?> clazz) {
         this.clazz = clazz;
-        this.packageName = packageName;
-        this.className = className;
-        this.methodName = methodName;
         methodCodeGenerator = new MethodCodeGenerator();
     }
 
-    public JavaFile generate(@NotNull List<Buildable> methodCalls) {
+    public JavaFile generate(
+            @NotNull List<Buildable> methodCalls,
+            String packageName,
+            String className,
+            String methodName
+    ) {
         TypeSpec.Builder generatedClassBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(clazz);
 
