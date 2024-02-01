@@ -1,9 +1,18 @@
 package org.codegenerator;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jacodb.api.JcDatabase;
+import org.jacodb.api.JcFeature;
+import org.jacodb.impl.JacoDB;
+import org.jacodb.impl.JcSettings;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.UnmodifiableView;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static java.util.Collections.swap;
 
@@ -16,6 +25,32 @@ public class Utils {
 
     public static <T extends RuntimeException> void throwUnless(boolean cond, T exception) {
         throwIf(!cond, exception);
+    }
+
+    public static JcDatabase loadOrCreateDataBase(String dbname, JcFeature<?, ?>... jcFeatures) throws ExecutionException, InterruptedException {
+        return JacoDB.async(new JcSettings()
+                .useProcessJavaRuntime()
+                .persistent(dbname)
+                .installFeatures(jcFeatures)
+        ).get();
+    }
+
+    public static @NotNull String buildDescriptor(@NotNull Executable executable) {
+        StringBuilder descriptor = new StringBuilder("(");
+
+        for (Class<?> c : executable.getParameterTypes()) {
+            descriptor.append(toDescriptor(c));
+        }
+        descriptor.append(")");
+
+        if (executable instanceof Constructor<?>) {
+            descriptor.append("V");
+        } else if (executable instanceof Method) {
+            descriptor.append(toDescriptor(((Method) executable).getReturnType()));
+        } else {
+            throw new IllegalArgumentException();
+        }
+        return descriptor.toString();
     }
 
     public static <E> E callSupplierWrapper(SupplierWrapper<E> supplierWrapper) {
@@ -95,5 +130,38 @@ public class Utils {
             }
         }
         return result;
+    }
+
+    private static final @NotNull @UnmodifiableView Map<Class<?>, String> PRIMITIVES_TO_DESCRIPTOR = getPrimitiveToDescriptor();
+
+    private static @NotNull @UnmodifiableView Map<Class<?>, String> getPrimitiveToDescriptor() {
+        Map<Class<?>, String> map = new HashMap<>();
+
+        map.put(byte.class, "B");
+        map.put(char.class, "C");
+        map.put(double.class, "D");
+        map.put(float.class, "F");
+        map.put(int.class, "I");
+        map.put(long.class, "J");
+        map.put(short.class, "S");
+        map.put(void.class, "V");
+        map.put(boolean.class, "Z");
+
+        return Collections.unmodifiableMap(map);
+    }
+
+    private static @NotNull String toDescriptor(@NotNull Class<?> c) {
+        String desc = PRIMITIVES_TO_DESCRIPTOR.get(c);
+        if (desc != null) return desc;
+
+        if (c.isArray()) {
+            int deep = 0;
+            for (; c.isArray(); c = c.getComponentType()) {
+                deep++;
+            }
+            return StringUtils.repeat('[', deep) + "L" + c.getName().replace(".", "/") + ";";
+        } else {
+            return "L" + c.getName().replace(".", "/") + ";";
+        }
     }
 }

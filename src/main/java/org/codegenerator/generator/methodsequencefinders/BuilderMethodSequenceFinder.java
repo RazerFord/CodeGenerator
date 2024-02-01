@@ -13,8 +13,6 @@ import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.EdgeMethod;
 import org.codegenerator.generator.graph.StateGraph;
 import org.jacodb.api.*;
-import org.jacodb.impl.JacoDB;
-import org.jacodb.impl.JcSettings;
 import org.jacodb.impl.features.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -25,6 +23,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -80,7 +79,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         for (BuilderInfo builderInfo : builderInfoList) {
             try {
                 List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
-                return Collections.emptyList();
+                return createJacoDBCalls(builderInfo.builderBuildMethod.getDeclaringClass(), edgeMethods);
             } catch (Exception e) {
                 // this block must be empty
             }
@@ -169,6 +168,30 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         return buildableList;
     }
 
+    private @NotNull List<Call<JcMethod>> createJacoDBCalls(@NotNull Class<?> declaringClass, @NotNull List<EdgeMethod> methodList) {
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+            List<File> fileList = Collections.singletonList(new File(declaringClass.getProtectionDomain().getCodeSource().getLocation().toURI()));
+            JcClasspath classpath = db.asyncClasspath(fileList).get();
+
+            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(declaringClass.getTypeName()));
+
+            List<Call<JcMethod>> callList = new ArrayList<>();
+
+            JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
+            methodList.forEach(it -> {
+                Method method = it.getMethod();
+                JcMethod jcMethod = lookup.method(method.getName(), Utils.buildDescriptor(method));
+                callList.add(new Call<>(jcMethod, it.getArgs()));
+            });
+            return callList;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        } catch (ExecutionException | IOException | URISyntaxException e) {
+            throw new JacoDBException(e);
+        }
+    }
+
     private Method findBuildMethod(@NotNull Class<?> cls) {
         return Arrays.stream(cls.getMethods())
                 .filter(m -> m.getParameterCount() == 0)
@@ -176,7 +199,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
                 .findFirst().orElse(null);
     }
 
-    private @Nullable Executable findBuilderConstructor(JcDatabase db, @NotNull Class<?> builderClazz) throws IOException, ExecutionException, InterruptedException {
+    private @Nullable Executable findBuilderConstructor(JcDatabase db, @NotNull Class<?> builderClazz) throws ExecutionException, InterruptedException {
         for (Constructor<?> constructor : builderClazz.getConstructors()) {
             if (constructor.getParameterCount() == 0) return constructor;
         }
@@ -246,7 +269,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         throwIf(builderInfoList.isEmpty(), new InvariantCheckingException(BUILDER_NOT_FOUND));
     }
 
-    public List<Class<?>> findBuilders(@NotNull JcDatabase db) throws IOException, ExecutionException, InterruptedException {
+    public List<Class<?>> findBuilders(@NotNull JcDatabase db) throws ExecutionException, InterruptedException {
         List<File> fileList = Arrays.stream(ArrayUtils.addAll(classes, clazz)).map(it ->
                 Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
         ).collect(Collectors.toList());
@@ -267,11 +290,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
-        return JacoDB.async(new JcSettings()
-                .useProcessJavaRuntime()
-                .persistent(dbname)
-                .installFeatures(Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE)
-        ).get();
+        return Utils.loadOrCreateDataBase(dbname, Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE);
     }
 
     private static class BuilderInfo {
