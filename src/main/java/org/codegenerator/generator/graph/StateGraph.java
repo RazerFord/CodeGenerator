@@ -1,5 +1,6 @@
 package org.codegenerator.generator.graph;
 
+import com.rits.cloning.Cloner;
 import kotlin.Triple;
 import org.codegenerator.Utils;
 import org.codegenerator.extractor.ClassFieldExtractor;
@@ -8,21 +9,16 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import static org.codegenerator.Utils.callRunnableWrapper;
-import static org.codegenerator.Utils.callSupplierWrapper;
-
 public class StateGraph {
-    private final Class<?> clazz;
     private final EdgeGeneratorMethod edgeGeneratorMethod;
+    private final Cloner cloner = new Cloner();
 
     public StateGraph(Class<?> clazz) {
-        this.clazz = clazz;
         edgeGeneratorMethod = new EdgeGeneratorMethod(clazz);
     }
 
@@ -32,7 +28,7 @@ public class StateGraph {
             @NotNull UnaryOperator<Object> termination
     ) {
         Object beginObject = constructor.get();
-        UnaryOperator<Object> copyObject = copyObject(constructor);
+        UnaryOperator<Object> copyObject = copyObject();
         Object finalObject = assignableTypePropertyGrouper.getObject();
         Map<Class<?>, List<Object>> typeToValues = assignableTypePropertyGrouper.get();
 
@@ -123,15 +119,8 @@ public class StateGraph {
     }
 
     @Contract(pure = true)
-    private @NotNull UnaryOperator<Object> copyObject(@NotNull Supplier<?> supplier) {
-        return o -> {
-            Object instance = callSupplierWrapper(supplier::get);
-            for (Field field : clazz.getDeclaredFields()) {
-                field.setAccessible(true);
-                callRunnableWrapper(() -> field.set(instance, callSupplierWrapper(() -> field.get(o))));
-            }
-            return instance;
-        };
+    private @NotNull UnaryOperator<Object> copyObject() {
+        return cloner::deepClone;
     }
 
     private static final class PathNode {
