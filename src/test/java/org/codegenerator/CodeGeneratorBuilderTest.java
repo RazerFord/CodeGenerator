@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CodeGeneratorBuilderTest {
+class CodeGeneratorBuilderTest {
     private static final String OUTPUT_DIRECTORY = "./";
     private static final String PACKAGE_NAME = "generatedclass";
     private static final String METHOD_NAME = "generate";
@@ -19,7 +19,7 @@ public class CodeGeneratorBuilderTest {
     private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
 
     @Test
-    public void userBuilderTest() throws IOException {
+    void userBuilderTest() throws IOException {
         final String generatedClassName = "GeneratedUserClass";
 
         BuilderGenerator<User> builderGenerator = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
@@ -37,7 +37,7 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
-    public void userBuilderDefaultTest() throws IOException {
+    void userBuilderDefaultTest() throws IOException {
         final String generatedClassName = "GeneratedUserDefaultClass";
 
         BuilderGenerator<User> builderGenerator = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
@@ -51,7 +51,7 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
-    public void userBuilderWithConstructorTest() throws IOException {
+    void userBuilderWithConstructorTest() throws IOException {
         final String generatedClassName = "GeneratedUserBuilderWithConstructorClass";
 
         BuilderGenerator<UserBuilderWithConstructor> builderGenerator = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
@@ -69,7 +69,7 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
-    public void userBuilderWithConstructorDefaultTest() throws IOException {
+    void userBuilderWithConstructorDefaultTest() throws IOException {
         final String generatedClassName = "GeneratedUserBuilderWithConstructorDefaultClass";
 
         BuilderGenerator<UserBuilderWithConstructor> builderGenerator = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
@@ -83,7 +83,7 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
-    public void userWithDefectTest() throws IOException {
+    void userWithDefectTest() throws IOException {
         final String generatedClassName = "GeneratedUserWithDefectClass";
 
         BuilderGenerator<UserWithDefect> builderGenerator = new BuilderGenerator<>(UserWithDefect.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
@@ -101,7 +101,7 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
-    public void fieldsCanBeCreatedUsingBuildersTest() throws IOException {
+    void fieldsCanBeCreatedUsingBuildersTest() throws IOException {
         final String generatedClassName = "GeneratedFieldsCanBeCreatedUsingBuildersClass";
 
         BuilderGenerator<SendingMoneyTransfer> builderGenerator = new BuilderGenerator<>(SendingMoneyTransfer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
@@ -117,7 +117,7 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
-    public void fieldsCanBeCreatedUsingBuildersWithPojoTest() throws IOException {
+    void fieldsCanBeCreatedUsingBuildersWithPojoTest() throws IOException {
         final String generatedClassName = "GeneratedFieldsCanBeCreatedUsingBuildersWithPojoClass";
 
         BuilderGenerator<SendingMoneyTransferWithPojo> builderGenerator = new BuilderGenerator<>(SendingMoneyTransferWithPojo.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
@@ -133,7 +133,7 @@ public class CodeGeneratorBuilderTest {
     }
 
     @Test
-    public void builderInAnotherPackageTest() throws IOException {
+    void builderInAnotherPackageTest() throws IOException {
         final String generatedClassName = "GeneratedBuilderInAnotherPackageClass";
 
         BuilderGenerator<UserWithBuilderInAnotherPackage> builderGenerator = new BuilderGenerator<>(UserWithBuilderInAnotherPackage.class, PACKAGE_NAME, generatedClassName, METHOD_NAME, UserBuilder.class);
@@ -146,7 +146,7 @@ public class CodeGeneratorBuilderTest {
         assertEquals(user, that);
     }
 
-    public <R> R createObject(String generatedClassName) {
+    <R> R createObject(String generatedClassName) {
         return generatedCodeCompiler.createObject(generatedClassName);
     }
 }

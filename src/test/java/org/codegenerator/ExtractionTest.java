@@ -12,37 +12,37 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Field;
 import java.util.*;
 
-public class ExtractionTest {
+class ExtractionTest {
     @Test
-    public void simpleBaseTest() {
+    void simpleBaseTest() {
         ClzBase clzBase = new ClzBase();
         Node extracted = ClassFieldExtractor.extract(clzBase);
         print(extracted);
     }
 
     @Test
-    public void sameValuesTest() {
+    void sameValuesTest() {
         SameValues sameValues = new SameValues();
         Node extracted = ClassFieldExtractor.extract(sameValues);
         print(extracted);
     }
 
     @Test
-    public void nullTest() {
+    void nullTest() {
         ListNode node = new ListNode();
         Node extracted = ClassFieldExtractor.extract(node);
         print(extracted);
     }
 
     @Test
-    public void simpleInheritanceTest() {
+    void simpleInheritanceTest() {
         Clz clz = new Clz();
         Node extracted = ClassFieldExtractor.extract(clz);
         print(extracted);
     }
 
     @Test
-    public void referenceTest() {
+    void referenceTest() {
         ListNode node1 = new ListNode();
         ListNode node2 = new ListNode();
 
@@ -55,7 +55,7 @@ public class ExtractionTest {
     }
 
     @Test
-    public void referenceToYourselfTest() {
+    void referenceToYourselfTest() {
         ListNode node1 = new ListNode();
 
         node1.next = node1;
@@ -66,7 +66,7 @@ public class ExtractionTest {
     }
 
     @Test
-    public void arrayTest() {
+    void arrayTest() {
         String[] strings = new String[]{"it", "is", "array", "of", "string"};
 
         Node extracted = ClassFieldExtractor.extract(strings);
@@ -75,7 +75,7 @@ public class ExtractionTest {
     }
 
     @Test
-    public void listTest() {
+    void listTest() {
         List<String> strings = new ArrayList<>();
         strings.add("it");
         strings.add("is");
@@ -89,7 +89,7 @@ public class ExtractionTest {
     }
 
     @Test
-    public void treeSetTest() {
+    void treeSetTest() {
         Set<String> strings = new TreeSet<>();
         strings.add("it");
         strings.add("is");
@@ -103,7 +103,7 @@ public class ExtractionTest {
     }
 
     @Test
-    public void hashSetTest() {
+    void hashSetTest() {
         Set<String> strings = new HashSet<>();
         strings.add("it");
         strings.add("is");
@@ -117,7 +117,7 @@ public class ExtractionTest {
     }
 
     @Test
-    public void primitivesTest() {
+    void primitivesTest() {
         int i = 42;
 
         Node extracted = ClassFieldExtractor.extract(i);
@@ -125,12 +125,12 @@ public class ExtractionTest {
         print(extracted);
     }
 
-    public void print(@NotNull Node node) {
+    void print(@NotNull Node node) {
         Set<Object> visited = new HashSet<>();
         print(node, 0, visited);
     }
 
-    public void print(@NotNull Node node, int indent, @NotNull Set<Object> visited) {
+    void print(@NotNull Node node, int indent, @NotNull Set<Object> visited) {
         System.out.printf("%s:%s\n", node.getClassOfValue(), node.getValue());
         if (visited.contains(node))
             System.out.printf("%sReference\n", String.join("", Collections.nCopies(indent, " ")));
