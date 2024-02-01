@@ -67,7 +67,7 @@ public class BuilderMethodSequenceFinder {
     }
 
     private @NotNull List<BuilderInfo> createBuilderInfoList() {
-        List<BuilderInfo> builderInfoList = new ArrayList<>();
+        List<BuilderInfo> builderInfoList1 = new ArrayList<>();
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             List<Class<?>> builderClasses = findBuilders(db);
 
@@ -78,7 +78,7 @@ public class BuilderMethodSequenceFinder {
                 Executable builderConstructor = findBuilderConstructor(db, builderClass);
                 StateGraph stateGraph = new StateGraph(builderClass);
 
-                builderInfoList.add(new BuilderInfo(builderClass, builderConstructor, buildMethod, stateGraph));
+                builderInfoList1.add(new BuilderInfo(builderClass, builderConstructor, buildMethod, stateGraph));
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -86,7 +86,7 @@ public class BuilderMethodSequenceFinder {
         } catch (IOException | ExecutionException e) {
             throw new JacoDBException(e);
         }
-        return builderInfoList;
+        return builderInfoList1;
     }
 
     private @NotNull List<Buildable> createBuildableList(@NotNull List<EdgeMethod> edgeMethods, @NotNull BuilderInfo builderInfo) {
