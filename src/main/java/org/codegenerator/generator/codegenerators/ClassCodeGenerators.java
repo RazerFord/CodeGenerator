@@ -6,8 +6,6 @@ import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 
 import static javax.lang.model.element.Modifier.*;
