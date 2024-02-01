@@ -1,13 +1,16 @@
 package org.codegenerator.generator;
 
 import com.squareup.javapoet.JavaFile;
+import org.codegenerator.Call;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.BuilderMethodSequenceFinder;
+import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.lang.reflect.Executable;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -53,10 +56,20 @@ public class BuilderGenerator<T> implements Generator<T> {
             String methodName,
             Path path
     ) throws IOException {
-        List<Buildable> buildableList = builderMethodSequenceFinder.find(finalObject);
+        List<Buildable> buildableList = builderMethodSequenceFinder.findBuildableList(finalObject);
 
         JavaFile javaFile = classCodeGenerators.generate(buildableList, packageName, className, methodName);
 
         javaFile.writeTo(path);
+    }
+
+    @Override
+    public List<Call<Executable>> generateReflectionCalls(@NotNull T finalObject) {
+        return builderMethodSequenceFinder.findReflectionCalls(finalObject);
+    }
+
+    @Override
+    public List<Call<JcMethod>> generateJacoDBCalls(@NotNull T finalObject) {
+        return builderMethodSequenceFinder.findJacoDBCalls(finalObject);
     }
 }

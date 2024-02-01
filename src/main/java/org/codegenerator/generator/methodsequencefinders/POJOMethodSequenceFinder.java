@@ -1,18 +1,20 @@
 package org.codegenerator.generator.methodsequencefinders;
 
+import org.codegenerator.Call;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.*;
+import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.throwIf;
 
-public class POJOMethodSequenceFinder {
+public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     private final Class<?> clazz;
     private final StateGraph stateGraph;
     private final PojoConstructorStateGraph pojoConstructorStateGraph;
@@ -24,21 +26,41 @@ public class POJOMethodSequenceFinder {
         checkInvariants();
     }
 
-    public List<Buildable> find(@NotNull Object finalObject) {
+    public List<Buildable> findBuildableList(@NotNull Object finalObject) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
         EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
         List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
-        return new ArrayList<Buildable>() {
-            {
-                if (methodList.isEmpty()) {
-                    add(new ReturnConstructorCall(clazz, edgeConstructor.getArgs()));
-                } else {
-                    add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));
-                    addAll(methodList.stream().map(e -> new MethodCall(e.getMethod(), e.getArgs())).collect(Collectors.toList()));
-                    add(new ReturnExpression(VARIABLE_NAME));
-                }
-            }
-        };
+
+        List<Buildable> buildableList = new ArrayList<>();
+        if (methodList.isEmpty()) {
+            buildableList.add(new ReturnConstructorCall(clazz, edgeConstructor.getArgs()));
+        } else {
+            buildableList.add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));
+            methodList.forEach(it -> buildableList.add(new MethodCall(it.getMethod(), it.getArgs())));
+            buildableList.add(new ReturnExpression(VARIABLE_NAME));
+        }
+        return buildableList;
+    }
+
+    @Override
+    public List<Call<Executable>> findReflectionCalls(@NotNull Object finalObject) {
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+        EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
+
+        List<Call<Executable>> callList = new ArrayList<>();
+        callList.add(new Call<>(edgeConstructor.getMethod(), edgeConstructor.getArgs()));
+        methodList.forEach(it -> callList.add(new Call<>(it.getMethod(), it.getArgs())));
+
+        return callList;
+    }
+
+    @Override
+    public List<Call<JcMethod>> findJacoDBCalls(@NotNull Object finalObject) {
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+        EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
+        return null;
     }
 
     private void checkInvariants() {

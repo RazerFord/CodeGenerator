@@ -3,10 +3,11 @@ package org.codegenerator.generator.methodsequencefinders;
 import kotlin.sequences.Sequence;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.codegenerator.Call;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
-import org.codegenerator.exceptions.PathNotFindException;
+import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.EdgeMethod;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.throwIf;
 
-public class BuilderMethodSequenceFinder {
+public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
     private final Class<?> clazz;
     private final Class<?>[] classes;
@@ -47,23 +48,54 @@ public class BuilderMethodSequenceFinder {
         checkInvariants();
     }
 
-    public List<Buildable> find(@NotNull Object finalObject) {
+    public List<Buildable> findBuildableList(@NotNull Object finalObject) {
         for (BuilderInfo builderInfo : builderInfoList) {
             try {
-                Method builderBuildMethod = builderInfo.builderBuildMethod;
-                StateGraph stateGraph = builderInfo.stateGraph;
-                Executable builderConstructor = builderInfo.builderConstructor;
-
-                UnaryOperator<Object> termination = createTerminationFunction(builderBuildMethod);
-                AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-                List<EdgeMethod> edgeMethods = stateGraph.findPath(assignableTypePropertyGrouper, createConstructorSupplier(builderConstructor), termination);
-
+                List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
                 return createBuildableList(edgeMethods, builderInfo);
             } catch (Exception e) {
                 // this block must be empty
             }
         }
-        throw new PathNotFindException();
+        throw new MethodSequenceNotFoundException();
+    }
+
+    @Override
+    public List<Call<Executable>> findReflectionCalls(@NotNull Object finalObject) {
+        for (BuilderInfo builderInfo : builderInfoList) {
+            try {
+                List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
+                List<Call<Executable>> calls = new ArrayList<>();
+                edgeMethods.forEach(it -> calls.add(new Call<>(it.getMethod(), it.getArgs())));
+                return calls;
+            } catch (Exception e) {
+                // this block must be empty
+            }
+        }
+        throw new MethodSequenceNotFoundException();
+    }
+
+    @Override
+    public List<Call<JcMethod>> findJacoDBCalls(@NotNull Object finalObject) {
+        for (BuilderInfo builderInfo : builderInfoList) {
+            try {
+                List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
+                return Collections.emptyList();
+            } catch (Exception e) {
+                // this block must be empty
+            }
+        }
+        throw new MethodSequenceNotFoundException();
+    }
+
+    private @NotNull List<EdgeMethod> find(@NotNull BuilderInfo builderInfo, @NotNull Object finalObject) {
+        Method builderBuildMethod = builderInfo.builderBuildMethod;
+        StateGraph stateGraph = builderInfo.stateGraph;
+        Executable builderConstructor = builderInfo.builderConstructor;
+
+        UnaryOperator<Object> termination = createTerminationFunction(builderBuildMethod);
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+        return stateGraph.findPath(assignableTypePropertyGrouper, createConstructorSupplier(builderConstructor), termination);
     }
 
     private @NotNull List<BuilderInfo> createBuilderInfoList() {

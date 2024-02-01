@@ -29,7 +29,7 @@ public class BuilderConverter implements Converter {
     public String convert(@NotNull Object o, TypeSpec.@NotNull Builder typeBuilder, MethodSpec.@NotNull Builder methodBuilder) {
         Class<?> clazz = o.getClass();
         BuilderMethodSequenceFinder builderMethodSequenceFinder = new BuilderMethodSequenceFinder(clazz);
-        List<Buildable> buildableList = builderMethodSequenceFinder.find(o);
+        List<Buildable> buildableList = builderMethodSequenceFinder.findBuildableList(o);
         MethodSpec.Builder methodBuilder1 = MethodSpec.constructorBuilder();
         methodCodeGenerator.generate(buildableList, typeBuilder, methodBuilder1);
         String newMethodName = methodName + clazz.getSimpleName() + typeBuilder.methodSpecs.size();

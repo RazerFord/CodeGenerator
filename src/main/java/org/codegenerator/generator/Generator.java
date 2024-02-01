@@ -1,9 +1,13 @@
 package org.codegenerator.generator;
 
+import org.codegenerator.Call;
+import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.lang.reflect.Executable;
 import java.nio.file.Path;
+import java.util.List;
 
 public interface Generator<T> {
     /**
@@ -51,4 +55,8 @@ public interface Generator<T> {
             String methodName,
             Path path
     ) throws IOException;
+
+    List<Call<Executable>> generateReflectionCalls(@NotNull T finalObject);
+
+    List<Call<JcMethod>> generateJacoDBCalls(@NotNull T finalObject);
 }
