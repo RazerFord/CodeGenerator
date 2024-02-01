@@ -34,4 +34,21 @@ public interface Generator<T> {
             String methodName,
             Path path
     ) throws IOException;
+
+    /**
+     * Generates code with which you can get `finalObject`
+     * and saves it in the `path` directory
+     *
+     * @param finalObject object for which you need to generate a sequence of methods
+     * @param className   the name of the class into which the generated code is placed
+     * @param methodName  name of the method that creates the object
+     * @param path        directory where you want to save the file
+     * @throws IOException – if an I/O error occurs
+     */
+    void generate(
+            @NotNull T finalObject,
+            String className,
+            String methodName,
+            Path path
+    ) throws IOException;
 }

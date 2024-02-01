@@ -41,6 +41,11 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Override
+    public void generate(@NotNull T finalObject, String className, String methodName, Path path) throws IOException {
+        generate(finalObject, packageName, className, methodName, path);
+    }
+
+    @Override
     public void generate(
             @NotNull T finalObject,
             String packageName,
