@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -65,6 +64,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
             try {
                 List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
                 List<Call<Executable>> calls = new ArrayList<>();
+                calls.add(new Call<>(builderInfo.builderConstructor));
                 edgeMethods.forEach(it -> calls.add(new Call<>(it.getMethod(), it.getArgs())));
                 return calls;
             } catch (Exception e) {
@@ -79,7 +79,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         for (BuilderInfo builderInfo : builderInfoList) {
             try {
                 List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
-                return createJacoDBCalls(builderInfo.builderBuildMethod.getDeclaringClass(), edgeMethods);
+                return createJacoDBCalls(builderInfo, edgeMethods);
             } catch (Exception e) {
                 // this block must be empty
             }
@@ -168,26 +168,39 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         return buildableList;
     }
 
-    private @NotNull List<Call<JcMethod>> createJacoDBCalls(@NotNull Class<?> declaringClass, @NotNull List<EdgeMethod> methodList) {
-        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            List<File> fileList = Collections.singletonList(new File(declaringClass.getProtectionDomain().getCodeSource().getLocation().toURI()));
-            JcClasspath classpath = db.asyncClasspath(fileList).get();
+    private @NotNull List<Call<JcMethod>> createJacoDBCalls(@NotNull BuilderInfo builderInfo, @NotNull List<EdgeMethod> methodList) {
+        Class<?> builderClazz = builderInfo.builderClazz;
+        Executable builderConstructor = builderInfo.builderConstructor;
+        Class<?> builderConstructorClazz = builderConstructor.getDeclaringClass();
 
-            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(declaringClass.getTypeName()));
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+            JcClasspath classpath = createJcClasspath(db, builderClazz);
 
             List<Call<JcMethod>> callList = new ArrayList<>();
 
+            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderConstructorClazz.getTypeName()));
+
             JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
-            methodList.forEach(it -> {
-                Method method = it.getMethod();
-                JcMethod jcMethod = lookup.method(method.getName(), Utils.buildDescriptor(method));
-                callList.add(new Call<>(jcMethod, it.getArgs()));
-            });
+
+            JcMethod jcMethod = lookup.method(createMethodName(builderConstructor), Utils.buildDescriptor(builderConstructor));
+            callList.add(new Call<>(jcMethod));
+
+            if (builderClazz != builderConstructorClazz) {
+                jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
+            }
+            lookup = jcClassOrInterface.getLookup();
+
+            for (EdgeMethod edgeMethod : methodList) {
+                Method method = edgeMethod.getMethod();
+                Object[] args = edgeMethod.getArgs();
+                jcMethod = lookup.method(method.getName(), Utils.buildDescriptor(method));
+                callList.add(new Call<>(jcMethod, args));
+            }
             return callList;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);
-        } catch (ExecutionException | IOException | URISyntaxException e) {
+        } catch (ExecutionException | IOException e) {
             throw new JacoDBException(e);
         }
     }
@@ -204,12 +217,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
             if (constructor.getParameterCount() == 0) return constructor;
         }
         try {
-            Class<?>[] localClasses = ArrayUtils.add(classes, builderClazz);
-            localClasses = ArrayUtils.add(localClasses, clazz);
-            List<File> fileList = Arrays.stream(localClasses).map(it ->
-                    Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
-            ).collect(Collectors.toList());
-            JcClasspath classpath = db.asyncClasspath(fileList).get();
+            JcClasspath classpath = createJcClasspath(db, builderClazz);
             JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
 
             SyncUsagesExtension haystack = new SyncUsagesExtension(JcHierarchies.asyncHierarchy(classpath).get(), classpath);
@@ -232,6 +240,15 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         ) {
             throw new JacoDBException(e);
         }
+    }
+
+    private JcClasspath createJcClasspath(@NotNull JcDatabase db, Class<?> clazz) throws ExecutionException, InterruptedException {
+        Class<?>[] localClasses = ArrayUtils.add(classes, clazz);
+        localClasses = ArrayUtils.add(localClasses, clazz);
+        List<File> fileList = Arrays.stream(localClasses).map(it ->
+                Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
+        ).collect(Collectors.toList());
+        return db.asyncClasspath(fileList).get();
     }
 
     private JcMethod findMethodCreatingBuilder(SyncUsagesExtension haystack, @NotNull List<JcMethod> needles) {
@@ -263,6 +280,17 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     @Contract(pure = true)
     private @NotNull UnaryOperator<Object> createTerminationFunction(Method method) {
         return o -> Utils.callSupplierWrapper(() -> method.invoke(o));
+    }
+
+    @Contract(pure = true)
+    private @NotNull String createMethodName(Executable executable) {
+        if (executable instanceof Method) {
+            return executable.getName();
+        }
+        if (executable instanceof Constructor<?>) {
+            return "<init>";
+        }
+        throw new IllegalArgumentException();
     }
 
     private void checkInvariants() {
