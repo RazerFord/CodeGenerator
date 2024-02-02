@@ -1,9 +1,7 @@
 package org.codegenerator.generator;
 
-import com.squareup.javapoet.JavaFile;
 import org.codegenerator.Call;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
-import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.BuilderMethodSequenceFinder;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
@@ -40,12 +38,14 @@ public class BuilderGenerator<T> implements Generator<T> {
 
     @Override
     public void generateCode(@NotNull T finalObject, Path path) throws IOException {
-        this.generateCode(finalObject, packageName, className, methodName, path);
+//        this.generateCode(finalObject, packageName, className, methodName, path);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void generateCode(@NotNull T finalObject, String className, String methodName, Path path) throws IOException {
-        this.generateCode(finalObject, packageName, className, methodName, path);
+//        this.generateCode(finalObject, packageName, className, methodName, path);
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -56,20 +56,23 @@ public class BuilderGenerator<T> implements Generator<T> {
             String methodName,
             Path path
     ) throws IOException {
-        List<Buildable> buildableList = builderMethodSequenceFinder.findBuildableList(finalObject);
-
-        JavaFile javaFile = classCodeGenerators.generate(buildableList, packageName, className, methodName);
-
-        javaFile.writeTo(path);
+//        List<Buildable> buildableList = builderMethodSequenceFinder.findBuildableList(finalObject);
+//
+//        JavaFile javaFile = classCodeGenerators.generate(buildableList, packageName, className, methodName);
+//
+//        javaFile.writeTo(path);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List<Call<Executable>> generateReflectionCalls(@NotNull T finalObject) {
-        return builderMethodSequenceFinder.findReflectionCalls(finalObject);
+//        return builderMethodSequenceFinder.findReflectionCalls(finalObject);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public List<Call<JcMethod>> generateJacoDBCalls(@NotNull T finalObject) {
-        return builderMethodSequenceFinder.findJacoDBCalls(finalObject);
+//        return builderMethodSequenceFinder.findJacoDBCalls(finalObject);
+        throw new UnsupportedOperationException();
     }
 }

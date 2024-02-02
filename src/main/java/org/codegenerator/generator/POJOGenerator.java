@@ -4,7 +4,9 @@ import com.squareup.javapoet.JavaFile;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.Call;
+import org.codegenerator.generator.methodsequencefinders.MethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.POJOMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.PipelineMethodSequenceFinder;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -12,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class POJOGenerator<T> implements Generator<T> {
@@ -22,7 +25,7 @@ public class POJOGenerator<T> implements Generator<T> {
     private final String className;
     private final String methodName;
     private final ClassCodeGenerators classCodeGenerators;
-    private final POJOMethodSequenceFinder pojoMethodSequenceFinder;
+    private final MethodSequenceFinder methodSequenceFinder;
 
     @Contract(pure = true)
     public POJOGenerator(@NotNull Class<?> clazz) {
@@ -35,7 +38,7 @@ public class POJOGenerator<T> implements Generator<T> {
         this.methodName = methodName;
 
         classCodeGenerators = new ClassCodeGenerators(clazz);
-        pojoMethodSequenceFinder = new POJOMethodSequenceFinder(clazz);
+        methodSequenceFinder = createPipeline(clazz);
     }
 
     public void generateCode(@NotNull T finalObject, Path path) throws IOException {
@@ -55,7 +58,7 @@ public class POJOGenerator<T> implements Generator<T> {
             String methodName,
             Path path
     ) throws IOException {
-        List<Buildable> pathNode = pojoMethodSequenceFinder.findBuildableList(finalObject);
+        List<Buildable> pathNode = methodSequenceFinder.findBuildableList(finalObject);
 
         JavaFile javaFile = classCodeGenerators.generate(pathNode, packageName, className, methodName);
 
@@ -64,11 +67,17 @@ public class POJOGenerator<T> implements Generator<T> {
 
     @Override
     public List<Call<Executable>> generateReflectionCalls(@NotNull T finalObject) {
-        return pojoMethodSequenceFinder.findReflectionCalls(finalObject);
+        return methodSequenceFinder.findReflectionCalls(finalObject);
     }
 
     @Override
     public List<Call<JcMethod>> generateJacoDBCalls(@NotNull T finalObject) {
-        return pojoMethodSequenceFinder.findJacoDBCalls(finalObject);
+        return methodSequenceFinder.findJacoDBCalls(finalObject);
+    }
+
+    private @NotNull MethodSequenceFinder createPipeline(Class<?> clazz) {
+        List<MethodSequenceFinder> methodSequenceFinderList = new ArrayList<>();
+        methodSequenceFinderList.add(new POJOMethodSequenceFinder(clazz));
+        return new PipelineMethodSequenceFinder(methodSequenceFinderList);
     }
 }

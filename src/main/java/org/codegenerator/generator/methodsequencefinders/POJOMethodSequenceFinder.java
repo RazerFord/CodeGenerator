@@ -2,7 +2,6 @@ package org.codegenerator.generator.methodsequencefinders;
 
 import org.codegenerator.Call;
 import org.codegenerator.Utils;
-import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.*;
@@ -14,12 +13,12 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
-
-import static org.codegenerator.Utils.throwIf;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
@@ -31,7 +30,6 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
         this.clazz = clazz;
         stateGraph = new StateGraph(clazz);
         pojoConstructorStateGraph = new PojoConstructorStateGraph(clazz);
-        checkInvariants();
     }
 
     public List<Buildable> findBuildableList(@NotNull Object finalObject) {
@@ -95,13 +93,6 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
         return Utils.loadOrCreateDataBase(dbname, InMemoryHierarchy.INSTANCE);
-    }
-
-    private void checkInvariants() {
-        int maxArguments = Arrays.stream(clazz.getDeclaredMethods()).filter(it -> Modifier.isPublic(it.getModifiers())).map(Method::getParameterCount).max(Comparator.naturalOrder()).orElse(0);
-        int numberFields = clazz.getDeclaredFields().length;
-
-        throwIf(maxArguments > numberFields, new InvariantCheckingException(NUM_ARG_GREATER_THEN_NUM_FIELDS));
     }
 
     private static final String VARIABLE_NAME = "object";
