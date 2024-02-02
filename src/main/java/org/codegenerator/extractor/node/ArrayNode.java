@@ -3,17 +3,25 @@ package org.codegenerator.extractor.node;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
-public class Leaf implements Node {
-    public static final Node NULL_NODE = new Leaf(null, null, null);
+public class ArrayNode implements Node {
     private final Class<?> clazz;
-    private final Object value;
-    private final Map<Object, Node> fields = Collections.emptyMap();
+    private final Object[] value;
+    private final Map<Object, Node> fields = new HashMap<>();
+    private final Map<Object, Node> visited;
 
-    public Leaf(Class<?> clazz, Object value, Map<Object, Node> ignoredVisited) {
+    public ArrayNode(@NotNull Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
-        this.value = value;
+        if (!clazz.isArray()) throw new IllegalArgumentException();
+        int length = Array.getLength(value);
+        Object[] newValue = new Object[length];
+        for (int i = 0; i < length; i++) {
+            newValue[i] = Array.get(value, i);
+        }
+        this.value = newValue;
+        this.visited = visited;
     }
 
     @Override
@@ -28,20 +36,33 @@ public class Leaf implements Node {
 
     @Override
     public void extract() {
-        // this code block must be empty
+        for (int i = 0; i < value.length; i++) {
+            if (visited.containsKey(value[i])) {
+                fields.put(i, visited.get(value[i]));
+            } else {
+                Node node = Node.createNode(value[i], visited);
+                fields.put(i, node);
+                node.extract();
+            }
+        }
     }
 
     @Override
     public NodeType nodeType() {
-        return NodeType.LEAF;
+        return NodeType.ARRAY;
     }
 
     @Override
-    public int diff(@NotNull Node that) {
-        if (!(that instanceof Leaf)) return Integer.MAX_VALUE;
-        return Objects.equals(value, that.getValue()) ? 0 : 1;
+    public int diff(Node that) {
+        if (!(that instanceof ArrayNode)) return Integer.MAX_VALUE;
+        int diff = 0;
+        for (Map.Entry<Object, Node> entry : fields.entrySet()) {
+            if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
+                diff++;
+            }
+        }
+        return diff;
     }
-
 
     @Override
     public int size() {
@@ -70,13 +91,13 @@ public class Leaf implements Node {
 
     @Nullable
     @Override
-    public Node put(Object field, Node node) {
+    public Node put(Object key, Node node) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public Node remove(Object o) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -86,7 +107,7 @@ public class Leaf implements Node {
 
     @Override
     public void clear() {
-        // this code block must be empty
+        throw new UnsupportedOperationException();
     }
 
     @NotNull
@@ -109,12 +130,13 @@ public class Leaf implements Node {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Leaf)) return false;
-        return Objects.equals(value, ((Node) o).getValue());
+        if (!(o instanceof ArrayNode)) return false;
+        ArrayNode arrayNode = (ArrayNode) o;
+        return Arrays.equals(arrayNode.value, value);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(clazz, value);
+        return Objects.hash(clazz, Arrays.hashCode(value));
     }
 }

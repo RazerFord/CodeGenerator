@@ -1,4 +1,4 @@
-package org.codegenerator;
+package org.codegenerator.resourcesfieldextraction;
 
 public class Clz extends ClzBase {
     private final int y = 13;

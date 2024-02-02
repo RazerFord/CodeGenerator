@@ -1,17 +1,19 @@
 package org.codegenerator.extractor.node;
 
-import org.jetbrains.annotations.Contract;
+import org.codegenerator.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 
 public class InnerNode implements Node {
     private final Class<?> clazz;
     private final Object value;
-    private final Map<Field, Node> fields = new HashMap<>();
+    private final Map<Object, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
+    private final Set<Object> visitedDuringEquals = new HashSet<>();
 
     public InnerNode(Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
@@ -30,16 +32,20 @@ public class InnerNode implements Node {
     }
 
     @Override
-    public void extract() throws IllegalAccessException {
+    public void extract() {
         Class<?> clz = clazz;
         List<Node> unvisitedNodes = new ArrayList<>();
 
         while (clz != null) {
             Field[] fields1 = clz.getDeclaredFields();
             for (Field field : fields1) {
+                int modifiers = field.getModifiers();
+                if (Modifier.isStatic(modifiers)) {
+                    continue;
+                }
                 field.setAccessible(true);
-                Object o = field.get(value);
-                Node node = createNode(field, o);
+                Object o = Utils.callSupplierWrapper(() -> field.get(value));
+                Node node = Node.createNode(field, o, visited);
                 Node nextNode = visited.putIfAbsent(o, node);
                 if (nextNode != null) {
                     node = nextNode;
@@ -56,8 +62,20 @@ public class InnerNode implements Node {
     }
 
     @Override
-    public boolean isLeaf() {
-        return false;
+    public NodeType nodeType() {
+        return NodeType.INNER;
+    }
+
+    @Override
+    public int diff(Node that) {
+        if (!(that instanceof InnerNode)) return Integer.MAX_VALUE;
+        int diff = 0;
+        for (Map.Entry<Object, Node> entry : fields.entrySet()) {
+            if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
+                diff++;
+            }
+        }
+        return diff;
     }
 
     @Override
@@ -87,8 +105,11 @@ public class InnerNode implements Node {
 
     @Nullable
     @Override
-    public Node put(Field field, Node node) {
-        return fields.put(field, node);
+    public Node put(Object field, Node node) {
+        if (field instanceof Field) {
+            return fields.put(field, node);
+        }
+        throw new IllegalArgumentException();
     }
 
     @Override
@@ -97,8 +118,14 @@ public class InnerNode implements Node {
     }
 
     @Override
-    public void putAll(@NotNull Map<? extends Field, ? extends Node> map) {
-        fields.putAll(map);
+    public void putAll(@NotNull Map<?, ? extends Node> map) {
+        for (Map.Entry<?, ? extends Node> e : map.entrySet()) {
+            if (e.getKey() instanceof Field) {
+                fields.put(e.getKey(), e.getValue());
+            } else {
+                throw new IllegalArgumentException();
+            }
+        }
     }
 
     @Override
@@ -108,8 +135,8 @@ public class InnerNode implements Node {
 
     @NotNull
     @Override
-    public Set<Field> keySet() {
-        return fields.keySet();
+    public Set<Object> keySet() {
+        return new HashSet<>(fields.keySet());
     }
 
     @NotNull
@@ -120,18 +147,25 @@ public class InnerNode implements Node {
 
     @NotNull
     @Override
-    public Set<Entry<Field, Node>> entrySet() {
+    public Set<Entry<Object, Node>> entrySet() {
         return fields.entrySet();
     }
 
-    @Contract("_, _ -> new")
-    private @NotNull Node createNode(@NotNull Field field, Object o) {
-        if (o == null) {
-            return Leaf.NULL_NODE;
-        }
-        if (field.getType().isPrimitive()) {
-            return new Leaf(o.getClass(), o, visited);
-        }
-        return new InnerNode(o.getClass(), o, visited);
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof InnerNode)) return false;
+        InnerNode innerNode = (InnerNode) o;
+        // If recursion is detected, true should be returned.
+        // Since recursion could occur if `equals` of objects returned true
+        if (visitedDuringEquals.contains(o)) return true;
+        visitedDuringEquals.add(o);
+        boolean result = Objects.equals(value, innerNode.value) && innerNode.fields.equals(fields);
+        visitedDuringEquals.remove(o);
+        return result;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clazz, value, fields.keySet());
     }
 }
