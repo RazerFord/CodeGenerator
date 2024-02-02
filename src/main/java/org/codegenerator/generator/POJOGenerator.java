@@ -38,7 +38,7 @@ public class POJOGenerator<T> implements Generator<T> {
         this.methodName = methodName;
 
         classCodeGenerators = new ClassCodeGenerators(clazz);
-        methodSequenceFinder = createPipeline(clazz);
+        methodSequenceFinder = createPipeline();
     }
 
     public void generateCode(@NotNull T finalObject, Path path) throws IOException {
@@ -75,9 +75,9 @@ public class POJOGenerator<T> implements Generator<T> {
         return methodSequenceFinder.findJacoDBCalls(finalObject);
     }
 
-    private @NotNull MethodSequenceFinder createPipeline(Class<?> clazz) {
+    private @NotNull MethodSequenceFinder createPipeline() {
         List<MethodSequenceFinder> methodSequenceFinderList = new ArrayList<>();
-        methodSequenceFinderList.add(new POJOMethodSequenceFinder(clazz));
+        methodSequenceFinderList.add(new POJOMethodSequenceFinder());
         return new PipelineMethodSequenceFinder(methodSequenceFinderList);
     }
 }

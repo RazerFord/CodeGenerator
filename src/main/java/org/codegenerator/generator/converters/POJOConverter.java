@@ -30,7 +30,7 @@ public class POJOConverter implements Converter {
     @Override
     public String convert(@NotNull Object o, TypeSpec.@NotNull Builder typeBuilder, MethodSpec.@NotNull Builder methodBuilder) {
         Class<?> clazz = o.getClass();
-        POJOMethodSequenceFinder pojoMethodSequenceFinder = new POJOMethodSequenceFinder(clazz);
+        POJOMethodSequenceFinder pojoMethodSequenceFinder = new POJOMethodSequenceFinder();
         List<Buildable> pathNode = pojoMethodSequenceFinder.findBuildableList(o);
         MethodSpec.Builder methodBuilder1 = MethodSpec.constructorBuilder();
         methodCodeGenerator.generate(pathNode, typeBuilder, methodBuilder1);

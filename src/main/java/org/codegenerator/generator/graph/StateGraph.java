@@ -15,12 +15,8 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public class StateGraph {
-    private final EdgeGeneratorMethod edgeGeneratorMethod;
+    private final EdgeGenerator edgeGenerator = new EdgeGenerator();
     private final Cloner cloner = new Cloner();
-
-    public StateGraph(Class<?> clazz) {
-        edgeGeneratorMethod = new EdgeGeneratorMethod(clazz);
-    }
 
     public @NotNull List<EdgeMethod> findPath(
             @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
@@ -28,28 +24,12 @@ public class StateGraph {
             @NotNull UnaryOperator<Object> termination
     ) {
         Object beginObject = constructor.get();
+        Class<?> clazz = beginObject.getClass();
         UnaryOperator<Object> copyObject = copyObject();
         Object finalObject = assignableTypePropertyGrouper.getObject();
         Map<Class<?>, List<Object>> typeToValues = assignableTypePropertyGrouper.get();
 
-        return findPath(beginObject, finalObject, typeToValues, copyObject, termination);
-    }
-
-    public @NotNull List<EdgeMethod> findPath(
-            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
-            @NotNull Supplier<Object> constructor
-    ) {
-        return findPath(assignableTypePropertyGrouper, constructor, UnaryOperator.identity());
-    }
-
-    public @NotNull List<EdgeMethod> findPath(
-            @NotNull Object beginObject,
-            @NotNull Object finalObject,
-            @NotNull Map<Class<?>, List<Object>> typeToValues,
-            @NotNull UnaryOperator<Object> copyObject,
-            @NotNull UnaryOperator<Object> termination
-    ) {
-        List<EdgeMethod> edgeMethods = edgeGeneratorMethod.generate(typeToValues);
+        List<EdgeMethod> edgeMethods = edgeGenerator.generate(clazz.getMethods(), typeToValues);
 
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Object beginObjectBuilt = termination.apply(beginObject);
@@ -69,6 +49,12 @@ public class StateGraph {
         return new ArrayList<>(path);
     }
 
+    public @NotNull List<EdgeMethod> findPath(
+            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
+            @NotNull Supplier<Object> constructor
+    ) {
+        return findPath(assignableTypePropertyGrouper, constructor, UnaryOperator.identity());
+    }
 
     private @Nullable Triple<Object, Node, PathNode> bfs(
             @NotNull Triple<Object, Node, PathNode> triple,

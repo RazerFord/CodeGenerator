@@ -22,17 +22,16 @@ import java.util.concurrent.ExecutionException;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
-    private final Class<?> clazz;
     private final StateGraph stateGraph;
     private final PojoConstructorStateGraph pojoConstructorStateGraph;
 
-    public POJOMethodSequenceFinder(@NotNull Class<?> clazz) {
-        this.clazz = clazz;
-        stateGraph = new StateGraph(clazz);
-        pojoConstructorStateGraph = new PojoConstructorStateGraph(clazz);
+    public POJOMethodSequenceFinder() {
+        stateGraph = new StateGraph();
+        pojoConstructorStateGraph = new PojoConstructorStateGraph();
     }
 
     public List<Buildable> findBuildableList(@NotNull Object finalObject) {
+        Class<?> clazz = finalObject.getClass();
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
         EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
         List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
@@ -63,6 +62,8 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
 
     @Override
     public List<Call<JcMethod>> findJacoDBCalls(@NotNull Object finalObject) {
+        Class<?> clazz = finalObject.getClass();
+
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
             EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
@@ -96,5 +97,4 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private static final String VARIABLE_NAME = "object";
-    private static final String NUM_ARG_GREATER_THEN_NUM_FIELDS = "The number of arguments is greater than the number of fields";
 }

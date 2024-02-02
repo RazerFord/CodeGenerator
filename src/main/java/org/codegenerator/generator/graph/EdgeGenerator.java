@@ -3,11 +3,46 @@ package org.codegenerator.generator.graph;
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
 import java.util.*;
 
-public class EdgeGeneratorUtils {
-    private EdgeGeneratorUtils() {
+public class EdgeGenerator {
+    public List<EdgeConstructor> generate(
+            Constructor<?> @NotNull [] constructors,
+            Map<Class<?>, List<Object>> typeToValues
+    ) {
+        typeToValues = new HashMap<>(typeToValues);
+        List<EdgeConstructor> edges = new ArrayList<>();
+        for (Constructor<?> constructor : constructors) {
+            if (constructor.getParameterCount() == 0) {
+                edges.add(new EdgeConstructor(constructor));
+            } else {
+                List<Node> roots = buildGraph(constructor, typeToValues);
+                List<List<Node>> listArguments = generatePossibleArguments(roots);
+                for (List<Node> arguments : listArguments) {
+                    edges.add(new EdgeConstructor(constructor, extractArgs(arguments, typeToValues)));
+                }
+            }
+        }
+        return edges;
+    }
+
+    public List<EdgeMethod> generate(
+            Method @NotNull [] methods,
+            Map<Class<?>, List<Object>> typeToValues
+    ) {
+        typeToValues = new HashMap<>(typeToValues);
+        List<EdgeMethod> edgeMethods = new ArrayList<>();
+        for (Method method : methods) {
+            List<Node> roots = buildGraph(method, typeToValues);
+            List<List<Node>> listArguments = generatePossibleArguments(roots);
+            for (List<Node> arguments : listArguments) {
+                edgeMethods.add(new EdgeMethod(method, extractArgs(arguments, typeToValues)));
+            }
+        }
+        return edgeMethods;
     }
 
     public static @NotNull List<List<Node>> generatePossibleArguments(@NotNull List<Node> roots) {
@@ -43,12 +78,12 @@ public class EdgeGeneratorUtils {
      * Then the graph will be built:
      * <p>
      * (int, 0) ---> (int, 0)
-     *           |
+     * |
      * (int, 1) ---> (int, 1)
-     *           |
+     * |
      * (int, 2) ---> (int, 2)
      *
-     * @param executable method that can be executed. Usually this is an example `Constructor<?>` or `Method`
+     * @param executable   method that can be executed. Usually this is an example `Constructor<?>` or `Method`
      * @param typeToValues of types to their value
      * @return typeToValues a list of starting vertices of the graph
      */
@@ -88,7 +123,7 @@ public class EdgeGeneratorUtils {
      * There are all such values in `map` that `from` can be
      * cast to the type of these values
      *
-     * @param from a type for which all values to which it can be cast are sought
+     * @param from         a type for which all values to which it can be cast are sought
      * @param typeToValues mapping a class to its values
      */
     public static @NotNull List<Object> computeValues(

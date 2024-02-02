@@ -107,7 +107,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
                 if (buildMethod == null) continue;
 
                 Executable builderConstructor = findBuilderConstructor(db, builderClass);
-                StateGraph stateGraph = new StateGraph(builderClass);
+                StateGraph stateGraph = new StateGraph();
 
                 builderInfoList1.add(new BuilderInfo(builderClass, builderConstructor, buildMethod, stateGraph));
             }

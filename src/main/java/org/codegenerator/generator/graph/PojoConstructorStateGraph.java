@@ -10,14 +10,17 @@ import java.util.List;
 import static org.codegenerator.Utils.throwIf;
 
 public class PojoConstructorStateGraph {
-    private final EdgeGeneratorConstructor edgeGeneratorConstructor;
+    private final EdgeGenerator edgeGenerator;
 
-    public PojoConstructorStateGraph(Class<?> clazz) {
-        edgeGeneratorConstructor = new EdgeGeneratorConstructor(clazz);
+    public PojoConstructorStateGraph() {
+        edgeGenerator = new EdgeGenerator();
     }
 
     public @NotNull EdgeConstructor findPath(@NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper) {
-        List<EdgeConstructor> edgeConstructors = edgeGeneratorConstructor.generate(assignableTypePropertyGrouper.get());
+        List<EdgeConstructor> edgeConstructors = edgeGenerator.generate(
+                assignableTypePropertyGrouper.getClazz().getConstructors(),
+                assignableTypePropertyGrouper.get()
+        );
         return buildBeginObjectAndMethodCall(assignableTypePropertyGrouper.getObject(), edgeConstructors);
     }
 
