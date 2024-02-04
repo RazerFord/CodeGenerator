@@ -1,5 +1,7 @@
 package org.codegenerator.generator.graph;
 
+import org.codegenerator.generator.graph.edges.Edge;
+
 import java.lang.reflect.Method;
 
 import static org.codegenerator.Utils.callSupplierWrapper;

@@ -3,6 +3,8 @@ package org.codegenerator.generator.graph;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
+import org.codegenerator.generator.graph.edges.EdgeConstructor;
+import org.codegenerator.generator.graph.edges.EdgeGenerator;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;

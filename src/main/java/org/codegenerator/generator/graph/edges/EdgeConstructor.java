@@ -1,4 +1,4 @@
-package org.codegenerator.generator.graph;
+package org.codegenerator.generator.graph.edges;
 
 import java.lang.reflect.Constructor;
 

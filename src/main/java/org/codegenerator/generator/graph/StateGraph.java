@@ -5,6 +5,7 @@ import kotlin.Triple;
 import org.codegenerator.Utils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
+import org.codegenerator.generator.graph.edges.EdgeGenerator;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

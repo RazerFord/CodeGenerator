@@ -1,6 +1,7 @@
-package org.codegenerator.generator.graph;
+package org.codegenerator.generator.graph.edges;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.codegenerator.generator.graph.EdgeMethod;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;

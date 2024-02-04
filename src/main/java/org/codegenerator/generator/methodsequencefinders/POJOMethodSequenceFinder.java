@@ -5,6 +5,7 @@ import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.*;
+import org.codegenerator.generator.graph.edges.EdgeConstructor;
 import org.jacodb.api.*;
 import org.jacodb.impl.features.InMemoryHierarchy;
 import org.jetbrains.annotations.NotNull;
