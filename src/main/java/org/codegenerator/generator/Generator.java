@@ -1,6 +1,7 @@
 package org.codegenerator.generator;
 
 import org.codegenerator.Call;
+import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,7 +57,7 @@ public interface Generator<T> {
             Path path
     ) throws IOException;
 
-    List<Call<Executable>> generateReflectionCalls(@NotNull T finalObject);
+    History<Executable> generateReflectionCalls(@NotNull T finalObject);
 
     List<Call<JcMethod>> generateJacoDBCalls(@NotNull T finalObject);
 }

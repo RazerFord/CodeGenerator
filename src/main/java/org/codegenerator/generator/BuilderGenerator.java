@@ -5,6 +5,7 @@ import org.codegenerator.Call;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.BuilderMethodSequenceFinder;
+import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -64,7 +65,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Override
-    public List<Call<Executable>> generateReflectionCalls(@NotNull T finalObject) {
+    public History<Executable> generateReflectionCalls(@NotNull T finalObject) {
         return builderMethodSequenceFinder.findReflectionCalls(finalObject);
     }
 

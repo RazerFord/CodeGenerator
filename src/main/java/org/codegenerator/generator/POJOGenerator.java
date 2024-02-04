@@ -5,8 +5,10 @@ import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.Call;
 import org.codegenerator.generator.methodsequencefinders.MethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.MethodSequenceFinderInternal;
 import org.codegenerator.generator.methodsequencefinders.POJOMethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.PipelineMethodSequenceFinder;
+import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -66,7 +68,7 @@ public class POJOGenerator<T> implements Generator<T> {
     }
 
     @Override
-    public List<Call<Executable>> generateReflectionCalls(@NotNull T finalObject) {
+    public History<Executable> generateReflectionCalls(@NotNull T finalObject) {
         return methodSequenceFinder.findReflectionCalls(finalObject);
     }
 
@@ -76,7 +78,7 @@ public class POJOGenerator<T> implements Generator<T> {
     }
 
     private @NotNull MethodSequenceFinder createPipeline() {
-        List<MethodSequenceFinder> methodSequenceFinderList = new ArrayList<>();
+        List<MethodSequenceFinderInternal> methodSequenceFinderList = new ArrayList<>();
         methodSequenceFinderList.add(new POJOMethodSequenceFinder());
         return new PipelineMethodSequenceFinder(methodSequenceFinderList);
     }

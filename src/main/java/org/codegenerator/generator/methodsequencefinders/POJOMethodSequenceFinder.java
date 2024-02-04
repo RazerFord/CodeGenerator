@@ -6,6 +6,9 @@ import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.*;
 import org.codegenerator.generator.graph.edges.EdgeConstructor;
+import org.codegenerator.history.History;
+import org.codegenerator.history.HistoryCall;
+import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.*;
 import org.jacodb.impl.features.InMemoryHierarchy;
 import org.jetbrains.annotations.NotNull;
@@ -15,13 +18,10 @@ import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
-public class POJOMethodSequenceFinder implements MethodSequenceFinder {
+public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
     private final StateGraph stateGraph;
     private final PojoConstructorStateGraph pojoConstructorStateGraph;
@@ -49,16 +49,21 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     @Override
-    public List<Call<Executable>> findReflectionCalls(@NotNull Object finalObject) {
+    public History<Executable> findReflectionCalls(@NotNull Object finalObject) {
+        History<Executable> history = new History<>();
+
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
+        EdgeConstructor constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
 
-        List<Call<Executable>> callList = new ArrayList<>();
-        callList.add(new Call<>(edgeConstructor.getMethod(), edgeConstructor.getArgs()));
-        methodList.forEach(it -> callList.add(new Call<>(it.getMethod(), it.getArgs())));
+        List<HistoryCall<Executable>> calls = new ArrayList<>();
 
-        return callList;
+        calls.add(new HistoryCall<>(history, constructor.getMethod(), constructor.getArgs()));
+        methods.forEach(it -> calls.add(new HistoryCall<>(history, it.getMethod(), it.getArgs())));
+
+        history.put(finalObject, new HistoryObject<>(finalObject, calls));
+
+        return history;
     }
 
     @Override
@@ -97,4 +102,29 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private static final String VARIABLE_NAME = "object";
+
+    @Override
+    public List<Object> findReflectionCallsInternal(@NotNull Object object, History<Executable> history) {
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
+        EdgeConstructor constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
+
+        List<HistoryCall<Executable>> calls = new ArrayList<>();
+        List<Object> unvisited = new ArrayList<>(Arrays.asList(constructor.getArgs()));
+
+        calls.add(new HistoryCall<>(history, constructor.getMethod(), constructor.getArgs()));
+        methods.forEach(it -> {
+            calls.add(new HistoryCall<>(history, it.getMethod(), it.getArgs()));
+            unvisited.addAll(Arrays.asList(it.getArgs()));
+        });
+
+        history.put(object, new HistoryObject<>(object, calls));
+
+        return unvisited;
+    }
+
+    @Override
+    public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
+        return null;
+    }
 }

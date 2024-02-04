@@ -12,6 +12,7 @@ import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.EdgeMethod;
 import org.codegenerator.generator.graph.StateGraph;
+import org.codegenerator.history.History;
 import org.jacodb.api.*;
 import org.jacodb.impl.features.*;
 import org.jetbrains.annotations.Contract;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.throwIf;
 
-public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
+public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
     private final Class<?> clazz;
     private final Class<?>[] classes;
@@ -59,14 +60,15 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     @Override
-    public List<Call<Executable>> findReflectionCalls(@NotNull Object finalObject) {
+    public History<Executable> findReflectionCalls(@NotNull Object finalObject) {
         for (BuilderInfo builderInfo : builderInfoList) {
             try {
                 List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
                 List<Call<Executable>> calls = new ArrayList<>();
                 calls.add(new Call<>(builderInfo.builderConstructor));
                 edgeMethods.forEach(it -> calls.add(new Call<>(it.getMethod(), it.getArgs())));
-                return calls;
+//                return calls;
+                return null;
             } catch (Exception e) {
                 // this block must be empty
             }
@@ -319,6 +321,16 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
         return Utils.loadOrCreateDataBase(dbname, Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE);
+    }
+
+    @Override
+    public List<Object> findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
+        return null;
+    }
+
+    @Override
+    public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
+        return null;
     }
 
     private static class BuilderInfo {
