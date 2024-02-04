@@ -58,8 +58,8 @@ class CodeGeneratorPOJOTest {
 
         assertTrue(true);
 
-//        Point other = createObject(generatedClassName);
-//        assertEquals(point, other);
+        Point other = createObject(generatedClassName);
+        assertEquals(point, other);
     }
 
     @Test

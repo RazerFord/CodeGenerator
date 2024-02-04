@@ -42,12 +42,12 @@ public class POJOGenerator<T> implements Generator<T> {
     }
 
     public void generateCode(@NotNull T finalObject, Path path) throws IOException {
-        this.generateCode(finalObject, packageName, className, methodName, path);
+        generateCode(finalObject, packageName, className, methodName, path);
     }
 
     @Override
     public void generateCode(@NotNull T finalObject, String className, String methodName, Path path) throws IOException {
-        this.generateCode(finalObject, packageName, className, methodName, path);
+        generateCode(finalObject, packageName, className, methodName, path);
     }
 
     @Override
