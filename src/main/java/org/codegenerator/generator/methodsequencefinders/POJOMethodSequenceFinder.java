@@ -1,7 +1,6 @@
 package org.codegenerator.generator.methodsequencefinders;
 
 import org.codegenerator.Call;
-import org.codegenerator.History;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
