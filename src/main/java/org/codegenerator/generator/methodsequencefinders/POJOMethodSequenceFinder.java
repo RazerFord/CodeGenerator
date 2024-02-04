@@ -1,6 +1,7 @@
 package org.codegenerator.generator.methodsequencefinders;
 
 import org.codegenerator.Call;
+import org.codegenerator.History;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
@@ -32,11 +33,11 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     public List<Buildable> findBuildableList(@NotNull Object finalObject) {
-        Class<?> clazz = finalObject.getClass();
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
         EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
         List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
 
+        Class<?> clazz = finalObject.getClass();
         List<Buildable> buildableList = new ArrayList<>();
         if (methodList.isEmpty()) {
             buildableList.add(new ReturnConstructorCall(clazz, edgeConstructor.getArgs()));
@@ -63,13 +64,12 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
 
     @Override
     public List<Call<JcMethod>> findJacoDBCalls(@NotNull Object finalObject) {
-        Class<?> clazz = finalObject.getClass();
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+        EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
 
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-            EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
-            List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
-
+            Class<?> clazz = finalObject.getClass();
             List<File> fileList = Collections.singletonList(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
             JcClasspath classpath = db.asyncClasspath(fileList).get();
 
