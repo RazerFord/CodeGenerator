@@ -36,20 +36,26 @@ public class History<T> {
     }
 
     public static class HistoryCall<T> {
-        private final Call<T> call;
         private final History<T> history;
+        private final T method;
+        private final Object[] args;
 
-        public HistoryCall(Call<T> call, History<T> history) {
-            this.call = call;
+        public HistoryCall(History<T> history, T method, Object... args) {
+            this.method = method;
             this.history = history;
+            this.args = args;
         }
 
-        public Call<T> getCall() {
-            return call;
+        public T getMethod() {
+            return method;
+        }
+
+        public Object[] getArgs() {
+            return args;
         }
 
         public HistoryObject<T> getHistoryArg(int index) {
-            return history.get(call.getArgs()[index]);
+            return history.get(args[index]);
         }
     }
 }
