@@ -1,6 +1,9 @@
 package org.codegenerator;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jacodb.api.JcClassOrInterface;
+import org.jacodb.api.JcClasspath;
 import org.jacodb.api.JcDatabase;
 import org.jacodb.api.JcFeature;
 import org.jacodb.impl.JacoDB;
@@ -8,11 +11,13 @@ import org.jacodb.impl.JcSettings;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.swap;
 
@@ -53,6 +58,19 @@ public class Utils {
         return descriptor.toString();
     }
 
+    public static JcClassOrInterface toJcClassOrInterface(
+            @NotNull Class<?> targetClazz,
+            @NotNull JcDatabase db,
+            @NotNull Class<?>... otherClasses
+    ) throws ExecutionException, InterruptedException {
+        Class<?>[] classes = ArrayUtils.add(otherClasses, targetClazz);
+        List<File> fileList = Arrays.stream(classes).map(it ->
+                Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
+        ).collect(Collectors.toList());
+        JcClasspath classpath = db.asyncClasspath(fileList).get();
+        return Objects.requireNonNull(classpath.findClassOrNull(targetClazz.getTypeName()));
+    }
+
     public static <E> E callSupplierWrapper(SupplierWrapper<E> supplierWrapper) {
         try {
             return supplierWrapper.get();
@@ -66,7 +84,7 @@ public class Utils {
         T get() throws Exception;
     }
 
-    public static <E> void callRunnableWrapper(RunnableWrapper<E> runnableWrapper) {
+    public static <E> void callRunnableWrapper(RunnableWrapper runnableWrapper) {
         try {
             runnableWrapper.run();
         } catch (Exception e) {
@@ -75,7 +93,7 @@ public class Utils {
     }
 
     @FunctionalInterface
-    public interface RunnableWrapper<T> {
+    public interface RunnableWrapper {
         void run() throws Exception;
     }
 

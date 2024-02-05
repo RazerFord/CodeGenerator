@@ -3,8 +3,12 @@ package org.codegenerator.generator.methodsequencefinders;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
-import org.codegenerator.generator.graph.*;
+import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
+import org.codegenerator.generator.graph.PojoConstructorStateGraph;
+import org.codegenerator.generator.graph.StateGraph;
+import org.codegenerator.generator.graph.edges.Edge;
 import org.codegenerator.generator.graph.edges.EdgeConstructor;
+import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryObject;
@@ -12,13 +16,13 @@ import org.jacodb.api.*;
 import org.jacodb.impl.features.InMemoryHierarchy;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Executable;
-import java.lang.reflect.Method;
-import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
@@ -51,114 +55,66 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     public History<Executable> findReflectionCalls(@NotNull Object finalObject) {
         History<Executable> history = new History<>();
 
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        EdgeConstructor constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
-
-        List<HistoryCall<Executable>> calls = new ArrayList<>();
-
-        calls.add(new HistoryCall<>(history, constructor.getMethod(), constructor.getArgs()));
-        methods.forEach(it -> calls.add(new HistoryCall<>(history, it.getMethod(), it.getArgs())));
-
-        history.put(finalObject, new HistoryObject<>(finalObject, calls));
+        findReflectionCallsInternal(finalObject, history);
 
         return history;
     }
 
     @Override
     public History<JcMethod> findJacoDBCalls(@NotNull Object finalObject) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        EdgeConstructor constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
+        History<JcMethod> history = new History<>();
 
-        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            Class<?> clazz = finalObject.getClass();
-            List<File> fileList = Collections.singletonList(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
-            JcClasspath classpath = db.asyncClasspath(fileList).get();
+        findJacoDBCallsInternal(finalObject, history);
 
-            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
-
-            List<HistoryCall<JcMethod>> calls = new ArrayList<>();
-            History<JcMethod> history = new History<>();
-
-            JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
-            JcMethod jcMethod = lookup.method("<init>", Utils.buildDescriptor(constructor.getMethod()));
-            calls.add(new HistoryCall<>(history, jcMethod, constructor.getArgs()));
-            for (EdgeMethod edgeMethod : methods) {
-                Method method = edgeMethod.getMethod();
-                JcMethod jcMethod1 = lookup.method(method.getName(), Utils.buildDescriptor(method));
-                calls.add(new HistoryCall<>(history, jcMethod1, edgeMethod.getArgs()));
-            }
-            history.put(finalObject, new HistoryObject<>(finalObject, calls));
-
-            return history;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new JacoDBException(e);
-        } catch (ExecutionException | IOException | URISyntaxException e) {
-            throw new JacoDBException(e);
-        }
+        return history;
     }
 
     @Override
     public List<Object> findReflectionCallsInternal(@NotNull Object object, History<Executable> history) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
-        EdgeConstructor constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
-
-        List<HistoryCall<Executable>> calls = new ArrayList<>();
-        List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));
-
-        calls.add(new HistoryCall<>(history, constructor.getMethod(), constructor.getArgs()));
-        for (EdgeMethod method : methods) {
-            calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
-            suspect.addAll(Arrays.asList(method.getArgs()));
-        }
-
-        history.put(object, new HistoryObject<>(object, calls));
-
-        return suspect;
+        return findCallsInternal(object, history, Edge::getMethod);
     }
 
     @Override
-    public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        EdgeConstructor constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
-
+    public List<Object> findJacoDBCallsInternal(@NotNull Object object, History<JcMethod> history) {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            Class<?> clazz = finalObject.getClass();
-            List<File> fileList = Collections.singletonList(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
-            JcClasspath classpath = db.asyncClasspath(fileList).get();
-
-            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
-
-            List<HistoryCall<JcMethod>> calls = new ArrayList<>();
-
+            Class<?> clazz = object.getClass();
+            JcClassOrInterface jcClassOrInterface = Utils.toJcClassOrInterface(clazz, db);
             JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
-            JcMethod jcMethod = lookup.method("<init>", Utils.buildDescriptor(constructor.getMethod()));
-            calls.add(new HistoryCall<>(history, jcMethod, constructor.getArgs()));
-            List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));
-            for (EdgeMethod edgeMethod : methods) {
-                Method method = edgeMethod.getMethod();
-                Object[] args = edgeMethod.getArgs();
-                JcMethod jcMethod1 = lookup.method(method.getName(), Utils.buildDescriptor(method));
-                calls.add(new HistoryCall<>(history, jcMethod1, args));
-                suspect.addAll(Arrays.asList(args));
-            }
-            history.put(finalObject, new HistoryObject<>(finalObject, calls));
 
-            return suspect;
+            return findCallsInternal(object, history, o -> o.toJcMethod(lookup));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);
-        } catch (ExecutionException | IOException | URISyntaxException e) {
+        } catch (ExecutionException | IOException e) {
             throw new JacoDBException(e);
         }
     }
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
         return Utils.loadOrCreateDataBase(dbname, InMemoryHierarchy.INSTANCE);
+    }
+
+    private <T> @NotNull List<Object> findCallsInternal(
+            @NotNull Object object,
+            History<T> history,
+            @NotNull Function<Edge<? extends Executable>, T> toMethod
+    ) {
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
+        Edge<? extends Executable> constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        List<? extends Edge<? extends Executable>> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
+
+        List<HistoryCall<T>> calls = new ArrayList<>();
+        List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));
+
+        calls.add(new HistoryCall<>(history, toMethod.apply(constructor), constructor.getArgs()));
+        for (Edge<? extends Executable> em : methods) {
+            Object[] args = em.getArgs();
+            calls.add(new HistoryCall<>(history, toMethod.apply(em), args));
+            suspect.addAll(Arrays.asList(args));
+        }
+
+        history.put(object, new HistoryObject<>(object, calls));
+        return suspect;
     }
 
     private static final String VARIABLE_NAME = "object";
