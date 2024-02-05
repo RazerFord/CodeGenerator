@@ -13,6 +13,9 @@ import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.EdgeMethod;
 import org.codegenerator.generator.graph.StateGraph;
 import org.codegenerator.history.History;
+import org.codegenerator.history.HistoryCall;
+import org.codegenerator.history.HistoryNode;
+import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.*;
 import org.jacodb.impl.features.*;
 import org.jetbrains.annotations.Contract;
@@ -62,14 +65,20 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
     @Override
     public History<Executable> findReflectionCalls(@NotNull Object finalObject) {
+        History<Executable> history = new History<>();
         for (BuilderInfo builderInfo : builderInfoList) {
             try {
-                List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
-                List<Call<Executable>> calls = new ArrayList<>();
-                calls.add(new Call<>(builderInfo.builderConstructor));
-                edgeMethods.forEach(it -> calls.add(new Call<>(it.getMethod(), it.getArgs())));
-//                return calls;
-                return null;
+                List<EdgeMethod> methods = find(builderInfo, finalObject);
+                List<HistoryCall<Executable>> calls = new ArrayList<>();
+
+                calls.add(new HistoryCall<>(history, builderInfo.builderConstructor));
+                methods.forEach(it -> calls.add(new HistoryCall<>(history, it.getMethod(), it.getArgs())));
+                calls.add(new HistoryCall<>(history, builderInfo.builderBuildMethod));
+
+                HistoryNode<Executable> historyNode = new HistoryObject<>(finalObject, calls);
+                history.put(finalObject, historyNode);
+
+                return history;
             } catch (Exception e) {
                 // this block must be empty
             }
@@ -92,7 +101,28 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
     @Override
     public List<Object> findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
-        return null;
+        for (BuilderInfo builderInfo : builderInfoList) {
+            try {
+                List<EdgeMethod> methods = find(builderInfo, finalObject);
+                List<HistoryCall<Executable>> calls = new ArrayList<>();
+                List<Object> suspect = new ArrayList<>();
+
+                calls.add(new HistoryCall<>(history, builderInfo.builderConstructor));
+                calls.add(new HistoryCall<>(history, builderInfo.builderBuildMethod));
+                for (EdgeMethod method : methods) {
+                    calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
+                    suspect.addAll(Arrays.asList(method.getArgs()));
+                }
+
+                HistoryNode<Executable> historyNode = new HistoryObject<>(finalObject, calls);
+                history.put(finalObject, historyNode);
+
+                return suspect;
+            } catch (Exception e) {
+                // this block must be empty
+            }
+        }
+        throw new MethodSequenceNotFoundException();
     }
 
     @Override
@@ -258,7 +288,6 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
     private JcClasspath createJcClasspath(@NotNull JcDatabase db, Class<?> clazz) throws ExecutionException, InterruptedException {
         Class<?>[] localClasses = ArrayUtils.add(classes, clazz);
-        localClasses = ArrayUtils.add(localClasses, clazz);
         List<File> fileList = Arrays.stream(localClasses).map(it ->
                 Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
         ).collect(Collectors.toList());

@@ -4,7 +4,7 @@ import com.squareup.javapoet.JavaFile;
 import org.codegenerator.Call;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
-import org.codegenerator.generator.methodsequencefinders.BuilderMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.*;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BuilderGenerator<T> implements Generator<T> {
@@ -23,7 +24,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     private final String className;
     private final String methodName;
     private final ClassCodeGenerators classCodeGenerators;
-    private final BuilderMethodSequenceFinder builderMethodSequenceFinder;
+    private final MethodSequenceFinder methodSequenceFinder;
 
     @Contract(pure = true)
     public BuilderGenerator(@NotNull Class<?> clazz, Class<?>... classes) {
@@ -35,7 +36,7 @@ public class BuilderGenerator<T> implements Generator<T> {
         this.className = className;
         this.methodName = methodName;
 
-        builderMethodSequenceFinder = new BuilderMethodSequenceFinder(clazz, classes);
+        methodSequenceFinder = createPipeline(clazz, classes);
         classCodeGenerators = new ClassCodeGenerators(clazz);
     }
 
@@ -57,7 +58,7 @@ public class BuilderGenerator<T> implements Generator<T> {
             String methodName,
             Path path
     ) throws IOException {
-        List<Buildable> buildableList = builderMethodSequenceFinder.findBuildableList(finalObject);
+        List<Buildable> buildableList = methodSequenceFinder.findBuildableList(finalObject);
 
         JavaFile javaFile = classCodeGenerators.generate(buildableList, packageName, className, methodName);
 
@@ -66,11 +67,18 @@ public class BuilderGenerator<T> implements Generator<T> {
 
     @Override
     public History<Executable> generateReflectionCalls(@NotNull T finalObject) {
-        return builderMethodSequenceFinder.findReflectionCalls(finalObject);
+        return methodSequenceFinder.findReflectionCalls(finalObject);
     }
 
     @Override
     public List<Call<JcMethod>> generateJacoDBCalls(@NotNull T finalObject) {
-        return builderMethodSequenceFinder.findJacoDBCalls(finalObject);
+        return methodSequenceFinder.findJacoDBCalls(finalObject);
+    }
+
+    private @NotNull MethodSequenceFinder createPipeline(Class<?> clazz, Class<?>... classes) {
+        List<MethodSequenceFinderInternal> methodSequenceFinderList = new ArrayList<>();
+        methodSequenceFinderList.add(new BuilderMethodSequenceFinder(clazz, classes));
+        methodSequenceFinderList.add(new POJOMethodSequenceFinder());
+        return new PipelineMethodSequenceFinder(methodSequenceFinderList);
     }
 }
