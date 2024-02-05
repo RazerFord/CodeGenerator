@@ -14,6 +14,7 @@ import java.lang.reflect.Executable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class BuilderGenerator<T> implements Generator<T> {
     private static final String PACKAGE_NAME = "generatedclass";
@@ -75,12 +76,12 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     private @NotNull MethodSequenceFinder createPipeline(Class<?> clazz, Class<?>... classes) {
-        List<MethodSequenceFinderInternal> methodSequenceFinderList = new ArrayList<>();
-        methodSequenceFinderList.add(new NullMethodSequenceFinder());
-        methodSequenceFinderList.add(new PrimitiveMethodSequenceFinder());
-        methodSequenceFinderList.add(new ArrayMethodSequenceFinder());
-        methodSequenceFinderList.add(new BuilderMethodSequenceFinder(clazz, classes));
-        methodSequenceFinderList.add(new POJOMethodSequenceFinder());
+        List<Function<Object, ? extends MethodSequenceFinderInternal>> methodSequenceFinderList = new ArrayList<>();
+        methodSequenceFinderList.add(o -> new NullMethodSequenceFinder());
+        methodSequenceFinderList.add(o -> new PrimitiveMethodSequenceFinder());
+        methodSequenceFinderList.add(o -> new ArrayMethodSequenceFinder());
+        methodSequenceFinderList.add(o -> new BuilderMethodSequenceFinder(o.getClass(), classes));
+        methodSequenceFinderList.add(o -> new POJOMethodSequenceFinder());
         return new PipelineMethodSequenceFinder(methodSequenceFinderList);
     }
 }

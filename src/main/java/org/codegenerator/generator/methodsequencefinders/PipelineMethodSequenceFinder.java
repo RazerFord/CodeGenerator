@@ -7,13 +7,17 @@ import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
-    private final List<? extends MethodSequenceFinderInternal> methodSequenceFinderList;
+    private final Map<Class<?>, MethodSequenceFinderInternal> cachedFinders = new IdentityHashMap<>();
+    private final List<Function<Object, ? extends MethodSequenceFinderInternal>> methodSequenceFinderFunctions;
 
-    public PipelineMethodSequenceFinder(List<? extends MethodSequenceFinderInternal> methodSequenceFinderList) {
-        this.methodSequenceFinderList = methodSequenceFinderList;
+    public PipelineMethodSequenceFinder(List<Function<Object, ? extends MethodSequenceFinderInternal>> methodSequenceFinderFunctions) {
+        this.methodSequenceFinderFunctions = methodSequenceFinderFunctions;
     }
 
     @Override
@@ -23,9 +27,15 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
 
     @Override
     public List<Buildable> findBuildableList(@NotNull Object object) {
-        for (MethodSequenceFinder methodSequenceFinder : methodSequenceFinderList) {
+        Class<?> clazz = object.getClass();
+        MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
+        if (methodSequenceFinder != null) return methodSequenceFinder.findBuildableList(object);
+        for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
             try {
-                return methodSequenceFinder.findBuildableList(object);
+                methodSequenceFinder = function.apply(object);
+                List<Buildable> buildableList = methodSequenceFinder.findBuildableList(object);
+                cachedFinders.put(clazz, methodSequenceFinder);
+                return buildableList;
             } catch (Exception ignored) {
                 // this code block is empty
             }
@@ -48,11 +58,19 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private void findReflectionCallsRecursive(@NotNull Object object, History<Executable> history) {
-        for (MethodSequenceFinderInternal methodSequenceFinder : methodSequenceFinderList) {
+        Class<?> clazz = object.getClass();
+        MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
+        if (methodSequenceFinder != null) {
+            methodSequenceFinder.findReflectionCallsInternal(object, history);
+            return;
+        }
+        for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
             try {
+                methodSequenceFinder = function.apply(object);
                 if (methodSequenceFinder.canTry(object)) {
                     List<Object> suspects = methodSequenceFinder.findReflectionCallsInternal(object, history);
                     suspects.forEach(it -> findReflectionCallsRecursive(it, history));
+                    cachedFinders.put(clazz, methodSequenceFinder);
                     return;
                 }
             } catch (Exception ignored) {
@@ -63,11 +81,19 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private void findJacoDBCallsRecursive(@NotNull Object object, History<JcMethod> history) {
-        for (MethodSequenceFinderInternal methodSequenceFinder : methodSequenceFinderList) {
+        Class<?> clazz = object.getClass();
+        MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
+        if (methodSequenceFinder != null) {
+            methodSequenceFinder.findJacoDBCallsInternal(object, history);
+            return;
+        }
+        for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
             try {
+                methodSequenceFinder = function.apply(object);
                 if (methodSequenceFinder.canTry(object)) {
                     List<Object> suspects = methodSequenceFinder.findJacoDBCallsInternal(object, history);
                     suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
+                    cachedFinders.put(clazz, methodSequenceFinder);
                     return;
                 }
             } catch (Exception ignored) {
