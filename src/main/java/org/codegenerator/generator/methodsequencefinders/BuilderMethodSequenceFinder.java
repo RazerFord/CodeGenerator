@@ -85,8 +85,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
             suspect.addAll(Arrays.asList(method.getArgs()));
         }
-        history.put(finalObject, new HistoryObject<>(finalObject, calls));
 
+        history.put(finalObject, new HistoryObject<>(finalObject, calls));
         return suspect;
     }
 
@@ -103,33 +103,47 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             List<HistoryCall<JcMethod>> calls = new ArrayList<>();
             List<Object> suspect = new ArrayList<>();
 
-            Executable builderConstructor = builderInfo.builderConstructor;
-            Class<?> builderConstructorClazz = builderConstructor.getDeclaringClass();
+            Executable constructor = builderInfo.builderConstructor;
+            Class<?> builder = constructor.getDeclaringClass();
 
-            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderConstructorClazz.getTypeName()));
-            JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
+            addConstructor(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, constructor, calls);
+            addMethods(Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName())), history, methods, calls, suspect);
 
-            JcMethod jcMethod = lookup.method(Utils.buildMethodName(builderConstructor), Utils.buildDescriptor(builderConstructor));
-            calls.add(new HistoryCall<>(history, jcMethod));
-
-            if (builderClazz != builderConstructorClazz) {
-                jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
-                lookup = jcClassOrInterface.getLookup();
-            }
-
-            for (EdgeMethod em : methods) {
-                Object[] args = em.getArgs();
-                calls.add(new HistoryCall<>(history, em.toJcMethod(lookup), args));
-                suspect.addAll(Arrays.asList(args));
-            }
             history.put(finalObject, new HistoryObject<>(finalObject, calls));
-
             return suspect;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);
         } catch (ExecutionException | IOException e) {
             throw new JacoDBException(e);
+        }
+    }
+
+    private void addConstructor(
+            @NotNull JcClassOrInterface jcClassOrInterface,
+            History<JcMethod> history,
+            @NotNull Executable constructor,
+            @NotNull List<HistoryCall<JcMethod>> calls
+    ) {
+        JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
+
+        JcMethod jcMethod = lookup.method(Utils.buildMethodName(constructor), Utils.buildDescriptor(constructor));
+        calls.add(new HistoryCall<>(history, jcMethod));
+    }
+
+    private void addMethods(
+            @NotNull JcClassOrInterface jcClassOrInterface,
+            History<JcMethod> history,
+            @NotNull List<EdgeMethod> methods,
+            @NotNull List<HistoryCall<JcMethod>> calls,
+            @NotNull List<Object> suspect
+    ) {
+        JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
+
+        for (EdgeMethod em : methods) {
+            Object[] args = em.getArgs();
+            calls.add(new HistoryCall<>(history, em.toJcMethod(lookup), args));
+            suspect.addAll(Arrays.asList(args));
         }
     }
 
