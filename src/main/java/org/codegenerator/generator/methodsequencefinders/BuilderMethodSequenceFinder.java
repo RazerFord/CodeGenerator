@@ -34,6 +34,7 @@ import static org.codegenerator.Utils.throwIf;
 
 public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
+    private final StateGraph stateGraph = new StateGraph();
     private final Class<?> clazz;
     private final Class<?>[] classes;
     private final List<BuilderInfo> builderInfoList;
@@ -89,9 +90,18 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         throw new MethodSequenceNotFoundException();
     }
 
+    @Override
+    public List<Object> findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
+        return null;
+    }
+
+    @Override
+    public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
+        return null;
+    }
+
     private @NotNull List<EdgeMethod> find(@NotNull BuilderInfo builderInfo, @NotNull Object finalObject) {
         Method builderBuildMethod = builderInfo.builderBuildMethod;
-        StateGraph stateGraph = builderInfo.stateGraph;
         Executable builderConstructor = builderInfo.builderConstructor;
 
         UnaryOperator<Object> termination = createTerminationFunction(builderBuildMethod);
@@ -109,9 +119,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
                 if (buildMethod == null) continue;
 
                 Executable builderConstructor = findBuilderConstructor(db, builderClass);
-                StateGraph stateGraph = new StateGraph();
 
-                builderInfoList1.add(new BuilderInfo(builderClass, builderConstructor, buildMethod, stateGraph));
+                builderInfoList1.add(new BuilderInfo(builderClass, builderConstructor, buildMethod));
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -122,7 +131,10 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         return builderInfoList1;
     }
 
-    private @NotNull List<Buildable> createBuildableList(@NotNull List<EdgeMethod> edgeMethods, @NotNull BuilderInfo builderInfo) {
+    private @NotNull List<Buildable> createBuildableList(
+            @NotNull List<EdgeMethod> edgeMethods,
+            @NotNull BuilderInfo builderInfo
+    ) {
         List<Buildable> buildableList = new ArrayList<>();
         Class<?> builderClazz = builderInfo.builderClazz;
         Method builderBuildMethod = builderInfo.builderBuildMethod;
@@ -299,7 +311,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         throwIf(builderInfoList.isEmpty(), new InvariantCheckingException(BUILDER_NOT_FOUND));
     }
 
-    public List<Class<?>> findBuilders(@NotNull JcDatabase db) throws ExecutionException, InterruptedException {
+    private List<Class<?>> findBuilders(@NotNull JcDatabase db) throws ExecutionException, InterruptedException {
         List<File> fileList = Arrays.stream(ArrayUtils.addAll(classes, clazz)).map(it ->
                 Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
         ).collect(Collectors.toList());
@@ -323,32 +335,19 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         return Utils.loadOrCreateDataBase(dbname, Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE);
     }
 
-    @Override
-    public List<Object> findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
-        return null;
-    }
-
-    @Override
-    public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
-        return null;
-    }
-
     private static class BuilderInfo {
         private final Class<?> builderClazz;
         private final Executable builderConstructor;
         private final Method builderBuildMethod;
-        private final StateGraph stateGraph;
 
         private BuilderInfo(
                 Class<?> builderClazz,
                 Executable builderConstructor,
-                Method builderBuildMethod,
-                StateGraph stateGraph
+                Method builderBuildMethod
         ) {
             this.builderClazz = builderClazz;
             this.builderConstructor = builderConstructor;
             this.builderBuildMethod = builderBuildMethod;
-            this.stateGraph = stateGraph;
         }
     }
 

@@ -1,18 +1,15 @@
 package org.codegenerator;
 
 import org.codegenerator.generator.POJOGenerator;
-import org.codegenerator.history.History;
 import org.codegenerator.resourcescodegeneratorpojo.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
 import java.io.IOException;
-import java.lang.reflect.Executable;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CodeGeneratorPOJOTest {
     private static final String OUTPUT_DIRECTORY = "./";
@@ -427,13 +424,10 @@ class CodeGeneratorPOJOTest {
 
         MultidimensionalIntArray multidimensionalIntArray = getMultidimensionalIntArray();
 
-//        generator.generateCode(multidimensionalIntArray, Paths.get(OUTPUT_DIRECTORY));
+        generator.generateCode(multidimensionalIntArray, Paths.get(OUTPUT_DIRECTORY));
 
-//        MultidimensionalIntArray other = createObject(generatedClassName);
-//        assertEquals(multidimensionalIntArray, other);
-
-        History<Executable> x = generator.generateReflectionCalls(multidimensionalIntArray);
-        assertTrue(true);
+        MultidimensionalIntArray other = createObject(generatedClassName);
+        assertEquals(multidimensionalIntArray, other);
     }
 
     @Test
