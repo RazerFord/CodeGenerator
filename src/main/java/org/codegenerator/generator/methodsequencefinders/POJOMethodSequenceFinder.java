@@ -97,12 +97,6 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
         }
     }
 
-    private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
-        return Utils.loadOrCreateDataBase(dbname, InMemoryHierarchy.INSTANCE);
-    }
-
-    private static final String VARIABLE_NAME = "object";
-
     @Override
     public List<Object> findReflectionCallsInternal(@NotNull Object object, History<Executable> history) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
@@ -110,21 +104,27 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
         List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
 
         List<HistoryCall<Executable>> calls = new ArrayList<>();
-        List<Object> unvisited = new ArrayList<>(Arrays.asList(constructor.getArgs()));
+        List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));
 
         calls.add(new HistoryCall<>(history, constructor.getMethod(), constructor.getArgs()));
-        methods.forEach(it -> {
-            calls.add(new HistoryCall<>(history, it.getMethod(), it.getArgs()));
-            unvisited.addAll(Arrays.asList(it.getArgs()));
-        });
+        for (EdgeMethod method : methods) {
+            calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
+            suspect.addAll(Arrays.asList(method.getArgs()));
+        }
 
         history.put(object, new HistoryObject<>(object, calls));
 
-        return unvisited;
+        return suspect;
     }
 
     @Override
     public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
         return null;
     }
+
+    private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
+        return Utils.loadOrCreateDataBase(dbname, InMemoryHierarchy.INSTANCE);
+    }
+
+    private static final String VARIABLE_NAME = "object";
 }

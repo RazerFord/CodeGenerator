@@ -5,6 +5,7 @@ import org.codegenerator.Call;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.history.History;
+import org.codegenerator.history.HistoryArray;
 import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
@@ -58,8 +59,10 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
             history.put(object, new HistoryObject<>(object, Collections.emptyList()));
         } else if (clazz.isArray()) {
             int length = Array.getLength(object);
+            history.put(object, new HistoryArray<>(object, Collections.emptyList()));
             for (int i = 0; i < length; i++) {
-                findReflectionCallsRecursive(Array.get(object, i), history);
+                Object object1 = Array.get(object, i);
+                findReflectionCallsRecursive(object1, history);
             }
         } else {
             for (MethodSequenceFinderInternal methodSequenceFinder : methodSequenceFinderList) {

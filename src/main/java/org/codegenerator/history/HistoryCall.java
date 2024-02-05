@@ -19,7 +19,7 @@ public class HistoryCall<T> {
         return args;
     }
 
-    public HistoryObject<T> getHistoryArg(int index) {
+    public HistoryNode<T> getHistoryArg(int index) {
         return history.get(args[index]);
     }
 }
