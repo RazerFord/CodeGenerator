@@ -1,17 +1,12 @@
 package org.codegenerator.generator.methodsequencefinders;
 
-import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.history.History;
-import org.codegenerator.history.HistoryArray;
-import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
-import java.util.Collections;
 import java.util.List;
 
 public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
@@ -22,10 +17,15 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     @Override
-    public List<Buildable> findBuildableList(@NotNull Object finalObject) {
+    public boolean canTry(Object object) {
+        return true;
+    }
+
+    @Override
+    public List<Buildable> findBuildableList(@NotNull Object object) {
         for (MethodSequenceFinder methodSequenceFinder : methodSequenceFinderList) {
             try {
-                return methodSequenceFinder.findBuildableList(finalObject);
+                return methodSequenceFinder.findBuildableList(object);
             } catch (Exception ignored) {
                 // this code block is empty
             }
@@ -48,52 +48,32 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private void findReflectionCallsRecursive(@NotNull Object object, History<Executable> history) {
-        Class<?> clazz = object.getClass();
-        if (ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class) {
-            history.put(object, new HistoryObject<>(object, Collections.emptyList()));
-        } else if (clazz.isArray()) {
-            int length = Array.getLength(object);
-            history.put(object, new HistoryArray<>(object, Collections.emptyList()));
-            for (int i = 0; i < length; i++) {
-                Object object1 = Array.get(object, i);
-                findReflectionCallsRecursive(object1, history);
-            }
-        } else {
-            for (MethodSequenceFinderInternal methodSequenceFinder : methodSequenceFinderList) {
-                try {
+        for (MethodSequenceFinderInternal methodSequenceFinder : methodSequenceFinderList) {
+            try {
+                if (methodSequenceFinder.canTry(object)) {
                     List<Object> suspects = methodSequenceFinder.findReflectionCallsInternal(object, history);
                     suspects.forEach(it -> findReflectionCallsRecursive(it, history));
                     return;
-                } catch (Exception ignored) {
-                    // this code block is empty
                 }
+            } catch (Exception ignored) {
+                // this code block is empty
             }
-            throw new MethodSequenceNotFoundException();
         }
+        throw new MethodSequenceNotFoundException();
     }
 
     private void findJacoDBCallsRecursive(@NotNull Object object, History<JcMethod> history) {
-        Class<?> clazz = object.getClass();
-        if (ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class) {
-            history.put(object, new HistoryObject<>(object, Collections.emptyList()));
-        } else if (clazz.isArray()) {
-            int length = Array.getLength(object);
-            history.put(object, new HistoryArray<>(object, Collections.emptyList()));
-            for (int i = 0; i < length; i++) {
-                Object object1 = Array.get(object, i);
-                findJacoDBCallsRecursive(object1, history);
-            }
-        } else {
-            for (MethodSequenceFinderInternal methodSequenceFinder : methodSequenceFinderList) {
-                try {
+        for (MethodSequenceFinderInternal methodSequenceFinder : methodSequenceFinderList) {
+            try {
+                if (methodSequenceFinder.canTry(object)) {
                     List<Object> suspects = methodSequenceFinder.findJacoDBCallsInternal(object, history);
                     suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
                     return;
-                } catch (Exception ignored) {
-                    // this code block is empty
                 }
+            } catch (Exception ignored) {
+                // this code block is empty
             }
-            throw new MethodSequenceNotFoundException();
         }
+        throw new MethodSequenceNotFoundException();
     }
 }

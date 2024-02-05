@@ -9,9 +9,11 @@ import java.lang.reflect.Executable;
 import java.util.List;
 
 public interface MethodSequenceFinder {
-    List<Buildable> findBuildableList(@NotNull Object finalObject);
+    boolean canTry(Object object);
 
-    History<Executable> findReflectionCalls(@NotNull Object finalObject);
+    List<Buildable> findBuildableList(@NotNull Object object);
 
-    History<JcMethod> findJacoDBCalls(@NotNull Object finalObject);
+    History<Executable> findReflectionCalls(@NotNull Object object);
+
+    History<JcMethod> findJacoDBCalls(@NotNull Object object);
 }

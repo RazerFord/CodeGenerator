@@ -76,6 +76,9 @@ public class BuilderGenerator<T> implements Generator<T> {
 
     private @NotNull MethodSequenceFinder createPipeline(Class<?> clazz, Class<?>... classes) {
         List<MethodSequenceFinderInternal> methodSequenceFinderList = new ArrayList<>();
+        methodSequenceFinderList.add(new NullMethodSequenceFinder());
+        methodSequenceFinderList.add(new PrimitiveMethodSequenceFinder());
+        methodSequenceFinderList.add(new ArrayMethodSequenceFinder());
         methodSequenceFinderList.add(new BuilderMethodSequenceFinder(clazz, classes));
         methodSequenceFinderList.add(new POJOMethodSequenceFinder());
         return new PipelineMethodSequenceFinder(methodSequenceFinderList);

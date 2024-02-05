@@ -3,10 +3,7 @@ package org.codegenerator.generator;
 import com.squareup.javapoet.JavaFile;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
-import org.codegenerator.generator.methodsequencefinders.MethodSequenceFinder;
-import org.codegenerator.generator.methodsequencefinders.MethodSequenceFinderInternal;
-import org.codegenerator.generator.methodsequencefinders.POJOMethodSequenceFinder;
-import org.codegenerator.generator.methodsequencefinders.PipelineMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.*;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
@@ -78,6 +75,9 @@ public class POJOGenerator<T> implements Generator<T> {
 
     private @NotNull MethodSequenceFinder createPipeline() {
         List<MethodSequenceFinderInternal> methodSequenceFinderList = new ArrayList<>();
+        methodSequenceFinderList.add(new NullMethodSequenceFinder());
+        methodSequenceFinderList.add(new PrimitiveMethodSequenceFinder());
+        methodSequenceFinderList.add(new ArrayMethodSequenceFinder());
         methodSequenceFinderList.add(new POJOMethodSequenceFinder());
         return new PipelineMethodSequenceFinder(methodSequenceFinderList);
     }

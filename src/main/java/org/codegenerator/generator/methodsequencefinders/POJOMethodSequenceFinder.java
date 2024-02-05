@@ -34,12 +34,17 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
         pojoConstructorStateGraph = new PojoConstructorStateGraph();
     }
 
-    public List<Buildable> findBuildableList(@NotNull Object finalObject) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+    @Override
+    public boolean canTry(Object object) {
+        return true;
+    }
+
+    public List<Buildable> findBuildableList(@NotNull Object object) {
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
         EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
         List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
 
-        Class<?> clazz = finalObject.getClass();
+        Class<?> clazz = object.getClass();
         List<Buildable> buildableList = new ArrayList<>();
         if (methodList.isEmpty()) {
             buildableList.add(new ReturnConstructorCall(clazz, edgeConstructor.getArgs()));
@@ -52,19 +57,19 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     @Override
-    public History<Executable> findReflectionCalls(@NotNull Object finalObject) {
+    public History<Executable> findReflectionCalls(@NotNull Object object) {
         History<Executable> history = new History<>();
 
-        findReflectionCallsInternal(finalObject, history);
+        findReflectionCallsInternal(object, history);
 
         return history;
     }
 
     @Override
-    public History<JcMethod> findJacoDBCalls(@NotNull Object finalObject) {
+    public History<JcMethod> findJacoDBCalls(@NotNull Object object) {
         History<JcMethod> history = new History<>();
 
-        findJacoDBCallsInternal(finalObject, history);
+        findJacoDBCallsInternal(object, history);
 
         return history;
     }

@@ -51,22 +51,27 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         methodFinder = new LazyMethodFinder(builderInfoList, new StateGraph());
     }
 
-    public List<Buildable> findBuildableList(@NotNull Object finalObject) {
-        Pair<BuilderInfo, List<EdgeMethod>> found = methodFinder.find(finalObject);
+    @Override
+    public boolean canTry(Object object) {
+        return true;
+    }
+
+    public List<Buildable> findBuildableList(@NotNull Object object) {
+        Pair<BuilderInfo, List<EdgeMethod>> found = methodFinder.find(object);
         return createBuildableList(found.getSecond(), found.getFirst());
     }
 
     @Override
-    public History<Executable> findReflectionCalls(@NotNull Object finalObject) {
+    public History<Executable> findReflectionCalls(@NotNull Object object) {
         History<Executable> history = new History<>();
-        findReflectionCallsInternal(finalObject, history);
+        findReflectionCallsInternal(object, history);
         return history;
     }
 
     @Override
-    public History<JcMethod> findJacoDBCalls(@NotNull Object finalObject) {
+    public History<JcMethod> findJacoDBCalls(@NotNull Object object) {
         History<JcMethod> history = new History<>();
-        findJacoDBCallsInternal(finalObject, history);
+        findJacoDBCallsInternal(object, history);
         return history;
     }
 
