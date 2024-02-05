@@ -3,7 +3,6 @@ package org.codegenerator.generator.methodsequencefinders;
 import kotlin.sequences.Sequence;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
-import org.codegenerator.Call;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
@@ -87,11 +86,14 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     }
 
     @Override
-    public List<Call<JcMethod>> findJacoDBCalls(@NotNull Object finalObject) {
+    public History<JcMethod> findJacoDBCalls(@NotNull Object finalObject) {
         for (BuilderInfo builderInfo : builderInfoList) {
             try {
                 List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
-                return createJacoDBCalls(builderInfo, edgeMethods);
+                History<JcMethod> history = new History<>();
+                List<HistoryCall<JcMethod>> calls = createJacoDBCalls(history, builderInfo, edgeMethods);
+                history.put(finalObject, new HistoryObject<>(finalObject, calls));
+                return history;
             } catch (Exception e) {
                 // this block must be empty
             }
@@ -212,7 +214,11 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         return buildableList;
     }
 
-    private @NotNull List<Call<JcMethod>> createJacoDBCalls(@NotNull BuilderInfo builderInfo, @NotNull List<EdgeMethod> methodList) {
+    private @NotNull List<HistoryCall<JcMethod>> createJacoDBCalls(
+            History<JcMethod> history,
+            @NotNull BuilderInfo builderInfo,
+            @NotNull List<EdgeMethod> methodList
+    ) {
         Class<?> builderClazz = builderInfo.builderClazz;
         Executable builderConstructor = builderInfo.builderConstructor;
         Class<?> builderConstructorClazz = builderConstructor.getDeclaringClass();
@@ -220,14 +226,14 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             JcClasspath classpath = createJcClasspath(db, builderClazz);
 
-            List<Call<JcMethod>> callList = new ArrayList<>();
+            List<HistoryCall<JcMethod>> calls = new ArrayList<>();
 
             JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderConstructorClazz.getTypeName()));
 
             JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
 
             JcMethod jcMethod = lookup.method(createMethodName(builderConstructor), Utils.buildDescriptor(builderConstructor));
-            callList.add(new Call<>(jcMethod));
+            calls.add(new HistoryCall<>(history, jcMethod));
 
             if (builderClazz != builderConstructorClazz) {
                 jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
@@ -238,9 +244,9 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
                 Method method = edgeMethod.getMethod();
                 Object[] args = edgeMethod.getArgs();
                 jcMethod = lookup.method(method.getName(), Utils.buildDescriptor(method));
-                callList.add(new Call<>(jcMethod, args));
+                calls.add(new HistoryCall<>(history, jcMethod, args));
             }
-            return callList;
+            return calls;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);

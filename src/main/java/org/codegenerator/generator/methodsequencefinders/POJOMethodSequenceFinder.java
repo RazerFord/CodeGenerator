@@ -1,6 +1,5 @@
 package org.codegenerator.generator.methodsequencefinders;
 
-import org.codegenerator.Call;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
@@ -67,10 +66,10 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     @Override
-    public List<Call<JcMethod>> findJacoDBCalls(@NotNull Object finalObject) {
+    public History<JcMethod> findJacoDBCalls(@NotNull Object finalObject) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
+        EdgeConstructor constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
 
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             Class<?> clazz = finalObject.getClass();
@@ -79,16 +78,20 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
 
             JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
 
-            List<Call<JcMethod>> callList = new ArrayList<>();
+            List<HistoryCall<JcMethod>> calls = new ArrayList<>();
+            History<JcMethod> history = new History<>();
 
             JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
-            callList.add(new Call<>(lookup.method("<init>", Utils.buildDescriptor(edgeConstructor.getMethod())), edgeConstructor.getArgs()));
-            methodList.forEach(it -> {
-                Method method = it.getMethod();
-                JcMethod jcMethod = lookup.method(method.getName(), Utils.buildDescriptor(method));
-                callList.add(new Call<>(jcMethod, it.getArgs()));
-            });
-            return callList;
+            JcMethod jcMethod = lookup.method("<init>", Utils.buildDescriptor(constructor.getMethod()));
+            calls.add(new HistoryCall<>(history, jcMethod, constructor.getArgs()));
+            for (EdgeMethod edgeMethod : methods) {
+                Method method = edgeMethod.getMethod();
+                JcMethod jcMethod1 = lookup.method(method.getName(), Utils.buildDescriptor(method));
+                calls.add(new HistoryCall<>(history, jcMethod1, edgeMethod.getArgs()));
+            }
+            history.put(finalObject, new HistoryObject<>(finalObject, calls));
+
+            return history;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);
@@ -119,7 +122,39 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
 
     @Override
     public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
-        return null;
+        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
+        EdgeConstructor constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        List<EdgeMethod> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
+
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+            Class<?> clazz = finalObject.getClass();
+            List<File> fileList = Collections.singletonList(new File(clazz.getProtectionDomain().getCodeSource().getLocation().toURI()));
+            JcClasspath classpath = db.asyncClasspath(fileList).get();
+
+            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
+
+            List<HistoryCall<JcMethod>> calls = new ArrayList<>();
+
+            JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
+            JcMethod jcMethod = lookup.method("<init>", Utils.buildDescriptor(constructor.getMethod()));
+            calls.add(new HistoryCall<>(history, jcMethod, constructor.getArgs()));
+            List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));
+            for (EdgeMethod edgeMethod : methods) {
+                Method method = edgeMethod.getMethod();
+                Object[] args = edgeMethod.getArgs();
+                JcMethod jcMethod1 = lookup.method(method.getName(), Utils.buildDescriptor(method));
+                calls.add(new HistoryCall<>(history, jcMethod1, args));
+                suspect.addAll(Arrays.asList(args));
+            }
+            history.put(finalObject, new HistoryObject<>(finalObject, calls));
+
+            return suspect;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        } catch (ExecutionException | IOException | URISyntaxException e) {
+            throw new JacoDBException(e);
+        }
     }
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {

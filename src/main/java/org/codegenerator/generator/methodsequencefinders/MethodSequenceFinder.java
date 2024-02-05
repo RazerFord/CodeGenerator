@@ -1,6 +1,5 @@
 package org.codegenerator.generator.methodsequencefinders;
 
-import org.codegenerator.Call;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
@@ -14,5 +13,5 @@ public interface MethodSequenceFinder {
 
     History<Executable> findReflectionCalls(@NotNull Object finalObject);
 
-    List<Call<JcMethod>> findJacoDBCalls(@NotNull Object finalObject);
+    History<JcMethod> findJacoDBCalls(@NotNull Object finalObject);
 }

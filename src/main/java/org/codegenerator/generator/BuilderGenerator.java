@@ -1,7 +1,6 @@
 package org.codegenerator.generator;
 
 import com.squareup.javapoet.JavaFile;
-import org.codegenerator.Call;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.*;
@@ -71,7 +70,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Override
-    public List<Call<JcMethod>> generateJacoDBCalls(@NotNull T finalObject) {
+    public History<JcMethod> generateJacoDBCalls(@NotNull T finalObject) {
         return methodSequenceFinder.findJacoDBCalls(finalObject);
     }
 
