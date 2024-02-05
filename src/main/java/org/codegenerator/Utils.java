@@ -64,11 +64,15 @@ public class Utils {
             @NotNull Class<?>... otherClasses
     ) throws ExecutionException, InterruptedException {
         Class<?>[] classes = ArrayUtils.add(otherClasses, targetClazz);
+        JcClasspath classpath = toJcClasspath(db, classes);
+        return Objects.requireNonNull(classpath.findClassOrNull(targetClazz.getTypeName()));
+    }
+
+    public static JcClasspath toJcClasspath(@NotNull JcDatabase db, Class<?>... classes) throws ExecutionException, InterruptedException {
         List<File> fileList = Arrays.stream(classes).map(it ->
                 Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
         ).collect(Collectors.toList());
-        JcClasspath classpath = db.asyncClasspath(fileList).get();
-        return Objects.requireNonNull(classpath.findClassOrNull(targetClazz.getTypeName()));
+        return db.asyncClasspath(fileList).get();
     }
 
     public static <E> E callSupplierWrapper(SupplierWrapper<E> supplierWrapper) {

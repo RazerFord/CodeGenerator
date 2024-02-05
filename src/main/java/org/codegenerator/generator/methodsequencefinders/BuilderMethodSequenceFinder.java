@@ -9,11 +9,10 @@ import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
-import org.codegenerator.generator.graph.EdgeMethod;
+import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.codegenerator.generator.graph.StateGraph;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
-import org.codegenerator.history.HistoryNode;
 import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.*;
 import org.jacodb.impl.features.*;
@@ -65,40 +64,15 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     @Override
     public History<Executable> findReflectionCalls(@NotNull Object finalObject) {
         History<Executable> history = new History<>();
-        for (BuilderInfo builderInfo : builderInfoList) {
-            try {
-                List<EdgeMethod> methods = find(builderInfo, finalObject);
-                List<HistoryCall<Executable>> calls = new ArrayList<>();
-
-                calls.add(new HistoryCall<>(history, builderInfo.builderConstructor));
-                methods.forEach(it -> calls.add(new HistoryCall<>(history, it.getMethod(), it.getArgs())));
-                calls.add(new HistoryCall<>(history, builderInfo.builderBuildMethod));
-
-                HistoryNode<Executable> historyNode = new HistoryObject<>(finalObject, calls);
-                history.put(finalObject, historyNode);
-
-                return history;
-            } catch (Exception e) {
-                // this block must be empty
-            }
-        }
-        throw new MethodSequenceNotFoundException();
+        findReflectionCallsInternal(finalObject, history);
+        return history;
     }
 
     @Override
     public History<JcMethod> findJacoDBCalls(@NotNull Object finalObject) {
-        for (BuilderInfo builderInfo : builderInfoList) {
-            try {
-                List<EdgeMethod> edgeMethods = find(builderInfo, finalObject);
-                History<JcMethod> history = new History<>();
-                List<HistoryCall<JcMethod>> calls = createJacoDBCalls(history, builderInfo, edgeMethods);
-                history.put(finalObject, new HistoryObject<>(finalObject, calls));
-                return history;
-            } catch (Exception e) {
-                // this block must be empty
-            }
-        }
-        throw new MethodSequenceNotFoundException();
+        History<JcMethod> history = new History<>();
+        findJacoDBCallsInternal(finalObject, history);
+        return history;
     }
 
     @Override
@@ -115,9 +89,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
                     calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
                     suspect.addAll(Arrays.asList(method.getArgs()));
                 }
-
-                HistoryNode<Executable> historyNode = new HistoryObject<>(finalObject, calls);
-                history.put(finalObject, historyNode);
+                history.put(finalObject, new HistoryObject<>(finalObject, calls));
 
                 return suspect;
             } catch (Exception e) {
@@ -129,16 +101,58 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
     @Override
     public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
-        return null;
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+            for (BuilderInfo builderInfo : builderInfoList) {
+                Class<?> builderClazz = builderInfo.builderClazz;
+                JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
+                try {
+                    List<EdgeMethod> methods = find(builderInfo, finalObject);
+                    List<HistoryCall<JcMethod>> calls = new ArrayList<>();
+                    List<Object> suspect = new ArrayList<>();
+
+                    Executable builderConstructor = builderInfo.builderConstructor;
+                    Class<?> builderConstructorClazz = builderConstructor.getDeclaringClass();
+
+                    JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderConstructorClazz.getTypeName()));
+                    JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
+
+                    JcMethod jcMethod = lookup.method(createMethodName(builderConstructor), Utils.buildDescriptor(builderConstructor));
+                    calls.add(new HistoryCall<>(history, jcMethod));
+
+                    if (builderClazz != builderConstructorClazz) {
+                        jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
+                    }
+                    lookup = jcClassOrInterface.getLookup();
+
+                    for (EdgeMethod em : methods) {
+                        Object[] args = em.getArgs();
+                        calls.add(new HistoryCall<>(history, em.toJcMethod(lookup), args));
+                        suspect.addAll(Arrays.asList(args));
+                    }
+                    history.put(finalObject, new HistoryObject<>(finalObject, calls));
+                    return suspect;
+                } catch (Exception e) {
+                    // this block must be empty
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        } catch (ExecutionException | IOException e) {
+            throw new JacoDBException(e);
+        }
+        throw new MethodSequenceNotFoundException();
     }
 
     private @NotNull List<EdgeMethod> find(@NotNull BuilderInfo builderInfo, @NotNull Object finalObject) {
         Method builderBuildMethod = builderInfo.builderBuildMethod;
         Executable builderConstructor = builderInfo.builderConstructor;
 
-        UnaryOperator<Object> termination = createTerminationFunction(builderBuildMethod);
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        return stateGraph.findPath(assignableTypePropertyGrouper, createConstructorSupplier(builderConstructor), termination);
+        return stateGraph.findPath(
+                new AssignableTypePropertyGrouper(finalObject),
+                createConstructorSupplier(builderConstructor),
+                createTerminationFunction(builderBuildMethod)
+        );
     }
 
     private @NotNull List<BuilderInfo> createBuilderInfoList() {
@@ -214,47 +228,6 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         return buildableList;
     }
 
-    private @NotNull List<HistoryCall<JcMethod>> createJacoDBCalls(
-            History<JcMethod> history,
-            @NotNull BuilderInfo builderInfo,
-            @NotNull List<EdgeMethod> methodList
-    ) {
-        Class<?> builderClazz = builderInfo.builderClazz;
-        Executable builderConstructor = builderInfo.builderConstructor;
-        Class<?> builderConstructorClazz = builderConstructor.getDeclaringClass();
-
-        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            JcClasspath classpath = createJcClasspath(db, builderClazz);
-
-            List<HistoryCall<JcMethod>> calls = new ArrayList<>();
-
-            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderConstructorClazz.getTypeName()));
-
-            JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
-
-            JcMethod jcMethod = lookup.method(createMethodName(builderConstructor), Utils.buildDescriptor(builderConstructor));
-            calls.add(new HistoryCall<>(history, jcMethod));
-
-            if (builderClazz != builderConstructorClazz) {
-                jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
-            }
-            lookup = jcClassOrInterface.getLookup();
-
-            for (EdgeMethod edgeMethod : methodList) {
-                Method method = edgeMethod.getMethod();
-                Object[] args = edgeMethod.getArgs();
-                jcMethod = lookup.method(method.getName(), Utils.buildDescriptor(method));
-                calls.add(new HistoryCall<>(history, jcMethod, args));
-            }
-            return calls;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new JacoDBException(e);
-        } catch (ExecutionException | IOException e) {
-            throw new JacoDBException(e);
-        }
-    }
-
     private Method findBuildMethod(@NotNull Class<?> cls) {
         return Arrays.stream(cls.getMethods())
                 .filter(m -> m.getParameterCount() == 0)
@@ -267,7 +240,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             if (constructor.getParameterCount() == 0) return constructor;
         }
         try {
-            JcClasspath classpath = createJcClasspath(db, builderClazz);
+            JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
             JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
 
             SyncUsagesExtension haystack = new SyncUsagesExtension(JcHierarchies.asyncHierarchy(classpath).get(), classpath);
@@ -290,14 +263,6 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         ) {
             throw new JacoDBException(e);
         }
-    }
-
-    private JcClasspath createJcClasspath(@NotNull JcDatabase db, Class<?> clazz) throws ExecutionException, InterruptedException {
-        Class<?>[] localClasses = ArrayUtils.add(classes, clazz);
-        List<File> fileList = Arrays.stream(localClasses).map(it ->
-                Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
-        ).collect(Collectors.toList());
-        return db.asyncClasspath(fileList).get();
     }
 
     private JcMethod findMethodCreatingBuilder(SyncUsagesExtension haystack, @NotNull List<JcMethod> needles) {
