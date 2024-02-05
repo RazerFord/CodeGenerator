@@ -8,6 +8,7 @@ import org.jacodb.api.JcDatabase;
 import org.jacodb.api.JcFeature;
 import org.jacodb.impl.JacoDB;
 import org.jacodb.impl.JcSettings;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -56,6 +57,17 @@ public class Utils {
             throw new IllegalArgumentException();
         }
         return descriptor.toString();
+    }
+
+    @Contract(pure = true)
+    public static @NotNull String buildMethodName(Executable executable) {
+        if (executable instanceof Method) {
+            return executable.getName();
+        }
+        if (executable instanceof Constructor<?>) {
+            return "<init>";
+        }
+        throw new IllegalArgumentException();
     }
 
     public static JcClassOrInterface toJcClassOrInterface(
