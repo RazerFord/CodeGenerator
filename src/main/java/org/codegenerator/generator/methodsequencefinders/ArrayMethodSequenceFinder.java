@@ -3,6 +3,7 @@ package org.codegenerator.generator.methodsequencefinders;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryArray;
+import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,12 +26,12 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
 
     @Override
     public History<Executable> findReflectionCalls(@NotNull Object object) {
-        throw new UnsupportedOperationException();
+        return findCallsInternal(object);
     }
 
     @Override
     public History<JcMethod> findJacoDBCalls(@NotNull Object object) {
-        throw new UnsupportedOperationException();
+        return findCallsInternal(object);
     }
 
     @Override
@@ -41,6 +42,12 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
     @Override
     public List<Object> findJacoDBCallsInternal(@NotNull Object object, @NotNull History<JcMethod> history) {
         return findCallsInternal(object, history);
+    }
+
+    private <T> @NotNull History<T> findCallsInternal(@NotNull Object object) {
+        History<T> history = new History<>();
+        history.put(object, new HistoryObject<>(object, Collections.emptyList()));
+        return history;
     }
 
     private <T> @NotNull List<Object> findCallsInternal(@NotNull Object object, @NotNull History<T> history) {
