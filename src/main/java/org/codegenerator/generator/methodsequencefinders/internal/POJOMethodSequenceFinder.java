@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders;
+package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
@@ -54,24 +54,6 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
             buildableList.add(new ReturnExpression(VARIABLE_NAME));
         }
         return buildableList;
-    }
-
-    @Override
-    public History<Executable> findReflectionCalls(@NotNull Object object) {
-        History<Executable> history = new History<>();
-
-        findReflectionCallsInternal(object, history);
-
-        return history;
-    }
-
-    @Override
-    public History<JcMethod> findJacoDBCalls(@NotNull Object object) {
-        History<JcMethod> history = new History<>();
-
-        findJacoDBCallsInternal(object, history);
-
-        return history;
     }
 
     @Override

@@ -9,8 +9,6 @@ import java.lang.reflect.Executable;
 import java.util.List;
 
 public interface MethodSequenceFinder {
-    boolean canTry(Object object);
-
     List<Buildable> findBuildableList(@NotNull Object object);
 
     History<Executable> findReflectionCalls(@NotNull Object object);

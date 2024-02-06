@@ -2,6 +2,7 @@ package org.codegenerator.generator.methodsequencefinders;
 
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
+import org.codegenerator.generator.methodsequencefinders.internal.MethodSequenceFinderInternal;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
@@ -18,11 +19,6 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
 
     public PipelineMethodSequenceFinder(List<Function<Object, ? extends MethodSequenceFinderInternal>> methodSequenceFinderFunctions) {
         this.methodSequenceFinderFunctions = methodSequenceFinderFunctions;
-    }
-
-    @Override
-    public boolean canTry(Object object) {
-        return true;
     }
 
     @Override

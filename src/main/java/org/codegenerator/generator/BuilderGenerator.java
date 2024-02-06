@@ -4,6 +4,7 @@ import com.squareup.javapoet.JavaFile;
 import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.*;
+import org.codegenerator.generator.methodsequencefinders.internal.*;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;

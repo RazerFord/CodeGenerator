@@ -2,7 +2,7 @@ package org.codegenerator.generator.converters;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import org.codegenerator.generator.methodsequencefinders.POJOMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.internal.POJOMethodSequenceFinder;
 import org.codegenerator.generator.codegenerators.MethodCodeGenerator;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.jetbrains.annotations.Contract;

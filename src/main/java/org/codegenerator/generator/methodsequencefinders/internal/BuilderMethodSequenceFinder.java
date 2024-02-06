@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders;
+package org.codegenerator.generator.methodsequencefinders.internal;
 
 import kotlin.Pair;
 import kotlin.sequences.Sequence;
@@ -59,20 +59,6 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     public List<Buildable> findBuildableList(@NotNull Object object) {
         Pair<BuilderInfo, List<EdgeMethod>> found = methodFinder.find(object);
         return createBuildableList(found.getSecond(), found.getFirst());
-    }
-
-    @Override
-    public History<Executable> findReflectionCalls(@NotNull Object object) {
-        History<Executable> history = new History<>();
-        findReflectionCallsInternal(object, history);
-        return history;
-    }
-
-    @Override
-    public History<JcMethod> findJacoDBCalls(@NotNull Object object) {
-        History<JcMethod> history = new History<>();
-        findJacoDBCallsInternal(object, history);
-        return history;
     }
 
     @Override
