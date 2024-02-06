@@ -63,7 +63,8 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         Class<?> clazz = object.getClass();
         MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
         if (methodSequenceFinder != null) {
-            methodSequenceFinder.findReflectionCallsInternal(object, history);
+            List<Object> suspects = methodSequenceFinder.findReflectionCallsInternal(object, history);
+            suspects.forEach(it -> findReflectionCallsRecursive(it, history));
             return;
         }
         for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
@@ -86,7 +87,8 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         Class<?> clazz = object.getClass();
         MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
         if (methodSequenceFinder != null) {
-            methodSequenceFinder.findJacoDBCallsInternal(object, history);
+            List<Object> suspects = methodSequenceFinder.findJacoDBCallsInternal(object, history);
+            suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
             return;
         }
         for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
