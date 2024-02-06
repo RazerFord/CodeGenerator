@@ -33,9 +33,11 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
             try {
                 methodSequenceFinder = function.apply(object);
-                List<Buildable> buildableList = methodSequenceFinder.findBuildableList(object);
-                cachedFinders.put(clazz, methodSequenceFinder);
-                return buildableList;
+                if (methodSequenceFinder.canTry(object)) {
+                    List<Buildable> buildableList = methodSequenceFinder.findBuildableList(object);
+                    cachedFinders.put(clazz, methodSequenceFinder);
+                    return buildableList;
+                }
             } catch (Exception ignored) {
                 // this code block is empty
             }

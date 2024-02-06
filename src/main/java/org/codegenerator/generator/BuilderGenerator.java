@@ -36,7 +36,7 @@ public class BuilderGenerator<T> implements Generator<T> {
         this.className = className;
         this.methodName = methodName;
 
-        methodSequenceFinder = createPipeline(clazz, classes);
+        methodSequenceFinder = createPipeline(classes);
         classCodeGenerators = new ClassCodeGenerators(clazz);
     }
 
@@ -75,7 +75,7 @@ public class BuilderGenerator<T> implements Generator<T> {
         return methodSequenceFinder.findJacoDBCalls(finalObject);
     }
 
-    private @NotNull MethodSequenceFinder createPipeline(Class<?> clazz, Class<?>... classes) {
+    private @NotNull MethodSequenceFinder createPipeline(Class<?>... classes) {
         List<Function<Object, ? extends MethodSequenceFinderInternal>> methodSequenceFinderList = new ArrayList<>();
         methodSequenceFinderList.add(o -> new NullMethodSequenceFinder());
         methodSequenceFinderList.add(o -> new PrimitiveMethodSequenceFinder());
