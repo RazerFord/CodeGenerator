@@ -12,10 +12,12 @@ public class HistoryArray<T> implements HistoryNode<T> {
         this.historyCalls = historyCalls;
     }
 
+    @Override
     public Object getObject() {
         return object;
     }
 
+    @Override
     public List<HistoryCall<T>> getHistoryCalls() {
         return historyCalls;
     }
