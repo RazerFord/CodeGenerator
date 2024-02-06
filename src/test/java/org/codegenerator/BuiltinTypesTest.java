@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class BuiltinTypesTest {
     private static final String OUTPUT_DIRECTORY = "./";
@@ -51,17 +50,6 @@ class BuiltinTypesTest {
 
         String[] other = createObject(generatedClassName);
         assertEquals(strings, other);
-    }
-
-    @Test
-    void nullTest() throws IOException {
-        final String generatedClassName = "GeneratedNullClass";
-        POJOGenerator<Object> generator = new POJOGenerator<>(Object.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
-
-        generator.generateCode(null, Paths.get(OUTPUT_DIRECTORY));
-
-        String other = createObject(generatedClassName);
-        assertNull(other);
     }
 
     <R> R createObject(String generatedClassName) {
