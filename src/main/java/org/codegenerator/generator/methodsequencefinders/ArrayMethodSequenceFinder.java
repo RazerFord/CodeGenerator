@@ -3,7 +3,6 @@ package org.codegenerator.generator.methodsequencefinders;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryArray;
-import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
@@ -46,7 +45,7 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
 
     private <T> @NotNull History<T> findCallsInternal(@NotNull Object object) {
         History<T> history = new History<>();
-        history.put(object, new HistoryObject<>(object, Collections.emptyList()));
+        history.put(object, new HistoryArray<>(object, Collections.emptyList()));
         return history;
     }
 
