@@ -34,12 +34,20 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     private <T> @NotNull List<Object> findCallsInternal(@NotNull Object object, @NotNull History<T> history) {
-        int length = Array.getLength(object);
-        List<Object> suspects = new ArrayList<>(length);
         history.put(object, new HistoryArray<>(object, Collections.emptyList()));
-        for (int i = 0; i < length; i++) {
-            suspects.add(Array.get(object, i));
-        }
+        List<Object> suspects = new ArrayList<>();
+        arrayTraversal(object, suspects);
         return suspects;
+    }
+
+    private static void arrayTraversal(@NotNull Object object, List<Object> suspects) {
+        if (!object.getClass().isArray()) {
+            suspects.add(object);
+        } else {
+            int length = Array.getLength(object);
+            for (int i = 0; i < length; i++) {
+                arrayTraversal(Array.get(object, i), suspects);
+            }
+        }
     }
 }
