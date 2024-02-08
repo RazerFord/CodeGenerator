@@ -78,9 +78,9 @@ public class EdgeGenerator {
      * Then the graph will be built:
      * <p>
      * (int, 0) ---> (int, 0)
-     * |
+     *    |
      * (int, 1) ---> (int, 1)
-     * |
+     *    |
      * (int, 2) ---> (int, 2)
      *
      * @param executable   method that can be executed. Usually this is an example `Constructor<?>` or `Method`
