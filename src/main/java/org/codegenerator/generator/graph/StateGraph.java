@@ -9,7 +9,6 @@ import org.codegenerator.generator.graph.edges.EdgeGenerator;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -37,9 +36,6 @@ public class StateGraph {
         Object beginObjectBuilt = termination.apply(beginObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObjectBuilt), new PathNode(null, null, 0));
         triple = bfs(triple, finalNode, edgeMethods, copyObject, termination);
-        if (triple == null) {
-            return new Path(finalNode.power(), Collections.emptyList());
-        }
 
         PathNode finalPathNode = triple.getThird();
         Deque<EdgeMethod> path = new ArrayDeque<>();
@@ -58,7 +54,7 @@ public class StateGraph {
         return findPath(assignableTypePropertyGrouper, constructor, UnaryOperator.identity());
     }
 
-    private @Nullable Triple<Object, Node, PathNode> bfs(
+    private @NotNull Triple<Object, Node, PathNode> bfs(
             @NotNull Triple<Object, Node, PathNode> triple,
             @NotNull Node finalNode,
             @NotNull List<EdgeMethod> edgeMethods,
@@ -96,14 +92,14 @@ public class StateGraph {
             }
             List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
             int minDif = diffs.stream().min(Integer::compareTo).orElse(Integer.MAX_VALUE);
-            queue = queue.stream().filter(t -> t.getSecond().diff(finalNode) == minDif).collect(Collectors.toCollection(ArrayDeque::new));
+            queue = queue.stream().filter(t -> finalNode.diff(t.getSecond()) == minDif).collect(Collectors.toCollection(ArrayDeque::new));
             for (int i = 0; i < diffs.size(); i++) {
                 if (minDif == diffs.get(i)) {
                     queue.add(lowerLevel.get(i));
                 }
             }
         }
-        return null;
+        return triple;
     }
 
     @Contract(pure = true)
