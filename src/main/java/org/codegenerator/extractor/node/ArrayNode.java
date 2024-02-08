@@ -44,12 +44,13 @@ public class ArrayNode implements Node {
 
     @Override
     public void extract() {
+        Class<?> componentType = clazz.getComponentType();
         for (int i = 0; i < value.length; i++) {
             Node node = visited.get(value[i]);
             if (node != null) {
                 fields.put(i, node);
             } else {
-                node = NodeUtils.createNode(value[i], visited);
+                node = NodeUtils.createNode(componentType, value[i], visited);
                 fields.put(i, node);
                 node.extract();
             }
@@ -68,10 +69,10 @@ public class ArrayNode implements Node {
 
     @Override
     public int diff(Node that) {
-        if (!(that instanceof ArrayNode)) return Integer.MAX_VALUE;
+        if (!(that instanceof ArrayNode)) return power();
         int diff = 0;
         for (Map.Entry<Object, Node> entry : fields.entrySet()) {
-            int curDiff = NodeUtils.diff(that.get(entry.getKey()), entry.getValue());
+            int curDiff = NodeUtils.diff(entry.getValue(), that.get(entry.getKey()));
             // diff + curDiff >= MAX => curDiff >= MAX - diff
             if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
             diff += curDiff;

@@ -52,7 +52,7 @@ public class InnerNode implements Node {
                 if (node != null) {
                     fields.put(field, node);
                 } else {
-                    node = NodeUtils.createNode(o, visited);
+                    node = NodeUtils.createNode(field.getType(), o, visited);
                     fields.put(field, node);
                     node.extract();
                 }
@@ -73,10 +73,10 @@ public class InnerNode implements Node {
 
     @Override
     public int diff(Node that) {
-        if (!(that instanceof InnerNode)) return Integer.MAX_VALUE;
+        if (!(that instanceof InnerNode)) return power();
         int diff = 0;
         for (Map.Entry<Object, Node> entry : fields.entrySet()) {
-            int curDiff = NodeUtils.diff(that.get(entry.getKey()), entry.getValue());
+            int curDiff = NodeUtils.diff(entry.getValue(), that.get(entry.getKey()));
             // diff + curDiff >= MAX => curDiff >= MAX - diff
             if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
             diff += curDiff;

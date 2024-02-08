@@ -4,7 +4,6 @@ import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -13,18 +12,20 @@ public class NodeUtils {
     }
 
     static int diff(Node l, Node r) {
-        return l == null ? Integer.MAX_VALUE : l.diff(r);
+        if (l == null) {
+            return r == null ? 0 : r.power();
+        }
+        return l.diff(r);
     }
 
-    static @NotNull Node createNode(@NotNull Field field, Object o, Map<Object, Node> visited) {
+    static @NotNull Node createNode(@NotNull Class<?> clazz, Object o, Map<Object, Node> visited) {
         if (o == null) {
             return Leaf.NULL_NODE;
         }
-        Class<?> clz = field.getType();
-        if (ClassUtils.isPrimitiveOrWrapper(field.getType()) || clz == String.class) {
+        if (ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class) {
             return new Leaf(o.getClass(), o, visited);
         }
-        if (field.getType().isArray()) {
+        if (clazz.isArray()) {
             return new ArrayNode(o.getClass(), o, visited);
         }
         return new InnerNode(o.getClass(), o, visited);

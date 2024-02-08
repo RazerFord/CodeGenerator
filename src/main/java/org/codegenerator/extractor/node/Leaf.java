@@ -44,8 +44,8 @@ public class Leaf implements Node {
 
     @Override
     public int diff(@NotNull Node that) {
-        if (!(that instanceof Leaf)) return Integer.MAX_VALUE;
-        return Objects.equals(value, that.getValue()) ? 0 : POWER;
+        if (!(that instanceof Leaf)) return power();
+        return Objects.equals(value, that.getValue()) ? 0 : power();
     }
 
     @Override
