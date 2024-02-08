@@ -11,19 +11,15 @@ import java.util.List;
 
 import static org.codegenerator.Utils.throwIf;
 
-public class PojoConstructorStateGraph {
-    private final EdgeGenerator edgeGenerator;
-
-    public PojoConstructorStateGraph() {
-        edgeGenerator = new EdgeGenerator();
-    }
+public class ConstructorStateGraph {
+    private final EdgeGenerator edgeGenerator = new EdgeGenerator();
 
     public @NotNull EdgeConstructor findPath(@NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper) {
         List<EdgeConstructor> edgeConstructors = edgeGenerator.generate(
                 assignableTypePropertyGrouper.getClazz().getConstructors(),
                 assignableTypePropertyGrouper.get()
         );
-        return buildBeginObjectAndMethodCall(assignableTypePropertyGrouper.getObject(), edgeConstructors);
+        return buildBeginObjectAndConstructorCall(assignableTypePropertyGrouper.getObject(), edgeConstructors);
     }
 
     @SuppressWarnings("unused")
@@ -32,7 +28,7 @@ public class PojoConstructorStateGraph {
         return findPath(assignableTypePropertyGrouper);
     }
 
-    private @NotNull EdgeConstructor buildBeginObjectAndMethodCall(Object finalObject, @NotNull List<EdgeConstructor> edges) {
+    private @NotNull EdgeConstructor buildBeginObjectAndConstructorCall(Object finalObject, @NotNull List<EdgeConstructor> edges) {
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         throwIf(edges.isEmpty(), new InvariantCheckingException(NO_CONSTRUCTORS));
         EdgeConstructor edgeConstructor = edges.get(0);

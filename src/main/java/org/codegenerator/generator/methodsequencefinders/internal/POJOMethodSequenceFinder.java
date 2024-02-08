@@ -4,7 +4,7 @@ import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
-import org.codegenerator.generator.graph.PojoConstructorStateGraph;
+import org.codegenerator.generator.graph.ConstructorStateGraph;
 import org.codegenerator.generator.graph.StateGraph;
 import org.codegenerator.generator.graph.edges.Edge;
 import org.codegenerator.generator.graph.edges.EdgeConstructor;
@@ -26,13 +26,8 @@ import java.util.function.Function;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
-    private final StateGraph stateGraph;
-    private final PojoConstructorStateGraph pojoConstructorStateGraph;
-
-    public POJOMethodSequenceFinder() {
-        stateGraph = new StateGraph();
-        pojoConstructorStateGraph = new PojoConstructorStateGraph();
-    }
+    private final StateGraph stateGraph = new StateGraph();
+    private final ConstructorStateGraph constructorStateGraph = new ConstructorStateGraph();
 
     @Override
     public boolean canTry(Object object) {
@@ -41,7 +36,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
 
     public List<Buildable> findBuildableList(@NotNull Object object) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
-        EdgeConstructor edgeConstructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        EdgeConstructor edgeConstructor = constructorStateGraph.findPath(assignableTypePropertyGrouper);
         List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
 
         Class<?> clazz = object.getClass();
@@ -87,7 +82,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
             @NotNull Function<Edge<? extends Executable>, T> toMethod
     ) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
-        Edge<? extends Executable> constructor = pojoConstructorStateGraph.findPath(assignableTypePropertyGrouper);
+        Edge<? extends Executable> constructor = constructorStateGraph.findPath(assignableTypePropertyGrouper);
         List<? extends Edge<? extends Executable>> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
 
         List<HistoryCall<T>> calls = new ArrayList<>();
