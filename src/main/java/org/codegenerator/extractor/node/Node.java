@@ -25,12 +25,6 @@ public interface Node extends Map<Object, Node> {
     static @NotNull Node createNode(Object o) {
         Map<Object, Node> visited = new HashMap<>();
 
-        Node node = NodeUtils.createNode(o, visited);
-
-        visited.put(o, node);
-
-        node.extract();
-
-        return node;
+        return NodeUtils.createNode(o, visited);
     }
 }

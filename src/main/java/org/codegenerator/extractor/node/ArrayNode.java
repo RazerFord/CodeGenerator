@@ -14,7 +14,7 @@ public class ArrayNode implements Node {
     private final Object[] value;
     private final Map<Object, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
-    private Supplier<Integer> power = NodeUtils.createPowerSupplier(fields);
+    private final Supplier<Integer> power;
 
     ArrayNode(@NotNull Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
@@ -26,6 +26,10 @@ public class ArrayNode implements Node {
         }
         this.value = newValue;
         this.visited = visited;
+
+        visited.put(value, this);
+        extract();
+        power = NodeUtils.createPowerSupplier(fields);
     }
 
     @Override
@@ -41,15 +45,15 @@ public class ArrayNode implements Node {
     @Override
     public void extract() {
         for (int i = 0; i < value.length; i++) {
-            if (visited.containsKey(value[i])) {
-                fields.put(i, visited.get(value[i]));
+            Node node = visited.get(value[i]);
+            if (node != null) {
+                fields.put(i, node);
             } else {
-                Node node = NodeUtils.createNode(value[i], visited);
+                node = NodeUtils.createNode(value[i], visited);
                 fields.put(i, node);
                 node.extract();
             }
         }
-        power = NodeUtils.createPowerSupplier(fields);
     }
 
     @Override
