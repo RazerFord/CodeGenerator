@@ -39,6 +39,8 @@ public class BuilderGenerator<T> implements Generator<T> {
 
         methodSequenceFinder = createPipeline(classes);
         classCodeGenerators = new ClassCodeGenerators(clazz);
+
+        registerFinder(clazz, new BuilderMethodSequenceFinder(clazz, classes));
     }
 
     @Override
@@ -74,6 +76,11 @@ public class BuilderGenerator<T> implements Generator<T> {
     @Override
     public History<JcMethod> generateJacoDBCalls(@NotNull T finalObject) {
         return methodSequenceFinder.findJacoDBCalls(finalObject);
+    }
+
+    @Override
+    public void registerFinder(Class<?> clazz, MethodSequenceFinderInternal finder) {
+        methodSequenceFinder.registerFinder(clazz, finder);
     }
 
     private @NotNull MethodSequenceFinder createPipeline(Class<?>... classes) {

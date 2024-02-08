@@ -1,5 +1,6 @@
 package org.codegenerator.generator;
 
+import org.codegenerator.generator.methodsequencefinders.internal.MethodSequenceFinderInternal;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
@@ -58,4 +59,6 @@ public interface Generator<T> {
     History<Executable> generateReflectionCalls(@NotNull T finalObject);
 
     History<JcMethod> generateJacoDBCalls(@NotNull T finalObject);
+
+    void registerFinder(Class<?> clazz, MethodSequenceFinderInternal finder);
 }

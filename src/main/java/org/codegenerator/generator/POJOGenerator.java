@@ -39,6 +39,8 @@ public class POJOGenerator<T> implements Generator<T> {
 
         classCodeGenerators = new ClassCodeGenerators(clazz);
         methodSequenceFinder = createPipeline();
+
+        registerFinder(clazz, new POJOMethodSequenceFinder());
     }
 
     public void generateCode(@NotNull T finalObject, Path path) throws IOException {
@@ -73,6 +75,11 @@ public class POJOGenerator<T> implements Generator<T> {
     @Override
     public History<JcMethod> generateJacoDBCalls(@NotNull T finalObject) {
         return methodSequenceFinder.findJacoDBCalls(finalObject);
+    }
+
+    @Override
+    public void registerFinder(Class<?> clazz, MethodSequenceFinderInternal finder) {
+        methodSequenceFinder.registerFinder(clazz, finder);
     }
 
     private @NotNull MethodSequenceFinder createPipeline() {

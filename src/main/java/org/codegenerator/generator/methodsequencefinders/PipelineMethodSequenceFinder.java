@@ -55,6 +55,11 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         return history;
     }
 
+    @Override
+    public void registerFinder(Class<?> clazz, MethodSequenceFinderInternal finder) {
+        cachedFinders.put(clazz, finder);
+    }
+
     private void findReflectionCallsRecursive(@NotNull Object object, History<Executable> history) {
         Class<?> clazz = object.getClass();
         MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
