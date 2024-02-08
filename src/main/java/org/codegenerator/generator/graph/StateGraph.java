@@ -20,7 +20,7 @@ public class StateGraph {
     private final EdgeGenerator edgeGenerator = new EdgeGenerator();
     private final Cloner cloner = new Cloner();
 
-    public @NotNull List<EdgeMethod> findPath(
+    public @NotNull Path findPath(
             @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
             @NotNull Supplier<Object> constructor,
             @NotNull UnaryOperator<Object> termination
@@ -38,7 +38,7 @@ public class StateGraph {
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObjectBuilt), new PathNode(null, null, 0));
         triple = bfs(triple, finalNode, edgeMethods, copyObject, termination);
         if (triple == null) {
-            return Collections.emptyList();
+            return new Path(finalNode.power(), Collections.emptyList());
         }
 
         PathNode finalPathNode = triple.getThird();
@@ -48,10 +48,10 @@ public class StateGraph {
             finalPathNode = finalPathNode.prevPathNode;
         }
 
-        return new ArrayList<>(path);
+        return new Path(finalNode.diff(triple.getSecond()), new ArrayList<>(path));
     }
 
-    public @NotNull List<EdgeMethod> findPath(
+    public @NotNull Path findPath(
             @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
             @NotNull Supplier<Object> constructor
     ) {

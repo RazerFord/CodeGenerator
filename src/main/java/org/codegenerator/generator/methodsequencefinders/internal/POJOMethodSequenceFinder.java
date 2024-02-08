@@ -37,7 +37,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     public List<Buildable> findBuildableList(@NotNull Object object) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
         EdgeConstructor edgeConstructor = constructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
+        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke).getMethods();
 
         Class<?> clazz = object.getClass();
         List<Buildable> buildableList = new ArrayList<>();
@@ -83,7 +83,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     ) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
         Edge<? extends Executable> constructor = constructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<? extends Edge<? extends Executable>> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
+        List<? extends Edge<? extends Executable>> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke).getMethods();
 
         List<HistoryCall<T>> calls = new ArrayList<>();
         List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));

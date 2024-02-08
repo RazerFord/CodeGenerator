@@ -10,6 +10,7 @@ import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
+import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.StateGraph;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.codegenerator.history.History;
@@ -57,15 +58,15 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     }
 
     public List<Buildable> findBuildableList(@NotNull Object object) {
-        Pair<BuilderInfo, List<EdgeMethod>> found = methodFinder.find(object);
-        return createBuildableList(found.getSecond(), found.getFirst());
+        Pair<BuilderInfo, Path> found = methodFinder.find(object);
+        return createBuildableList(found.getSecond().getMethods(), found.getFirst());
     }
 
     @Override
     public List<Object> findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
-        Pair<BuilderInfo, List<EdgeMethod>> found = methodFinder.find(finalObject);
+        Pair<BuilderInfo, Path> found = methodFinder.find(finalObject);
         BuilderInfo builderInfo = found.getFirst();
-        List<EdgeMethod> methods = found.getSecond();
+        List<EdgeMethod> methods = found.getSecond().getMethods();
 
         List<HistoryCall<Executable>> calls = new ArrayList<>();
         List<Object> suspect = new ArrayList<>();
@@ -84,9 +85,9 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     @Override
     public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            Pair<BuilderInfo, List<EdgeMethod>> found = methodFinder.find(finalObject);
+            Pair<BuilderInfo, Path> found = methodFinder.find(finalObject);
             BuilderInfo builderInfo = found.getFirst();
-            List<EdgeMethod> methods = found.getSecond();
+            List<EdgeMethod> methods = found.getSecond().getMethods();
 
             Class<?> builderClazz = builderInfo.builderClazz;
             JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
@@ -305,17 +306,17 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     }
 
     private static class LazyMethodFinder {
-        private Function<Object, Pair<BuilderInfo, List<EdgeMethod>>> finder;
+        private Function<Object, Pair<BuilderInfo, Path>> finder;
 
         private LazyMethodFinder(List<BuilderInfo> builderInfoList, StateGraph stateGraph) {
             initFinder(builderInfoList, stateGraph);
         }
 
-        private Pair<BuilderInfo, List<EdgeMethod>> find(Object object) {
+        private Pair<BuilderInfo, Path> find(Object object) {
             return finder.apply(object);
         }
 
-        private @NotNull List<EdgeMethod> find(
+        private @NotNull Path find(
                 @NotNull BuilderInfo builderInfo,
                 @NotNull StateGraph stateGraph,
                 Object object
@@ -334,9 +335,9 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             finder = o -> {
                 for (BuilderInfo builderInfo : builderInfoList) {
                     try {
-                        @NotNull List<EdgeMethod> methods = find(builderInfo, stateGraph, o);
+                        @NotNull Path path = find(builderInfo, stateGraph, o);
                         finder = o1 -> new Pair<>(builderInfo, find(builderInfo, stateGraph, o1));
-                        return new Pair<>(builderInfo, methods);
+                        return new Pair<>(builderInfo, path);
                     } catch (Exception e) {
                         // this block must be empty
                     }
