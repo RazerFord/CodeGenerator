@@ -5,16 +5,20 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.function.Supplier;
+
+import static org.codegenerator.Utils.throwUnless;
 
 public class ArrayNode implements Node {
     private final Class<?> clazz;
     private final Object[] value;
     private final Map<Object, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
+    private Supplier<Integer> power = NodeUtils.createPowerSupplier(fields);
 
-    public ArrayNode(@NotNull Class<?> clazz, Object value, Map<Object, Node> visited) {
+    ArrayNode(@NotNull Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
-        if (!clazz.isArray()) throw new IllegalArgumentException();
+        throwUnless(clazz.isArray(), new IllegalArgumentException());
         int length = Array.getLength(value);
         Object[] newValue = new Object[length];
         for (int i = 0; i < length; i++) {
@@ -40,11 +44,12 @@ public class ArrayNode implements Node {
             if (visited.containsKey(value[i])) {
                 fields.put(i, visited.get(value[i]));
             } else {
-                Node node = Node.createNode(value[i], visited);
+                Node node = NodeUtils.createNode(value[i], visited);
                 fields.put(i, node);
                 node.extract();
             }
         }
+        power = NodeUtils.createPowerSupplier(fields);
     }
 
     @Override
@@ -53,13 +58,19 @@ public class ArrayNode implements Node {
     }
 
     @Override
+    public int power() {
+        return power.get();
+    }
+
+    @Override
     public int diff(Node that) {
         if (!(that instanceof ArrayNode)) return Integer.MAX_VALUE;
         int diff = 0;
         for (Map.Entry<Object, Node> entry : fields.entrySet()) {
-            if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
-                diff++;
-            }
+            int curDiff = NodeUtils.diff(that.get(entry.getKey()), entry.getValue());
+            // diff + curDiff >= MAX => curDiff >= MAX - diff
+            if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
+            diff += curDiff;
         }
         return diff;
     }
