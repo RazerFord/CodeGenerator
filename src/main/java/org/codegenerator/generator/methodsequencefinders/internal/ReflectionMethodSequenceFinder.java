@@ -15,6 +15,8 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static org.codegenerator.Utils.throwIf;
+
 public class ReflectionMethodSequenceFinder {
     private final Map<Class<?>, List<Field>> cachedFields = new IdentityHashMap<>();
 
@@ -30,9 +32,7 @@ public class ReflectionMethodSequenceFinder {
         Class<?> expectedClass = expected.getClass();
         Class<?> actualClass = actual.getClass();
 
-        if (expectedClass != actualClass) {
-            throw new IllegalArgumentException();
-        }
+        throwIf(expectedClass != actualClass, new IllegalArgumentException());
 
         List<Field> fields = cachedFields.computeIfAbsent(expectedClass, this::getFields);
 

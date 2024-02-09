@@ -93,6 +93,10 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         ResultFinding resultFinding = methodSequenceFinder.findReflectionCallsInternal(object, history);
         List<Object> suspects = resultFinding.getSuspects();
         suspects.forEach(it -> findReflectionCallsRecursive(it, history));
+        if (!resultFinding.isSuccess()) {
+            useReflection(object, resultFinding.getTargetObject(), history)
+                    .getSuspects().forEach(it -> findReflectionCallsRecursive(it, history));
+        }
     }
 
     private void tryFindJacoDBCalls(
@@ -103,6 +107,10 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         ResultFinding resultFinding = methodSequenceFinder.findJacoDBCallsInternal(object, history);
         List<Object> suspects = resultFinding.getSuspects();
         suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
+        if (!resultFinding.isSuccess()) {
+            useReflection(object, resultFinding.getTargetObject(), history)
+                    .getSuspects().forEach(it -> findJacoDBCallsRecursive(it, history));
+        }
     }
 
     @Contract(pure = true)
