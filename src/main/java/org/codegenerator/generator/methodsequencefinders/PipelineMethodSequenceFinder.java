@@ -11,9 +11,11 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
@@ -27,22 +29,10 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
 
     @Override
     public List<Buildable> findBuildableList(@NotNull Object object) {
-        Class<?> clazz = object.getClass();
-        MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
-        if (methodSequenceFinder != null) return methodSequenceFinder.findBuildableList(object);
-        for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
-            try {
-                methodSequenceFinder = function.apply(object);
-                if (methodSequenceFinder.canTry(object)) {
-                    List<Buildable> buildableList = methodSequenceFinder.findBuildableList(object);
-                    cachedFinders.put(clazz, methodSequenceFinder);
-                    return buildableList;
-                }
-            } catch (Exception ignored) {
-                // this code block is empty
-            }
-        }
-        throw new MethodSequenceNotFoundException();
+        @SuppressWarnings("unchecked")
+        List<Buildable>[] list = new ArrayList[1];
+        findCallsRecursiveBase(object, (m, o) -> list[0] = m.findBuildableList(o));
+        return list[0];
     }
 
     @Override
@@ -65,21 +55,25 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private void findReflectionCallsRecursive(@NotNull Object object, History<Executable> history) {
+        findCallsRecursiveBase(object, (m, o) -> tryFindReflectionCalls(o, history, m));
+    }
+
+    private void findJacoDBCallsRecursive(@NotNull Object object, History<JcMethod> history) {
+        findCallsRecursiveBase(object, (m, o) -> tryFindJacoDBCalls(o, history, m));
+    }
+
+    private void findCallsRecursiveBase(@NotNull Object object, BiConsumer<MethodSequenceFinderInternal, Object> consumer) {
         Class<?> clazz = object.getClass();
         MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
         if (methodSequenceFinder != null) {
-            ResultFinding resultFinding = methodSequenceFinder.findReflectionCallsInternal(object, history);
-            List<Object> suspects = resultFinding.getSuspects();
-            suspects.forEach(it -> findReflectionCallsRecursive(it, history));
+            consumer.accept(methodSequenceFinder, object);
             return;
         }
         for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
             try {
                 methodSequenceFinder = function.apply(object);
                 if (methodSequenceFinder.canTry(object)) {
-                    ResultFinding resultFinding = methodSequenceFinder.findReflectionCallsInternal(object, history);
-                    List<Object> suspects = resultFinding.getSuspects();
-                    suspects.forEach(it -> findReflectionCallsRecursive(it, history));
+                    consumer.accept(methodSequenceFinder, object);
                     cachedFinders.put(clazz, methodSequenceFinder);
                     return;
                 }
@@ -90,30 +84,25 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         throw new MethodSequenceNotFoundException();
     }
 
-    private void findJacoDBCallsRecursive(@NotNull Object object, History<JcMethod> history) {
-        Class<?> clazz = object.getClass();
-        MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
-        if (methodSequenceFinder != null) {
-            ResultFinding resultFinding = methodSequenceFinder.findJacoDBCallsInternal(object, history);
-            List<Object> suspects = resultFinding.getSuspects();
-            suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
-            return;
-        }
-        for (Function<Object, ? extends MethodSequenceFinderInternal> function : methodSequenceFinderFunctions) {
-            try {
-                methodSequenceFinder = function.apply(object);
-                if (methodSequenceFinder.canTry(object)) {
-                    ResultFinding resultFinding = methodSequenceFinder.findJacoDBCallsInternal(object, history);
-                    List<Object> suspects = resultFinding.getSuspects();
-                    suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
-                    cachedFinders.put(clazz, methodSequenceFinder);
-                    return;
-                }
-            } catch (Exception ignored) {
-                // this code block is empty
-            }
-        }
-        throw new MethodSequenceNotFoundException();
+
+    private void tryFindReflectionCalls(
+            Object object,
+            History<Executable> history,
+            @NotNull MethodSequenceFinderInternal methodSequenceFinder
+    ) {
+        ResultFinding resultFinding = methodSequenceFinder.findReflectionCallsInternal(object, history);
+        List<Object> suspects = resultFinding.getSuspects();
+        suspects.forEach(it -> findReflectionCallsRecursive(it, history));
+    }
+
+    private void tryFindJacoDBCalls(
+            Object object,
+            History<JcMethod> history,
+            @NotNull MethodSequenceFinderInternal methodSequenceFinder
+    ) {
+        ResultFinding resultFinding = methodSequenceFinder.findJacoDBCallsInternal(object, history);
+        List<Object> suspects = resultFinding.getSuspects();
+        suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
     }
 
     @Contract(pure = true)
