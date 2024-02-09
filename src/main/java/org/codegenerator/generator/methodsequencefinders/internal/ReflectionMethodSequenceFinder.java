@@ -1,6 +1,8 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
@@ -10,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ReflectionMethodSequenceFinder implements MethodSequenceFinderInternal {
+
     @Override
     public boolean canTry(Object object) {
         return true;
@@ -21,12 +24,12 @@ public class ReflectionMethodSequenceFinder implements MethodSequenceFinderInter
     }
 
     @Override
-    public List<Object> findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
-        return Collections.emptyList();
+    public ResultFinding findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
+        throw new NotImplementedException();
     }
 
     @Override
-    public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
-        return Collections.emptyList();
+    public ResultFinding findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
+        throw new NotImplementedException();
     }
 }

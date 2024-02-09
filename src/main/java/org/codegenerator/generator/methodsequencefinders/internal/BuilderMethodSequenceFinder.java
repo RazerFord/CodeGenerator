@@ -13,6 +13,8 @@ import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.StateGraph;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryObject;
@@ -63,10 +65,11 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     }
 
     @Override
-    public List<Object> findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
+    public ResultFinding findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
         Pair<BuilderInfo, Path> found = methodFinder.find(finalObject);
         BuilderInfo builderInfo = found.getFirst();
-        List<EdgeMethod> methods = found.getSecond().getMethods();
+        Path path = found.getSecond();
+        List<EdgeMethod> methods = path.getMethods();
 
         List<HistoryCall<Executable>> calls = new ArrayList<>();
         List<Object> suspect = new ArrayList<>();
@@ -79,15 +82,17 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         }
 
         history.put(finalObject, new HistoryObject<>(finalObject, calls));
-        return suspect;
+
+        return new ResultFindingImpl(path.getTargetObject(), path.getDeviation(), suspect);
     }
 
     @Override
-    public List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
+    public ResultFinding findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             Pair<BuilderInfo, Path> found = methodFinder.find(finalObject);
             BuilderInfo builderInfo = found.getFirst();
-            List<EdgeMethod> methods = found.getSecond().getMethods();
+            Path path = found.getSecond();
+            List<EdgeMethod> methods = path.getMethods();
 
             Class<?> builderClazz = builderInfo.builderClazz;
             JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
@@ -102,7 +107,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             addMethods(Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName())), history, methods, calls, suspect);
 
             history.put(finalObject, new HistoryObject<>(finalObject, calls));
-            return suspect;
+
+            return new ResultFindingImpl(path.getTargetObject(), path.getDeviation(), suspect);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);

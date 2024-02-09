@@ -3,6 +3,7 @@ package org.codegenerator.generator.methodsequencefinders;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.internal.MethodSequenceFinderInternal;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
@@ -64,7 +65,8 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         Class<?> clazz = object.getClass();
         MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
         if (methodSequenceFinder != null) {
-            List<Object> suspects = methodSequenceFinder.findReflectionCallsInternal(object, history);
+            ResultFinding resultFinding = methodSequenceFinder.findReflectionCallsInternal(object, history);
+            List<Object> suspects = resultFinding.getSuspects();
             suspects.forEach(it -> findReflectionCallsRecursive(it, history));
             return;
         }
@@ -72,7 +74,8 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
             try {
                 methodSequenceFinder = function.apply(object);
                 if (methodSequenceFinder.canTry(object)) {
-                    List<Object> suspects = methodSequenceFinder.findReflectionCallsInternal(object, history);
+                    ResultFinding resultFinding = methodSequenceFinder.findReflectionCallsInternal(object, history);
+                    List<Object> suspects = resultFinding.getSuspects();
                     suspects.forEach(it -> findReflectionCallsRecursive(it, history));
                     cachedFinders.put(clazz, methodSequenceFinder);
                     return;
@@ -88,7 +91,8 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         Class<?> clazz = object.getClass();
         MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
         if (methodSequenceFinder != null) {
-            List<Object> suspects = methodSequenceFinder.findJacoDBCallsInternal(object, history);
+            ResultFinding resultFinding = methodSequenceFinder.findJacoDBCallsInternal(object, history);
+            List<Object> suspects = resultFinding.getSuspects();
             suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
             return;
         }
@@ -96,7 +100,8 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
             try {
                 methodSequenceFinder = function.apply(object);
                 if (methodSequenceFinder.canTry(object)) {
-                    List<Object> suspects = methodSequenceFinder.findJacoDBCallsInternal(object, history);
+                    ResultFinding resultFinding = methodSequenceFinder.findJacoDBCallsInternal(object, history);
+                    List<Object> suspects = resultFinding.getSuspects();
                     suspects.forEach(it -> findJacoDBCallsRecursive(it, history));
                     cachedFinders.put(clazz, methodSequenceFinder);
                     return;

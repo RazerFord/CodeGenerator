@@ -1,6 +1,7 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +14,7 @@ public interface MethodSequenceFinderInternal {
 
     List<Buildable> findBuildableList(@NotNull Object object);
 
-    List<Object> findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history);
+    ResultFinding findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history);
 
-    List<Object> findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history);
+    ResultFinding findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history);
 }

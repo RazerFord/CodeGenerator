@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 public class StateGraph {
     private final EdgeGenerator edgeGenerator = new EdgeGenerator();
-    private final Cloner cloner = new Cloner();
+    private final Cloner cloner = Cloner.standard();
 
     public @NotNull Path findPath(
             @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
@@ -28,9 +28,8 @@ public class StateGraph {
         Class<?> clazz = beginObject.getClass();
         UnaryOperator<Object> copyObject = copyObject();
         Object finalObject = assignableTypePropertyGrouper.getObject();
-        Map<Class<?>, List<Object>> typeToValues = assignableTypePropertyGrouper.get();
 
-        List<EdgeMethod> edgeMethods = edgeGenerator.generate(clazz.getMethods(), typeToValues);
+        List<EdgeMethod> edgeMethods = edgeGenerator.generate(clazz.getMethods(), assignableTypePropertyGrouper.get());
 
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Object beginObjectBuilt = termination.apply(beginObject);
@@ -44,7 +43,11 @@ public class StateGraph {
             finalPathNode = finalPathNode.prevPathNode;
         }
 
-        return new Path(finalNode.diff(triple.getSecond()), new ArrayList<>(path));
+        return new Path(
+                triple.getFirst(),
+                finalNode.diff(triple.getSecond()),
+                new ArrayList<>(path)
+        );
     }
 
     public @NotNull Path findPath(

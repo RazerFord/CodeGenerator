@@ -1,6 +1,8 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.WrapperResultFinding;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryArray;
 import org.jacodb.api.JcMethod;
@@ -24,20 +26,20 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     @Override
-    public List<Object> findReflectionCallsInternal(@NotNull Object object, @NotNull History<Executable> history) {
+    public ResultFinding findReflectionCallsInternal(@NotNull Object object, @NotNull History<Executable> history) {
         return findCallsInternal(object, history);
     }
 
     @Override
-    public List<Object> findJacoDBCallsInternal(@NotNull Object object, @NotNull History<JcMethod> history) {
+    public ResultFinding findJacoDBCallsInternal(@NotNull Object object, @NotNull History<JcMethod> history) {
         return findCallsInternal(object, history);
     }
 
-    private <T> @NotNull List<Object> findCallsInternal(@NotNull Object object, @NotNull History<T> history) {
+    private <T> @NotNull ResultFinding findCallsInternal(@NotNull Object object, @NotNull History<T> history) {
         history.put(object, new HistoryArray<>(object, Collections.emptyList()));
         List<Object> suspects = new ArrayList<>();
         arrayTraversal(object, suspects);
-        return suspects;
+        return new WrapperResultFinding(suspects);
     }
 
     private static void arrayTraversal(@NotNull Object object, List<Object> suspects) {

@@ -2,6 +2,8 @@ package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.WrapperResultFinding;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryPrimitive;
 import org.jacodb.api.JcMethod;
@@ -24,14 +26,14 @@ public class PrimitiveMethodSequenceFinder implements MethodSequenceFinderIntern
     }
 
     @Override
-    public List<Object> findReflectionCallsInternal(@NotNull Object object, @NotNull History<Executable> history) {
+    public ResultFinding findReflectionCallsInternal(@NotNull Object object, @NotNull History<Executable> history) {
         history.put(object, new HistoryPrimitive<>(object, Collections.emptyList()));
-        return Collections.emptyList();
+        return WrapperResultFinding.withEmptySuspects();
     }
 
     @Override
-    public List<Object> findJacoDBCallsInternal(@NotNull Object object, @NotNull History<JcMethod> history) {
+    public ResultFinding findJacoDBCallsInternal(@NotNull Object object, @NotNull History<JcMethod> history) {
         history.put(object, new HistoryPrimitive<>(object, Collections.emptyList()));
-        return Collections.emptyList();
+        return WrapperResultFinding.withEmptySuspects();
     }
 }

@@ -5,10 +5,13 @@ import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.ConstructorStateGraph;
+import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.StateGraph;
 import org.codegenerator.generator.graph.edges.Edge;
 import org.codegenerator.generator.graph.edges.EdgeConstructor;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
+import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryObject;
@@ -52,12 +55,12 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     @Override
-    public List<Object> findReflectionCallsInternal(@NotNull Object object, History<Executable> history) {
+    public ResultFinding findReflectionCallsInternal(@NotNull Object object, History<Executable> history) {
         return findCallsInternal(object, history, Edge::getMethod);
     }
 
     @Override
-    public List<Object> findJacoDBCallsInternal(@NotNull Object object, History<JcMethod> history) {
+    public ResultFinding findJacoDBCallsInternal(@NotNull Object object, History<JcMethod> history) {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             Class<?> clazz = object.getClass();
             JcClassOrInterface jcClassOrInterface = Utils.toJcClassOrInterface(clazz, db);
@@ -76,19 +79,21 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
         return Utils.loadOrCreateDataBase(dbname, InMemoryHierarchy.INSTANCE);
     }
 
-    private <T> @NotNull List<Object> findCallsInternal(
+    private <T> @NotNull ResultFinding findCallsInternal(
             @NotNull Object object,
             History<T> history,
             @NotNull Function<Edge<? extends Executable>, T> toMethod
     ) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
         Edge<? extends Executable> constructor = constructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<? extends Edge<? extends Executable>> methods = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke).getMethods();
+        @NotNull Path path = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
+        List<? extends Edge<? extends Executable>> methods = path.getMethods();
 
         List<HistoryCall<T>> calls = new ArrayList<>();
-        List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));
 
+        List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));
         calls.add(new HistoryCall<>(history, toMethod.apply(constructor), constructor.getArgs()));
+
         for (Edge<? extends Executable> em : methods) {
             Object[] args = em.getArgs();
             calls.add(new HistoryCall<>(history, toMethod.apply(em), args));
@@ -96,7 +101,10 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
         }
 
         history.put(object, new HistoryObject<>(object, calls));
-        return suspect;
+
+        int deviation = path.getDeviation();
+
+        return new ResultFindingImpl(path.getTargetObject(), deviation, suspect);
     }
 
     private static final String VARIABLE_NAME = "object";
