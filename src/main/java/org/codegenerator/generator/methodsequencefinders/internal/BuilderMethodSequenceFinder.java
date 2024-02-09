@@ -83,7 +83,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
         history.put(finalObject, new HistoryObject<>(finalObject, calls));
 
-        return new ResultFindingImpl(path.getTargetObject(), path.getDeviation(), suspect);
+        return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspect);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
             history.put(finalObject, new HistoryObject<>(finalObject, calls));
 
-            return new ResultFindingImpl(path.getTargetObject(), path.getDeviation(), suspect);
+            return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspect);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);

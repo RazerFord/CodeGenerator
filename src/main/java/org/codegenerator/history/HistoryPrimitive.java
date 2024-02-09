@@ -1,5 +1,6 @@
 package org.codegenerator.history;
 
+import java.util.Collections;
 import java.util.List;
 
 public class HistoryPrimitive<T> implements HistoryNode<T> {
@@ -19,6 +20,11 @@ public class HistoryPrimitive<T> implements HistoryNode<T> {
     @Override
     public List<HistoryCall<T>> getHistoryCalls() {
         return historyCalls;
+    }
+
+    @Override
+    public List<SetterUsingReflection<T>> getSetterUsingReflections() {
+        return Collections.emptyList();
     }
 
     @Override

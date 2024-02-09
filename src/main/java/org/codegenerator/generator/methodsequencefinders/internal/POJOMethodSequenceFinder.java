@@ -104,7 +104,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
 
         int deviation = path.getDeviation();
 
-        return new ResultFindingImpl(path.getTargetObject(), deviation, suspect);
+        return new ResultFindingImpl(path.getActualObject(), deviation, suspect);
     }
 
     private static final String VARIABLE_NAME = "object";

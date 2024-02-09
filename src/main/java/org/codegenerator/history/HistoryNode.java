@@ -7,5 +7,7 @@ public interface HistoryNode<T> {
 
     List<HistoryCall<T>> getHistoryCalls();
 
+    List<SetterUsingReflection<T>> getSetterUsingReflections();
+
     HistoryType getType();
 }

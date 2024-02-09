@@ -12,7 +12,7 @@ public class WrapperResultFinding implements ResultFinding {
     }
 
     public Object getTargetObject() {
-        throw new UnsupportedOperationException("getTargetObject");
+        throw new UnsupportedOperationException("getActualObject");
     }
 
     public List<Object> getSuspects() {
