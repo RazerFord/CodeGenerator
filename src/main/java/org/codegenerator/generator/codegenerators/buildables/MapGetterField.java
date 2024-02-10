@@ -12,7 +12,11 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
 public class MapGetterField implements Buildable {
-    private static final String METHOD_NAME = "getFields";
+    private final String methodName;
+
+    public MapGetterField(String methodName) {
+        this.methodName = methodName;
+    }
 
     /**
      * Create and add a `getFields` method to `typeBuilder`
@@ -23,6 +27,7 @@ public class MapGetterField implements Buildable {
      *      for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
      *          Map<String, Field> fieldMap = new HashMap<>();
      *          for (Field field : clazz.getDeclaredFields()) {
+     *              field.setAccessible(true);
      *              fieldMap.put(field.getName(), field);
      *          }
      *          classMapMap.put(clazz, fieldMap);
@@ -45,13 +50,14 @@ public class MapGetterField implements Buildable {
         ParameterizedTypeName mapType = ParameterizedTypeName.get(Map.class, String.class, Field.class);
         ParameterizedTypeName mapMapType = ParameterizedTypeName.get(mapName, classType, mapType);
 
-        MethodSpec methodSpec = MethodSpec.methodBuilder(METHOD_NAME)
+        MethodSpec methodSpec = MethodSpec.methodBuilder(methodName)
                 .addModifiers(PUBLIC, STATIC).returns(mapMapType)
                 .addParameter(Class.class, "clazz")
                 .addStatement("$T classMapMap = new $T<>()", mapMapType, HashMap.class)
                 .beginControlFlow("for (; clazz != Object.class; clazz = clazz.getSuperclass())")
                 .addStatement("$T fieldMap = new $T<>()", mapType, HashMap.class)
                 .beginControlFlow("for (Field field : clazz.getDeclaredFields())")
+                .addStatement("field.setAccessible(true)")
                 .addStatement("fieldMap.put(field.getName(), field)")
                 .endControlFlow()
                 .addStatement("classMapMap.put(clazz, fieldMap)")

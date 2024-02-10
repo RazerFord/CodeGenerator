@@ -29,6 +29,7 @@ import java.util.function.Function;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
+    private final ReflectionMethodSequenceFinder reflectionMethodSequenceFinder = new ReflectionMethodSequenceFinder();
     private final StateGraph stateGraph = new StateGraph();
     private final ConstructorStateGraph constructorStateGraph = new ConstructorStateGraph();
 
@@ -40,15 +41,22 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     public List<Buildable> findBuildableList(@NotNull Object object) {
         AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
         EdgeConstructor edgeConstructor = constructorStateGraph.findPath(assignableTypePropertyGrouper);
-        List<EdgeMethod> methodList = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke).getMethods();
+        Path path = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
+        List<EdgeMethod> methods = path.getMethods();
 
         Class<?> clazz = object.getClass();
         List<Buildable> buildableList = new ArrayList<>();
-        if (methodList.isEmpty()) {
+        if (methods.isEmpty()) {
+            if (path.getDeviation() != 0) {
+                reflectionMethodSequenceFinder.updateBuildableList(VARIABLE_NAME, object, path.getActualObject(), buildableList);
+            }
             buildableList.add(new ReturnConstructorCall(clazz, edgeConstructor.getArgs()));
         } else {
             buildableList.add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));
-            methodList.forEach(it -> buildableList.add(new MethodCall(it.getMethod(), it.getArgs())));
+            methods.forEach(it -> buildableList.add(new MethodCall(it.getMethod(), it.getArgs())));
+            if (path.getDeviation() != 0) {
+                reflectionMethodSequenceFinder.updateBuildableList(VARIABLE_NAME, object, path.getActualObject(), buildableList);
+            }
             buildableList.add(new ReturnExpression(VARIABLE_NAME));
         }
         return buildableList;

@@ -1,15 +1,16 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
+import org.codegenerator.generator.codegenerators.buildables.CreationMapGetterField;
+import org.codegenerator.generator.codegenerators.buildables.FieldSetter;
+import org.codegenerator.generator.codegenerators.buildables.MapGetterField;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryNode;
 import org.codegenerator.history.HistoryObject;
 import org.codegenerator.history.SetterUsingReflection;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
@@ -18,10 +19,30 @@ import java.util.*;
 import static org.codegenerator.Utils.throwIf;
 
 public class ReflectionMethodSequenceFinder {
+    private static final String METHOD_NAME = "getFields";
+    private static final String MAP_NAME = "map";
     private final Map<Class<?>, List<Field>> cachedFields = new IdentityHashMap<>();
 
-    public List<Buildable> findBuildableList(@NotNull Object expected, @NotNull Object actual) {
-        throw new NotImplementedException();
+    public void updateBuildableList(
+            String variableName,
+            @NotNull Object expected,
+            @NotNull Object actual,
+            @NotNull List<Buildable> buildableList
+    ) {
+        List<Field> fields = checkAndGetFields(expected, actual);
+
+        if (buildableList.stream().noneMatch(m -> m.getClass() == MapGetterField.class)) {
+            buildableList.add(new MapGetterField(METHOD_NAME));
+        }
+        buildableList.add(new CreationMapGetterField(variableName, MAP_NAME, METHOD_NAME));
+
+        for (Field field : fields) {
+            Object expectedValue = Utils.callSupplierWrapper(() -> field.get(expected));
+            Object actualValue = Utils.callSupplierWrapper(() -> field.get(actual));
+            if (!equals(expectedValue, actualValue)) {
+                buildableList.add(new FieldSetter(field, MAP_NAME, variableName, expectedValue));
+            }
+        }
     }
 
     public <T> ResultFinding findSetter(
@@ -29,39 +50,22 @@ public class ReflectionMethodSequenceFinder {
             @NotNull Object actual,
             History<T> history
     ) {
-        Class<?> expectedClass = expected.getClass();
-        Class<?> actualClass = actual.getClass();
+        List<Field> fields = checkAndGetFields(expected, actual);
 
-        throwIf(expectedClass != actualClass, new IllegalArgumentException());
-
-        List<Field> fields = cachedFields.computeIfAbsent(expectedClass, this::getFields);
-
-        List<Object> suspects = Utils.callSupplierWrapper(() -> trySetFieldsAndUpdateHistory(fields, expected, actual, history));
-
-        return new ResultFindingImpl(actual, 0, suspects);
-    }
-
-    @Contract(pure = true)
-    private <T> @NotNull List<Object> trySetFieldsAndUpdateHistory(
-            @NotNull List<Field> fields,
-            Object expected,
-            Object actual,
-            History<T> history
-    ) throws IllegalAccessException {
         List<Object> suspects = new ArrayList<>();
         List<SetterUsingReflection<T>> sur = new ArrayList<>();
         for (Field field : fields) {
-            Object expectedValue = field.get(expected);
-            Object actualValue = field.get(actual);
+            Object expectedValue = Utils.callSupplierWrapper(() -> field.get(expected));
+            Object actualValue = Utils.callSupplierWrapper(() -> field.get(actual));
             if (!equals(expectedValue, actualValue)) {
-                field.set(actual, expectedValue);
+                Utils.callRunnableWrapper(() -> field.set(actual, expectedValue));
                 suspects.add(expectedValue);
                 sur.add(new SetterUsingReflection<>(history, field, expectedValue));
             }
         }
-        HistoryNode<T> old = history.get(expected);
-        history.put(expected, new HistoryObject<>(expected, old.getHistoryCalls(), sur));
-        return suspects;
+        updateHistory(history, expected, sur);
+
+        return new ResultFindingImpl(actual, 0, suspects);
     }
 
     private @NotNull List<Field> getFields(Class<?> clazz) {
@@ -77,6 +81,24 @@ public class ReflectionMethodSequenceFinder {
             field.setAccessible(true);
             fields.add(field);
         }
+    }
+
+    private <T> void updateHistory(
+            @NotNull History<T> history,
+            Object expected,
+            List<SetterUsingReflection<T>> sur
+    ) {
+        HistoryNode<T> old = history.get(expected);
+        history.put(expected, new HistoryObject<>(expected, old.getHistoryCalls(), sur));
+    }
+
+    private List<Field> checkAndGetFields(@NotNull Object expected, @NotNull Object actual) {
+        Class<?> expectedClass = expected.getClass();
+        Class<?> actualClass = actual.getClass();
+
+        throwIf(expectedClass != actualClass, new IllegalArgumentException());
+
+        return cachedFields.computeIfAbsent(expectedClass, this::getFields);
     }
 
     private boolean equals(Object o1, Object o2) {

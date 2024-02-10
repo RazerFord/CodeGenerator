@@ -39,6 +39,7 @@ import static org.codegenerator.Utils.throwIf;
 
 public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
+    private final ReflectionMethodSequenceFinder reflectionMethodSequenceFinder = new ReflectionMethodSequenceFinder();
     private final Class<?> clazz;
     private final Class<?>[] classes;
     private final LazyMethodFinder methodFinder;
@@ -61,7 +62,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
     public List<Buildable> findBuildableList(@NotNull Object object) {
         Pair<BuilderInfo, Path> found = methodFinder.find(object);
-        return createBuildableList(found.getSecond().getMethods(), found.getFirst());
+        return createBuildableList(object, found);
     }
 
     @Override
@@ -167,27 +168,30 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         }
     }
 
-    private @NotNull List<Buildable> createBuildableList(
-            @NotNull List<EdgeMethod> edgeMethods,
-            @NotNull BuilderInfo builderInfo
-    ) {
+    private @NotNull List<Buildable> createBuildableList(@NotNull Object object, @NotNull Pair<BuilderInfo, Path> found) {
+        BuilderInfo builderInfo = found.getFirst();
+        Path path = found.getSecond();
+        List<EdgeMethod> methods = path.getMethods();
+
         List<Buildable> buildableList = new ArrayList<>();
         Class<?> builderClazz = builderInfo.builderClazz;
         Method builderBuildMethod = builderInfo.builderBuildMethod;
         Executable builderConstructor = builderInfo.builderConstructor;
 
-        if (edgeMethods.isEmpty()) {
+        if (path.getDeviation() != 0) {
+            reflectionMethodSequenceFinder.updateBuildableList(VARIABLE_NAME, object, path.getActualObject(), buildableList);
+        }
+        if (methods.isEmpty()) {
             buildableList.add(new ReturnCreatingChainingMethod(builderClazz, builderConstructor));
             buildableList.add(new FinalChainingMethod(builderBuildMethod));
             return buildableList;
         }
-
         buildableList.add(new BuilderCreationMethod(builderClazz, VARIABLE_NAME, builderConstructor));
 
         boolean beginChain = false;
         int lastIndex = 0;
-        for (int i = 0; i < edgeMethods.size(); i++) {
-            EdgeMethod edgeMethod = edgeMethods.get(i);
+        for (int i = 0; i < methods.size(); i++) {
+            EdgeMethod edgeMethod = methods.get(i);
             if (!beginChain) {
                 if (edgeMethod.getMethod().getReturnType() == builderClazz) {
                     buildableList.add(new InitialChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
@@ -208,7 +212,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         }
 
         if (lastIndex != -1) {
-            EdgeMethod edgeMethod = edgeMethods.get(lastIndex - 1);
+            EdgeMethod edgeMethod = methods.get(lastIndex - 1);
             buildableList.set(lastIndex, new ReturnMiddleChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
             buildableList.add(new FinalChainingMethod(builderBuildMethod));
         } else {
