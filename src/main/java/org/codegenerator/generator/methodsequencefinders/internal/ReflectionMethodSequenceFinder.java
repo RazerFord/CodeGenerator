@@ -28,10 +28,8 @@ public class ReflectionMethodSequenceFinder {
     ) {
         List<Field> fields = checkAndGetFields(expected, actual);
 
-        if (buildableList.stream().noneMatch(m -> m.getClass() == MapGetterField.class)) {
-            buildableList.add(new MapGetterField(METHOD_NAME));
-        }
-        buildableList.add(new CreationMapGetterField(variableName, MAP_NAME, METHOD_NAME));
+        buildableList.add(new MapGetterField(METHOD_NAME));
+        buildableList.add(new CreationMapGetterVariable(variableName, MAP_NAME, METHOD_NAME));
         buildableList.add(CodeBlockBuildable.beginTryCatch());
 
         for (Field field : fields) {

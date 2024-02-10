@@ -36,10 +36,14 @@ public class EdgeGenerator {
         typeToValues = new HashMap<>(typeToValues);
         List<EdgeMethod> edgeMethods = new ArrayList<>();
         for (Method method : methods) {
-            List<Node> roots = buildGraph(method, typeToValues);
-            List<List<Node>> listArguments = generatePossibleArguments(roots);
-            for (List<Node> arguments : listArguments) {
-                edgeMethods.add(new EdgeMethod(method, extractArgs(arguments, typeToValues)));
+            if (method.getParameterCount() == 0) {
+                edgeMethods.add(new EdgeMethod(method));
+            } else {
+                List<Node> roots = buildGraph(method, typeToValues);
+                List<List<Node>> listArguments = generatePossibleArguments(roots);
+                for (List<Node> arguments : listArguments) {
+                    edgeMethods.add(new EdgeMethod(method, extractArgs(arguments, typeToValues)));
+                }
             }
         }
         return edgeMethods;

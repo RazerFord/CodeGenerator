@@ -46,10 +46,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
 
         Class<?> clazz = object.getClass();
         List<Buildable> buildableList = new ArrayList<>();
-        if (methods.isEmpty()) {
-            if (path.getDeviation() != 0) {
-                reflectionMethodSequenceFinder.updateBuildableList(VARIABLE_NAME, object, path.getActualObject(), buildableList);
-            }
+        if (methods.isEmpty() && path.getDeviation() == 0) {
             buildableList.add(new ReturnConstructorCall(clazz, edgeConstructor.getArgs()));
         } else {
             buildableList.add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));

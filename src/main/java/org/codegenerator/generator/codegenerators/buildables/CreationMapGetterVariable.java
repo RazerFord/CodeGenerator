@@ -7,12 +7,12 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-public class CreationMapGetterField implements Buildable {
+public class CreationMapGetterVariable implements Buildable {
     private final String variableName;
     private final String mapName;
     private final String methodName;
 
-    public CreationMapGetterField(
+    public CreationMapGetterVariable(
             String variableName,
             String mapName,
             String methodName

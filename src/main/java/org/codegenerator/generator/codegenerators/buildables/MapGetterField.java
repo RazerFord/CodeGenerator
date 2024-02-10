@@ -5,6 +5,7 @@ import org.codegenerator.generator.converters.Converter;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,28 +44,36 @@ public class MapGetterField implements Buildable {
             TypeSpec.@NotNull Builder typeBuilder,
             MethodSpec.@NotNull Builder methodBuilder
     ) {
-        ClassName mapName = ClassName.get(Map.class);
-        ClassName className = ClassName.get(Class.class);
-        TypeName wildcard = WildcardTypeName.subtypeOf(Object.class);
-        ParameterizedTypeName classType = ParameterizedTypeName.get(className, wildcard);
-        ParameterizedTypeName mapType = ParameterizedTypeName.get(Map.class, String.class, Field.class);
-        ParameterizedTypeName mapMapType = ParameterizedTypeName.get(mapName, classType, mapType);
+        buildIfNonExists(typeBuilder);
+    }
 
-        MethodSpec methodSpec = MethodSpec.methodBuilder(methodName)
-                .addModifiers(PUBLIC, STATIC).returns(mapMapType)
-                .addParameter(Class.class, "clazz")
-                .addStatement("$T classMapMap = new $T<>()", mapMapType, HashMap.class)
-                .beginControlFlow("for (; clazz != Object.class; clazz = clazz.getSuperclass())")
-                .addStatement("$T fieldMap = new $T<>()", mapType, HashMap.class)
-                .beginControlFlow("for (Field field : clazz.getDeclaredFields())")
-                .addStatement("field.setAccessible(true)")
-                .addStatement("fieldMap.put(field.getName(), field)")
-                .endControlFlow()
-                .addStatement("classMapMap.put(clazz, fieldMap)")
-                .endControlFlow()
-                .addStatement("return classMapMap")
-                .build();
+    private void buildIfNonExists(TypeSpec.@NotNull Builder typeBuilder) {
+        ParameterSpec parameterSpec = ParameterSpec.builder(Class.class, "clazz").build();
+        if (typeBuilder.methodSpecs.stream()
+                .noneMatch(m -> m.name.equals(methodName) && m.parameters.equals(Collections.singletonList(parameterSpec)))) {
+            ClassName mapName = ClassName.get(Map.class);
+            ClassName className = ClassName.get(Class.class);
+            TypeName wildcard = WildcardTypeName.subtypeOf(Object.class);
+            ParameterizedTypeName classType = ParameterizedTypeName.get(className, wildcard);
+            ParameterizedTypeName mapType = ParameterizedTypeName.get(Map.class, String.class, Field.class);
+            ParameterizedTypeName mapMapType = ParameterizedTypeName.get(mapName, classType, mapType);
 
-        typeBuilder.addMethod(methodSpec);
+            MethodSpec methodSpec = MethodSpec.methodBuilder(methodName)
+                    .addModifiers(PUBLIC, STATIC).returns(mapMapType)
+                    .addParameter(parameterSpec)
+                    .addStatement("$T classMapMap = new $T<>()", mapMapType, HashMap.class)
+                    .beginControlFlow("for (; clazz != Object.class; clazz = clazz.getSuperclass())")
+                    .addStatement("$T fieldMap = new $T<>()", mapType, HashMap.class)
+                    .beginControlFlow("for (Field field : clazz.getDeclaredFields())")
+                    .addStatement("field.setAccessible(true)")
+                    .addStatement("fieldMap.put(field.getName(), field)")
+                    .endControlFlow()
+                    .addStatement("classMapMap.put(clazz, fieldMap)")
+                    .endControlFlow()
+                    .addStatement("return classMapMap")
+                    .build();
+
+            typeBuilder.addMethod(methodSpec);
+        }
     }
 }

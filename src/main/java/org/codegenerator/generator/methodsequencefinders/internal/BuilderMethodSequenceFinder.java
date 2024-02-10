@@ -178,10 +178,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         Method builderBuildMethod = builderInfo.builderBuildMethod;
         Executable builderConstructor = builderInfo.builderConstructor;
 
-        if (path.getDeviation() != 0) {
-            reflectionMethodSequenceFinder.updateBuildableList(VARIABLE_NAME, object, path.getActualObject(), buildableList);
-        }
-        if (methods.isEmpty()) {
+        if (methods.isEmpty() && path.getDeviation() == 0) {
             buildableList.add(new ReturnCreatingChainingMethod(builderClazz, builderConstructor));
             buildableList.add(new FinalChainingMethod(builderBuildMethod));
             return buildableList;
@@ -211,7 +208,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             }
         }
 
-        if (lastIndex != -1) {
+        if (lastIndex != -1 && path.getDeviation() == 0) {
             EdgeMethod edgeMethod = methods.get(lastIndex - 1);
             buildableList.set(lastIndex, new ReturnMiddleChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
             buildableList.add(new FinalChainingMethod(builderBuildMethod));
