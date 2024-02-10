@@ -43,4 +43,17 @@ public class CodeBlockBuildable implements Buildable {
 
         return new CodeBlockBuildable(codeBlock);
     }
+
+    public static @NotNull CodeBlockBuildable createVariableBuilt(
+            Class<?> newType,
+            String newName,
+            String name,
+            String termination
+    ) {
+        CodeBlock codeBlock = CodeBlock.builder()
+                .addStatement("$T $L = $L.$L()", newType, newName, name, termination)
+                .build();
+
+        return new CodeBlockBuildable(codeBlock);
+    }
 }

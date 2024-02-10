@@ -213,7 +213,17 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             buildableList.set(lastIndex, new ReturnMiddleChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
             buildableList.add(new FinalChainingMethod(builderBuildMethod));
         } else {
-            buildableList.add(new ReturnExpression(String.format("%s.%s()", VARIABLE_NAME, builderBuildMethod.getName())));
+            if (path.getDeviation() == 0) {
+                buildableList.add(new ReturnExpression(String.format("%s.%s()", VARIABLE_NAME, builderBuildMethod.getName())));
+            } else {
+                String newVariableName = VARIABLE_NAME + "Built";
+                buildableList.add(CodeBlockBuildable.createVariableBuilt(builderBuildMethod.getReturnType(), newVariableName, VARIABLE_NAME, builderBuildMethod.getName()));
+
+                Object actual = Utils.callSupplierWrapper(() -> builderInfo.builderBuildMethod.invoke(path.getActualObject()));
+                reflectionMethodSequenceFinder.updateBuildableList(newVariableName, object, actual, buildableList);
+
+                buildableList.add(new ReturnExpression(newVariableName));
+            }
         }
 
         return buildableList;
