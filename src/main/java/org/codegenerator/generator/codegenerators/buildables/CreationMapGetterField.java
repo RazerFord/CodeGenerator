@@ -35,7 +35,6 @@ public class CreationMapGetterField implements Buildable {
         ParameterizedTypeName mapType = ParameterizedTypeName.get(Map.class, String.class, Field.class);
         ParameterizedTypeName mapMapType = ParameterizedTypeName.get(mapClassName, classType, mapType);
 
-        methodBuilder.addException(IllegalAccessException.class)
-                .addStatement("$T $L = $L($L.getClass())", mapMapType, mapName, methodName, variableName);
+        methodBuilder.addStatement("$T $L = $L($L.getClass())", mapMapType, mapName, methodName, variableName);
     }
 }

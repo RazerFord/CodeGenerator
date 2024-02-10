@@ -29,12 +29,12 @@ public class StateGraph {
         UnaryOperator<Object> copyObject = copyObject();
         Object finalObject = assignableTypePropertyGrouper.getObject();
 
-        List<EdgeMethod> edgeMethods = edgeGenerator.generate(clazz.getMethods(), assignableTypePropertyGrouper.get());
+        List<EdgeMethod> methods = edgeGenerator.generate(clazz.getMethods(), assignableTypePropertyGrouper.get());
 
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Object beginObjectBuilt = termination.apply(beginObject);
         Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObjectBuilt), new PathNode(null, null, 0));
-        triple = bfs(triple, finalNode, edgeMethods, copyObject, termination);
+        triple = bfs(triple, finalNode, methods, copyObject, termination);
 
         PathNode finalPathNode = triple.getThird();
         Deque<EdgeMethod> path = new ArrayDeque<>();
@@ -60,18 +60,17 @@ public class StateGraph {
     private @NotNull Triple<Object, Node, PathNode> bfs(
             @NotNull Triple<Object, Node, PathNode> triple,
             @NotNull Node finalNode,
-            @NotNull List<EdgeMethod> edgeMethods,
+            @NotNull List<EdgeMethod> methods,
             @NotNull UnaryOperator<Object> copyObject,
             @NotNull UnaryOperator<Object> termination
     ) {
         Queue<Triple<Object, Node, PathNode>> queue = new ArrayDeque<>(Collections.singleton(triple));
-        Set<Node> visited = new HashSet<>(Collections.singleton(finalNode));
+        Set<Node> visited = new HashSet<>();
 
         while (!queue.isEmpty()) {
             triple = queue.poll();
 
             Node curNode = triple.getSecond();
-            PathNode prevPath = triple.getThird();
 
             if (curNode.equals(finalNode)) {
                 return triple;
@@ -81,28 +80,41 @@ public class StateGraph {
             }
             visited.add(curNode);
 
-            List<Triple<Object, Node, PathNode>> lowerLevel = new ArrayList<>();
-
-            for (EdgeMethod edgeMethod : edgeMethods) {
-                Object instance = copyObject.apply(triple.getFirst());
-                try {
-                    edgeMethod.invoke(instance);
-                } catch (Exception ignored) {
-                    continue;
-                }
-                Object instanceBuilt = Utils.callSupplierWrapper(() -> termination.apply(instance));
-                lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instanceBuilt), new PathNode(prevPath, edgeMethod)));
-            }
+            List<Triple<Object, Node, PathNode>> lowerLevel = applyMethods(methods, triple, copyObject, termination);
             List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
+
             int minDif = diffs.stream().min(Integer::compareTo).orElse(Integer.MAX_VALUE);
             queue = queue.stream().filter(t -> finalNode.diff(t.getSecond()) == minDif).collect(Collectors.toCollection(ArrayDeque::new));
             for (int i = 0; i < diffs.size(); i++) {
-                if (minDif == diffs.get(i)) {
-                    queue.add(lowerLevel.get(i));
+                Triple<Object, Node, PathNode> triple1 = lowerLevel.get(i);
+                if (minDif == diffs.get(i) && !visited.contains(triple1.getSecond())) {
+                    queue.add(triple1);
                 }
             }
         }
         return triple;
+    }
+
+    List<Triple<Object, Node, PathNode>> applyMethods(
+            @NotNull List<EdgeMethod> edgeMethods,
+            @NotNull Triple<Object, Node, PathNode> triple,
+            @NotNull UnaryOperator<Object> copyObject,
+            @NotNull UnaryOperator<Object> termination
+    ) {
+        List<Triple<Object, Node, PathNode>> lowerLevel = new ArrayList<>();
+        PathNode prevPath = triple.getThird();
+
+        for (EdgeMethod edgeMethod : edgeMethods) {
+            Object instance = copyObject.apply(triple.getFirst());
+            try {
+                edgeMethod.invoke(instance);
+            } catch (Exception ignored) {
+                continue;
+            }
+            Object instanceBuilt = Utils.callSupplierWrapper(() -> termination.apply(instance));
+            lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instanceBuilt), new PathNode(prevPath, edgeMethod)));
+        }
+        return lowerLevel;
     }
 
     @Contract(pure = true)

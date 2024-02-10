@@ -1,10 +1,7 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.codegenerator.Utils;
-import org.codegenerator.generator.codegenerators.buildables.Buildable;
-import org.codegenerator.generator.codegenerators.buildables.CreationMapGetterField;
-import org.codegenerator.generator.codegenerators.buildables.FieldSetter;
-import org.codegenerator.generator.codegenerators.buildables.MapGetterField;
+import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
@@ -35,6 +32,7 @@ public class ReflectionMethodSequenceFinder {
             buildableList.add(new MapGetterField(METHOD_NAME));
         }
         buildableList.add(new CreationMapGetterField(variableName, MAP_NAME, METHOD_NAME));
+        buildableList.add(CodeBlockBuildable.beginTryCatch());
 
         for (Field field : fields) {
             Object expectedValue = Utils.callSupplierWrapper(() -> field.get(expected));
@@ -43,6 +41,7 @@ public class ReflectionMethodSequenceFinder {
                 buildableList.add(new FieldSetter(field, MAP_NAME, variableName, expectedValue));
             }
         }
+        buildableList.add(CodeBlockBuildable.endTryCatch(IllegalAccessException.class));
     }
 
     public <T> ResultFinding findSetter(
