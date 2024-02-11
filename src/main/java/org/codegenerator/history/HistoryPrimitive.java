@@ -6,10 +6,16 @@ import java.util.List;
 public class HistoryPrimitive<T> implements HistoryNode<T> {
     private final Object object;
     private final List<HistoryCall<T>> historyCalls;
+    private final Class<?> creator;
 
-    public HistoryPrimitive(Object object, List<HistoryCall<T>> historyCalls) {
+    public HistoryPrimitive(
+            Object object,
+            List<HistoryCall<T>> historyCalls,
+            Class<?> creator
+    ) {
         this.object = object;
         this.historyCalls = historyCalls;
+        this.creator = creator;
     }
 
     @Override
@@ -30,5 +36,10 @@ public class HistoryPrimitive<T> implements HistoryNode<T> {
     @Override
     public HistoryType getType() {
         return HistoryType.PRIMITIVE;
+    }
+
+    @Override
+    public Class<?> getCreatorType() {
+        return creator;
     }
 }

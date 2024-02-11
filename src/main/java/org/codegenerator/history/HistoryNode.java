@@ -10,4 +10,6 @@ public interface HistoryNode<T> {
     List<SetterUsingReflection<T>> getSetterUsingReflections();
 
     HistoryType getType();
+
+    Class<?> getCreatorType();
 }

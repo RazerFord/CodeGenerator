@@ -45,7 +45,7 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
         if (object == null || !object.getClass().isArray()) {
             suspects.add(object);
         } else {
-            history.put(object, new HistoryArray<>(object, Collections.emptyList()));
+            history.put(object, new HistoryArray<>(object, Collections.emptyList(), ArrayMethodSequenceFinder.class));
             int length = Array.getLength(object);
             for (int i = 0; i < length; i++) {
                 arrayTraversal(Array.get(object, i), suspects, history);

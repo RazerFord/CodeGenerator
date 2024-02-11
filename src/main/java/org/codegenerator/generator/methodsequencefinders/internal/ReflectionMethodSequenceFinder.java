@@ -86,7 +86,7 @@ public class ReflectionMethodSequenceFinder {
             List<SetterUsingReflection<T>> sur
     ) {
         HistoryNode<T> old = history.get(expected);
-        history.put(expected, new HistoryObject<>(expected, old.getHistoryCalls(), sur));
+        history.put(expected, new HistoryObject<>(expected, old.getHistoryCalls(), sur, ReflectionMethodSequenceFinder.class));
     }
 
     private List<Field> checkAndGetFields(@NotNull Object expected, @NotNull Object actual) {

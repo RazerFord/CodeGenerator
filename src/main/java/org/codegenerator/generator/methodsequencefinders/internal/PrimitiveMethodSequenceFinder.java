@@ -27,13 +27,13 @@ public class PrimitiveMethodSequenceFinder implements MethodSequenceFinderIntern
 
     @Override
     public ResultFinding findReflectionCallsInternal(@NotNull Object object, @NotNull History<Executable> history) {
-        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList()));
+        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList(), PrimitiveMethodSequenceFinder.class));
         return WrapperResultFinding.withEmptySuspects();
     }
 
     @Override
     public ResultFinding findJacoDBCallsInternal(@NotNull Object object, @NotNull History<JcMethod> history) {
-        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList()));
+        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList(), PrimitiveMethodSequenceFinder.class));
         return WrapperResultFinding.withEmptySuspects();
     }
 }

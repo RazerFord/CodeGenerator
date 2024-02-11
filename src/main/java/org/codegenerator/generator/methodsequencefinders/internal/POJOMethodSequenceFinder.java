@@ -105,7 +105,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
             suspect.addAll(Arrays.asList(args));
         }
 
-        history.put(object, new HistoryObject<>(object, calls));
+        history.put(object, new HistoryObject<>(object, calls, POJOMethodSequenceFinder.class));
 
         int deviation = path.getDeviation();
 

@@ -35,7 +35,7 @@ public class NullMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     private <T> @NotNull WrapperResultFinding findCallsInternal(Object object, @NotNull History<T> history) {
-        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList()));
+        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList(), NullMethodSequenceFinder.class));
         return WrapperResultFinding.withEmptySuspects();
     }
 }

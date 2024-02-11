@@ -82,7 +82,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             suspect.addAll(Arrays.asList(method.getArgs()));
         }
 
-        history.put(finalObject, new HistoryObject<>(finalObject, calls));
+        history.put(finalObject, new HistoryObject<>(finalObject, calls, BuilderMethodSequenceFinder.class));
 
         return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspect);
     }
@@ -107,7 +107,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             addConstructor(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, constructor, calls);
             addMethods(Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName())), history, methods, calls, suspect);
 
-            history.put(finalObject, new HistoryObject<>(finalObject, calls));
+            history.put(finalObject, new HistoryObject<>(finalObject, calls, BuilderMethodSequenceFinder.class));
 
             return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspect);
         } catch (InterruptedException e) {
