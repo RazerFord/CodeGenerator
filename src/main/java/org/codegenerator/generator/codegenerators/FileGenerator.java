@@ -147,7 +147,7 @@ public class FileGenerator {
             } else if (args[i] == null) {
                 argumentMap.put(argFormat, "null");
             } else {
-                String myMethodName = String.format("createVar%s", typeBuilder.methodSpecs.size());
+                String myMethodName = String.format("createVar%s", typeBuilder.methodSpecs.size() + stackMethod.size());
                 argumentMap.put(argFormat, myMethodName + "()");
                 MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(myMethodName).addModifiers(PUBLIC, STATIC).returns(args[i].getClass());
                 stackMethod.add(methodBuilder);
