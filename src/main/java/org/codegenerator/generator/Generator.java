@@ -56,9 +56,29 @@ public interface Generator<T> {
             Path path
     ) throws IOException;
 
+    /**
+     * Finds methods that were called during the lifetime of objects.
+     * Each method is represented by `Executable`
+     *
+     * @param finalObject object for which you need to find a sequence of methods
+     * @return life history of the object
+     */
     History<Executable> generateReflectionCalls(@NotNull T finalObject);
 
+    /**
+     * Finds methods that were called during the lifetime of objects.
+     * Each method is represented by `JcMethod`
+     *
+     * @param finalObject object for which you need to find a sequence of methods
+     * @return life history of the object
+     */
     History<JcMethod> generateJacoDBCalls(@NotNull T finalObject);
 
+    /**
+     * Registers a finder of methods for the class
+     *
+     * @param clazz class
+     * @param finder finder of methods
+     */
     void registerFinder(Class<?> clazz, MethodSequenceFinderInternal finder);
 }
