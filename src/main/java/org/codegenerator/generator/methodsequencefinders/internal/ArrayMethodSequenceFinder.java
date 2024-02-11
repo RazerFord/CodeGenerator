@@ -36,19 +36,19 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     private <T> @NotNull ResultFinding findCallsInternal(@NotNull Object object, @NotNull History<T> history) {
-        history.put(object, new HistoryArray<>(object, Collections.emptyList()));
         List<Object> suspects = new ArrayList<>();
-        arrayTraversal(object, suspects);
+        arrayTraversal(object, suspects, history);
         return new WrapperResultFinding(suspects);
     }
 
-    private static void arrayTraversal(@NotNull Object object, List<Object> suspects) {
-        if (!object.getClass().isArray()) {
+    private static <T> void arrayTraversal(Object object, List<Object> suspects, History<T> history) {
+        if (object == null || !object.getClass().isArray()) {
             suspects.add(object);
         } else {
+            history.put(object, new HistoryArray<>(object, Collections.emptyList()));
             int length = Array.getLength(object);
             for (int i = 0; i < length; i++) {
-                arrayTraversal(Array.get(object, i), suspects);
+                arrayTraversal(Array.get(object, i), suspects, history);
             }
         }
     }

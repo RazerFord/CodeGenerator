@@ -1,10 +1,10 @@
 package org.codegenerator.history;
 
-import java.util.IdentityHashMap;
+import java.util.HashMap;
 import java.util.Map;
 
 public class History<T> {
-    private final Map<Object, HistoryNode<T>> historiesNode = new IdentityHashMap<>();
+    private final Map<Object, HistoryNode<T>> historiesNode = new HashMap<>();
 
     public HistoryNode<T> get(Object object) {
         return historiesNode.get(object);

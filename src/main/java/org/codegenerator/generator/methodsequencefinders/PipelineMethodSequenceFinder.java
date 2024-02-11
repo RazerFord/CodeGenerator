@@ -3,6 +3,7 @@ package org.codegenerator.generator.methodsequencefinders;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.internal.MethodSequenceFinderInternal;
+import org.codegenerator.generator.methodsequencefinders.internal.NullMethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.internal.ReflectionMethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.history.History;
@@ -20,6 +21,7 @@ import java.util.function.Function;
 
 public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
     private final ReflectionMethodSequenceFinder reflectionMethodSequenceFinder = new ReflectionMethodSequenceFinder();
+    private final NullMethodSequenceFinder nullMethodSequenceFinder = new NullMethodSequenceFinder();
     private final Map<Class<?>, MethodSequenceFinderInternal> cachedFinders = new IdentityHashMap<>();
     private final List<Function<Object, ? extends MethodSequenceFinderInternal>> methodSequenceFinderFunctions;
 
@@ -62,7 +64,11 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
         findCallsRecursiveBase(object, (m, o) -> tryFindJacoDBCalls(o, history, m));
     }
 
-    private void findCallsRecursiveBase(@NotNull Object object, BiConsumer<MethodSequenceFinderInternal, Object> consumer) {
+    private void findCallsRecursiveBase(Object object, BiConsumer<MethodSequenceFinderInternal, Object> consumer) {
+        if (object == null) {
+            consumer.accept(nullMethodSequenceFinder, null);
+            return;
+        }
         Class<?> clazz = object.getClass();
         MethodSequenceFinderInternal methodSequenceFinder = cachedFinders.get(clazz);
         if (methodSequenceFinder != null) {

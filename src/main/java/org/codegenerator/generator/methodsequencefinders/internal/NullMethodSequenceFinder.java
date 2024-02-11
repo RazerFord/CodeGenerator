@@ -4,7 +4,7 @@ import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.WrapperResultFinding;
 import org.codegenerator.history.History;
-import org.codegenerator.history.HistoryObject;
+import org.codegenerator.history.HistoryPrimitive;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,7 +35,7 @@ public class NullMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     private <T> @NotNull WrapperResultFinding findCallsInternal(Object object, @NotNull History<T> history) {
-        history.put(object, new HistoryObject<>(object, Collections.emptyList()));
+        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList()));
         return WrapperResultFinding.withEmptySuspects();
     }
 }
