@@ -4,7 +4,10 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import kotlin.Pair;
 import org.apache.commons.lang3.StringUtils;
+import org.codegenerator.generator.codegenerators.codegenerationstrategies.BeginCodeGenerationStrategy;
+import org.codegenerator.generator.codegenerators.codegenerationstrategies.CodeGenerationStrategy;
 import org.codegenerator.generator.converters.Converter;
 import org.codegenerator.generator.converters.ConverterPrimitiveTypesAndString;
 import org.codegenerator.history.History;
@@ -24,6 +27,7 @@ import static javax.lang.model.element.Modifier.*;
 
 public class FileGenerator {
     private final Converter converterPrimitive = new ConverterPrimitiveTypesAndString();
+    private CodeGenerationStrategy codeGenerationStrategy = new BeginCodeGenerationStrategy();
     private final String packageName;
     private final String className;
     private final String methodName;
@@ -35,13 +39,31 @@ public class FileGenerator {
     }
 
     public JavaFile generate(@NotNull History<Executable> history, @NotNull Object source) {
-        TypeSpec.Builder typeBuilder = TypeSpec.classBuilder(className).addModifiers(PUBLIC, FINAL);
-        MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName).addModifiers(PUBLIC, STATIC).returns(source.getClass());
+        TypeSpec.Builder typeBuilder = getTypeBuilder();
+        MethodSpec.Builder methodBuilder = getMethodBuilder(source);
 
-        process(history, typeBuilder, methodBuilder, source);
+        Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack = new ArrayDeque<>(Collections.singleton(new Pair<>(history.get(source), methodBuilder)));
+        while (!stack.isEmpty()) {
+            codeGenerationStrategy = codeGenerationStrategy.generate(typeBuilder, stack, history);
+        }
 
         TypeSpec type = typeBuilder.build();
         return JavaFile.builder(packageName, type).build();
+    }
+
+    @NotNull
+    private MethodSpec.Builder getMethodBuilder(@NotNull Object source) {
+        return MethodSpec
+                .methodBuilder(methodName)
+                .addModifiers(PUBLIC, STATIC)
+                .returns(source.getClass());
+    }
+
+    @NotNull
+    private TypeSpec.Builder getTypeBuilder() {
+        return TypeSpec
+                .classBuilder(className)
+                .addModifiers(PUBLIC, FINAL);
     }
 
     private void process(
@@ -56,78 +78,67 @@ public class FileGenerator {
         HistoryNode<Executable> historyObject = null;
         methodBuilder = null;
 
-        State state = State.BEGIN_METHOD;
-        while (!(state == State.BEGIN_METHOD && (stackObject.isEmpty() || stackMethod.isEmpty()))) {
-            switch (state) {
-                case BEGIN_METHOD:
-                    historyObject = history.get(stackObject.poll());
-                    methodBuilder = stackMethod.poll();
+        while (!(stackObject.isEmpty() || stackMethod.isEmpty())) {
+            historyObject = history.get(stackObject.poll());
+            methodBuilder = stackMethod.poll();
 
-                    state = State.PROCESSING_BODY;
-                    break;
-                case PROCESSING_BODY:
-                    assert historyObject != null && methodBuilder != null;
-                    Object object = historyObject.getObject();
-                    Class<?> typeObject = object.getClass();
+            assert historyObject != null && methodBuilder != null;
+            Object object = historyObject.getObject();
+            Class<?> typeObject = object.getClass();
 
-                    switch (historyObject.getType()) {
-                        case OBJECT: {
-                            List<HistoryCall<Executable>> calls = historyObject.getHistoryCalls();
-                            String variableName = "object";
-                            for (HistoryCall<Executable> call : calls) {
-                                Executable executable = call.getMethod();
-                                CodeBlock codeBlock;
-                                if (executable instanceof Constructor<?>) {
-                                    codeBlock = CodeBlock.builder()
-                                            .add("$1T $2L = new $1T", typeObject, variableName)
-                                            .add(createCall(typeBuilder, stackMethod, stackObject, methodBuilder, call.getArgs()))
-                                            .build();
-                                } else if (executable instanceof Method) {
-                                    codeBlock = CodeBlock.builder()
-                                            .add("$L.$L", variableName, executable.getName())
-                                            .add(createCall(typeBuilder, stackMethod, stackObject, methodBuilder, call.getArgs()))
-                                            .build();
-                                } else {
-                                    throw new IllegalStateException();
-                                }
-                                methodBuilder.addStatement(codeBlock);
-                            }
-                            methodBuilder.addStatement(
-                                    "return $L",
-                                    variableName
-                            );
-                            break;
+            switch (historyObject.getType()) {
+                case OBJECT: {
+                    List<HistoryCall<Executable>> calls = historyObject.getHistoryCalls();
+                    String variableName = "object";
+                    for (HistoryCall<Executable> call : calls) {
+                        Executable executable = call.getMethod();
+                        CodeBlock codeBlock;
+                        if (executable instanceof Constructor<?>) {
+                            codeBlock = CodeBlock.builder()
+                                    .add("$1T $2L = new $1T", typeObject, variableName)
+                                    .add(createCall(typeBuilder, stackMethod, stackObject, methodBuilder, call.getArgs()))
+                                    .build();
+                        } else if (executable instanceof Method) {
+                            codeBlock = CodeBlock.builder()
+                                    .add("$L.$L", variableName, executable.getName())
+                                    .add(createCall(typeBuilder, stackMethod, stackObject, methodBuilder, call.getArgs()))
+                                    .build();
+                        } else {
+                            throw new IllegalStateException();
                         }
-                        case ARRAY: {
-                            String variableName = "array";
-                            Class<?> componentType = typeObject.getComponentType();
-                            int deep = StringUtils.countMatches(componentType.getName(), "[");
-                            Class<?> typeArray = getArrayType(typeObject);
-
-                            CodeBlock codeBlock = createCodeBlockOfCreatingVariable(variableName, typeObject, typeArray, Array.getLength(object), deep);
-                            methodBuilder.addStatement(codeBlock);
-                            for (int i = 0, length = Array.getLength(object); i < length; i++) {
-                                Object element = Array.get(object, i);
-                                String call = createCallRecursively(componentType, element, typeBuilder, stackMethod, stackObject);
-                                methodBuilder.addStatement("$L[$L] = $L", variableName, i, call);
-                            }
-                            methodBuilder.addStatement("return $L", variableName);
-                            break;
-                        }
-                        case PRIMITIVE: {
-                            methodBuilder.addStatement(
-                                    "return $L",
-                                    converterPrimitive.convert(historyObject.getObject(), typeBuilder, methodBuilder)
-                            );
-                            break;
-                        }
+                        methodBuilder.addStatement(codeBlock);
                     }
-                    typeBuilder.addMethod(methodBuilder.build());
-                    state = State.BEGIN_METHOD;
+                    methodBuilder.addStatement(
+                            "return $L",
+                            variableName
+                    );
                     break;
-                case PROCESSING_ARG:
+                }
+                case ARRAY: {
+                    String variableName = "array";
+                    Class<?> componentType = typeObject.getComponentType();
+                    int deep = StringUtils.countMatches(componentType.getName(), "[");
+                    Class<?> typeArray = getArrayType(typeObject);
+
+                    CodeBlock codeBlock = createCodeBlockOfCreatingVariable(variableName, typeObject, typeArray, Array.getLength(object), deep);
+                    methodBuilder.addStatement(codeBlock);
+                    for (int i = 0, length = Array.getLength(object); i < length; i++) {
+                        Object element = Array.get(object, i);
+                        String call = createCallRecursively(componentType, element, typeBuilder, stackMethod, stackObject);
+                        methodBuilder.addStatement("$L[$L] = $L", variableName, i, call);
+                    }
+                    methodBuilder.addStatement("return $L", variableName);
                     break;
+                }
+                case PRIMITIVE: {
+                    methodBuilder.addStatement(
+                            "return $L",
+                            converterPrimitive.convert(historyObject.getObject(), typeBuilder, methodBuilder)
+                    );
+                    break;
+                }
             }
+            typeBuilder.addMethod(methodBuilder.build());
         }
     }
 
