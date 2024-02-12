@@ -76,11 +76,11 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         List<Object> suspect = new ArrayList<>();
 
         calls.add(new HistoryCall<>(history, builderInfo.builderConstructor));
-        calls.add(new HistoryCall<>(history, builderInfo.builderBuildMethod));
         for (EdgeMethod method : methods) {
             calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
             suspect.addAll(Arrays.asList(method.getArgs()));
         }
+        calls.add(new HistoryCall<>(history, builderInfo.builderBuildMethod));
 
         history.put(finalObject, new HistoryObject<>(finalObject, calls, BuilderMethodSequenceFinder.class));
 
