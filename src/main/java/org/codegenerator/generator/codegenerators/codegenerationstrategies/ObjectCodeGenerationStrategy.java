@@ -12,11 +12,11 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
 import java.util.Deque;
-import java.util.List;
 
 public class ObjectCodeGenerationStrategy implements CodeGenerationStrategy {
     private static final String VARIABLE_NAME = "object";
 
+    private final ReflectionCodeGeneration reflectionCodeGeneration = new ReflectionCodeGeneration();
     private final String variableName;
 
     public ObjectCodeGenerationStrategy() {
@@ -36,34 +36,25 @@ public class ObjectCodeGenerationStrategy implements CodeGenerationStrategy {
         Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
         HistoryNode<Executable> historyNode = p.getFirst();
         MethodSpec.Builder methodBuilder = p.getSecond();
+        Class<?> clazz = historyNode.getObject().getClass();
 
-        addStatements(historyNode.getObject(), historyNode.getHistoryCalls(), typeBuilder, methodBuilder, stack);
-
-        typeBuilder.addMethod(methodBuilder.build());
-        return new BeginCodeGenerationStrategy();
-    }
-
-    private void addStatements(
-            @NotNull Object object,
-            @NotNull List<HistoryCall<Executable>> calls,
-            TypeSpec.@NotNull Builder typeBuilder,
-            MethodSpec.@NotNull Builder methodBuilder,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
-    ) {
         Statement statement = new Init();
 
-        for (HistoryCall<Executable> call : calls) {
+        for (HistoryCall<Executable> call : historyNode.getHistoryCalls()) {
             CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
-            statement = statement.append(codeBlockBuilder, call.getMethod(), variableName, object.getClass());
+            statement = statement.append(codeBlockBuilder, call.getMethod(), variableName, clazz);
 
             String suffix = String.valueOf(typeBuilder.methodSpecs.size() + stack.size());
             CodeBlock codeBlock = codeBlockBuilder.add(Utils.createCall(suffix, stack, call)).build();
 
             methodBuilder.addStatement(codeBlock);
         }
+        reflectionCodeGeneration.generate(variableName, typeBuilder, p, stack);
         methodBuilder.addStatement("return $L", variableName);
-    }
 
+        typeBuilder.addMethod(methodBuilder.build());
+        return new BeginCodeGenerationStrategy();
+    }
 
     @FunctionalInterface
     private interface Statement {
