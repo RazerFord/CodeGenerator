@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
 import java.util.Deque;
-import java.util.Objects;
 
 public class BeginCodeGenerationStrategy implements CodeGenerationStrategy {
     @Override
@@ -19,10 +18,10 @@ public class BeginCodeGenerationStrategy implements CodeGenerationStrategy {
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
             History<Executable> history
     ) {
-        Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.element();
-        switch (Objects.requireNonNull(p).getFirst().getType()) {
+        HistoryNode<Executable> node = stack.element().getFirst();
+        switch (node.getType()) {
             case OBJECT:
-                return new ObjectCodeGenerationStrategy();
+                return StrategyFactory.getCodeGenerationStrategy(node.getCreatorType());
             case ARRAY:
                 return new ArrayCodeGenerationStrategy();
             case PRIMITIVE:

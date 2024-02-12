@@ -13,17 +13,17 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Executable;
 import java.util.Deque;
 
-public class ObjectCodeGenerationStrategy implements CodeGenerationStrategy {
+public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
     private static final String VARIABLE_NAME = "object";
 
     private final ReflectionCodeGeneration reflectionCodeGeneration = new ReflectionCodeGeneration();
     private final String variableName;
 
-    public ObjectCodeGenerationStrategy() {
+    public POJOCodeGenerationStrategy() {
         this(VARIABLE_NAME);
     }
 
-    public ObjectCodeGenerationStrategy(String variableName) {
+    public POJOCodeGenerationStrategy(String variableName) {
         this.variableName = variableName;
     }
 
