@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BuiltinTypesTest {
@@ -54,7 +55,7 @@ class BuiltinTypesTest {
         generator.generateCode(strings, Paths.get(OUTPUT_DIRECTORY));
 
         String[] other = createObject(generatedClassName);
-        assertEquals(strings, other);
+        assertArrayEquals(strings, other);
     }
 
     <R> R createObject(String generatedClassName) {
