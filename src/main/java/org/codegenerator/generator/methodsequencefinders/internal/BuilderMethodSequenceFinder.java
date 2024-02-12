@@ -84,7 +84,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
         history.put(finalObject, new HistoryObject<>(finalObject, calls, BuilderMethodSequenceFinder.class));
 
-        return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspect);
+        Object built = Utils.callSupplierWrapper(() -> builderInfo.builderBuildMethod.invoke(path.getActualObject()));
+        return new ResultFindingImpl(built, path.getDeviation(), suspect);
     }
 
     @Override

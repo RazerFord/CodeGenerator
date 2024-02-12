@@ -1,9 +1,9 @@
 package org.codegenerator.generator;
 
 import com.squareup.javapoet.JavaFile;
-import org.codegenerator.generator.codegenerators.ClassCodeGenerators;
-import org.codegenerator.generator.codegenerators.buildables.Buildable;
-import org.codegenerator.generator.methodsequencefinders.*;
+import org.codegenerator.generator.codegenerators.FileGenerator;
+import org.codegenerator.generator.methodsequencefinders.MethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.PipelineMethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.internal.*;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
@@ -24,7 +24,7 @@ public class BuilderGenerator<T> implements Generator<T> {
     private final String packageName;
     private final String className;
     private final String methodName;
-    private final ClassCodeGenerators classCodeGenerators;
+    private final FileGenerator fileGenerator;
     private final MethodSequenceFinder methodSequenceFinder;
 
     @Contract(pure = true)
@@ -32,13 +32,19 @@ public class BuilderGenerator<T> implements Generator<T> {
         this(clazz, PACKAGE_NAME, CLASS_NAME, METHOD_NAME, classes);
     }
 
-    public BuilderGenerator(@NotNull Class<?> clazz, String packageName, String className, String methodName, Class<?>... classes) {
+    public BuilderGenerator(
+            @NotNull Class<?> clazz,
+            String packageName,
+            String className,
+            String methodName,
+            Class<?>... classes
+    ) {
         this.packageName = packageName;
         this.className = className;
         this.methodName = methodName;
 
         methodSequenceFinder = createPipeline(classes);
-        classCodeGenerators = new ClassCodeGenerators(clazz);
+        fileGenerator = new FileGenerator();
 
         registerFinder(clazz, new BuilderMethodSequenceFinder(clazz, classes));
     }
@@ -49,7 +55,12 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Override
-    public void generateCode(@NotNull T finalObject, String className, String methodName, Path path) throws IOException {
+    public void generateCode(
+            @NotNull T finalObject,
+            String className,
+            String methodName,
+            Path path
+    ) throws IOException {
         this.generateCode(finalObject, packageName, className, methodName, path);
     }
 
@@ -61,9 +72,9 @@ public class BuilderGenerator<T> implements Generator<T> {
             String methodName,
             Path path
     ) throws IOException {
-        List<Buildable> buildableList = methodSequenceFinder.findBuildableList(finalObject);
+        History<Executable> history = methodSequenceFinder.findReflectionCalls(finalObject);
 
-        JavaFile javaFile = classCodeGenerators.generate(buildableList, packageName, className, methodName);
+        JavaFile javaFile = fileGenerator.generate(history, finalObject, packageName, className, methodName);
 
         javaFile.writeTo(path);
     }
