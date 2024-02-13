@@ -105,12 +105,14 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             Executable constructor = builderInfo.builderConstructor;
             Class<?> builder = constructor.getDeclaringClass();
 
-            addConstructor(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, constructor, calls);
+            addMethod(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, constructor, calls);
             addMethods(Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName())), history, methods, calls, suspect);
+            addMethod(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, builderInfo.builderBuildMethod, calls);
 
             history.put(finalObject, new HistoryObject<>(finalObject, calls, BuilderMethodSequenceFinder.class));
 
-            return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspect);
+            Object built = Utils.callSupplierWrapper(() -> builderInfo.builderBuildMethod.invoke(path.getActualObject()));
+            return new ResultFindingImpl(built, path.getDeviation(), suspect);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);
@@ -119,15 +121,15 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         }
     }
 
-    private void addConstructor(
+    private void addMethod(
             @NotNull JcClassOrInterface jcClassOrInterface,
             History<JcMethod> history,
-            @NotNull Executable constructor,
+            @NotNull Executable method,
             @NotNull List<HistoryCall<JcMethod>> calls
     ) {
         JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
 
-        JcMethod jcMethod = lookup.method(Utils.buildMethodName(constructor), Utils.buildDescriptor(constructor));
+        JcMethod jcMethod = lookup.method(Utils.buildMethodName(method), Utils.buildDescriptor(method));
         calls.add(new HistoryCall<>(history, jcMethod));
     }
 
