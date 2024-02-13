@@ -7,18 +7,24 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.Supplier;
 
 public class InnerNode implements Node {
+    private final Set<Object> visitedDuringEquals = new HashSet<>();
     private final Class<?> clazz;
     private final Object value;
     private final Map<Object, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
-    private final Set<Object> visitedDuringEquals = new HashSet<>();
+    private final Supplier<Integer> power;
 
-    public InnerNode(Class<?> clazz, Object value, Map<Object, Node> visited) {
+    InnerNode(Class<?> clazz, Object value, @NotNull Map<Object, Node> visited) {
         this.clazz = clazz;
         this.value = value;
         this.visited = visited;
+
+        visited.put(value, this);
+        extract();
+        power = NodeUtils.createPowerSupplier(fields);
     }
 
     @Override
@@ -34,30 +40,24 @@ public class InnerNode implements Node {
     @Override
     public void extract() {
         Class<?> clz = clazz;
-        List<Node> unvisitedNodes = new ArrayList<>();
 
         while (clz != null) {
-            Field[] fields1 = clz.getDeclaredFields();
-            for (Field field : fields1) {
-                int modifiers = field.getModifiers();
-                if (Modifier.isStatic(modifiers)) {
-                    continue;
-                }
+            for (Field field : clz.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
+
                 field.setAccessible(true);
                 Object o = Utils.callSupplierWrapper(() -> field.get(value));
-                Node node = Node.createNode(field, o, visited);
-                Node nextNode = visited.putIfAbsent(o, node);
-                if (nextNode != null) {
-                    node = nextNode;
+
+                Node node = visited.get(o);
+                if (node != null) {
+                    fields.put(field, node);
                 } else {
-                    unvisitedNodes.add(node);
+                    node = NodeUtils.createNode(field.getType(), o, visited);
+                    fields.put(field, node);
+                    node.extract();
                 }
-                fields.putIfAbsent(field, node);
             }
             clz = clz.getSuperclass();
-        }
-        for (Node node : unvisitedNodes) {
-            node.extract();
         }
     }
 
@@ -67,13 +67,19 @@ public class InnerNode implements Node {
     }
 
     @Override
+    public int power() {
+        return power.get();
+    }
+
+    @Override
     public int diff(Node that) {
-        if (!(that instanceof InnerNode)) return Integer.MAX_VALUE;
+        if (!(that instanceof InnerNode)) return power();
         int diff = 0;
         for (Map.Entry<Object, Node> entry : fields.entrySet()) {
-            if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
-                diff++;
-            }
+            int curDiff = NodeUtils.diff(entry.getValue(), that.get(entry.getKey()));
+            // diff + curDiff >= MAX => curDiff >= MAX - diff
+            if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
+            diff += curDiff;
         }
         return diff;
     }

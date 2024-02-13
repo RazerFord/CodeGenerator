@@ -1,18 +1,24 @@
 package org.codegenerator;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jacodb.api.JcClassOrInterface;
+import org.jacodb.api.JcClasspath;
 import org.jacodb.api.JcDatabase;
 import org.jacodb.api.JcFeature;
 import org.jacodb.impl.JacoDB;
 import org.jacodb.impl.JcSettings;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.UnmodifiableView;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.swap;
 
@@ -53,6 +59,34 @@ public class Utils {
         return descriptor.toString();
     }
 
+    @Contract(pure = true)
+    public static @NotNull String buildMethodName(Executable executable) {
+        if (executable instanceof Method) {
+            return executable.getName();
+        }
+        if (executable instanceof Constructor<?>) {
+            return "<init>";
+        }
+        throw new IllegalArgumentException();
+    }
+
+    public static JcClassOrInterface toJcClassOrInterface(
+            @NotNull Class<?> targetClazz,
+            @NotNull JcDatabase db,
+            @NotNull Class<?>... otherClasses
+    ) throws ExecutionException, InterruptedException {
+        Class<?>[] classes = ArrayUtils.add(otherClasses, targetClazz);
+        JcClasspath classpath = toJcClasspath(db, classes);
+        return Objects.requireNonNull(classpath.findClassOrNull(targetClazz.getTypeName()));
+    }
+
+    public static JcClasspath toJcClasspath(@NotNull JcDatabase db, Class<?>... classes) throws ExecutionException, InterruptedException {
+        List<File> fileList = Arrays.stream(classes).map(it ->
+                Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
+        ).collect(Collectors.toList());
+        return db.asyncClasspath(fileList).get();
+    }
+
     public static <E> E callSupplierWrapper(SupplierWrapper<E> supplierWrapper) {
         try {
             return supplierWrapper.get();
@@ -66,7 +100,7 @@ public class Utils {
         T get() throws Exception;
     }
 
-    public static <E> void callRunnableWrapper(RunnableWrapper<E> runnableWrapper) {
+    public static <E> void callRunnableWrapper(RunnableWrapper runnableWrapper) {
         try {
             runnableWrapper.run();
         } catch (Exception e) {
@@ -75,7 +109,7 @@ public class Utils {
     }
 
     @FunctionalInterface
-    public interface RunnableWrapper<T> {
+    public interface RunnableWrapper {
         void run() throws Exception;
     }
 

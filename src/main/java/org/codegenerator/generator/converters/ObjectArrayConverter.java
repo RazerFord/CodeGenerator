@@ -17,14 +17,14 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static org.codegenerator.Utils.throwIf;
 
-public class ArrayConverter implements Converter {
+public class ObjectArrayConverter implements Converter {
     private final String variableName;
     private final String methodName;
     private final MethodCodeGenerator methodCodeGenerator;
 
-    public ArrayConverter(String variableName,
-                          String methodName,
-                          @NotNull MethodCodeGenerator methodCodeGenerator) {
+    public ObjectArrayConverter(String variableName,
+                                String methodName,
+                                @NotNull MethodCodeGenerator methodCodeGenerator) {
         this.variableName = variableName;
         this.methodName = methodName;
         this.methodCodeGenerator = methodCodeGenerator;

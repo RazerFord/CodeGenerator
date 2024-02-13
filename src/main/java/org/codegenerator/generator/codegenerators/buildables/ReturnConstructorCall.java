@@ -16,9 +16,11 @@ public final class ReturnConstructorCall implements Buildable {
     }
 
     @Override
-    public void build(@NotNull Converter converter,
-                      TypeSpec.@NotNull Builder typeBuilder,
-                      MethodSpec.@NotNull Builder methodBuilder) {
+    public void build(
+            @NotNull Converter converter,
+            TypeSpec.@NotNull Builder typeBuilder,
+            MethodSpec.@NotNull Builder methodBuilder
+    ) {
         CodeBlock codeBlock = callCreator.build(converter, typeBuilder, methodBuilder);
         codeBlock = CodeBlock.builder().add("return new $T$L", clazz, codeBlock).build();
         methodBuilder.addStatement(codeBlock);

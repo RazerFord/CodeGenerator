@@ -19,6 +19,16 @@ public class User {
         this.coins = coins;
     }
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", created=" + created +
+                ", coins=" + Arrays.toString(coins) +
+                '}';
+    }
+
     @Contract(value = " -> new", pure = true)
     public static @NotNull UserBuilder builder() {
         return new UserBuilder();

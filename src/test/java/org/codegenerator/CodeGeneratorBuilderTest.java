@@ -22,7 +22,7 @@ class CodeGeneratorBuilderTest {
     void userBuilderTest() throws IOException {
         final String generatedClassName = "GeneratedUserClass";
 
-        BuilderGenerator<User> builderGenerator = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        BuilderGenerator<User> builder = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User user = User.builder()
                 .created(42)
@@ -30,7 +30,7 @@ class CodeGeneratorBuilderTest {
                 .age(17)
                 .build();
 
-        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
+        builder.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         User that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -40,11 +40,11 @@ class CodeGeneratorBuilderTest {
     void userBuilderDefaultTest() throws IOException {
         final String generatedClassName = "GeneratedUserDefaultClass";
 
-        BuilderGenerator<User> builderGenerator = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        BuilderGenerator<User> builder = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User user = User.builder().build();
 
-        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
+        builder.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         User that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -54,7 +54,7 @@ class CodeGeneratorBuilderTest {
     void userBuilderWithConstructorTest() throws IOException {
         final String generatedClassName = "GeneratedUserBuilderWithConstructorClass";
 
-        BuilderGenerator<UserBuilderWithConstructor> builderGenerator = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        BuilderGenerator<UserBuilderWithConstructor> builder = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         UserBuilderWithConstructor user = new UserBuilderWithConstructor.UserBuilder()
                 .created(42)
@@ -62,7 +62,7 @@ class CodeGeneratorBuilderTest {
                 .age(17)
                 .build();
 
-        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
+        builder.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserBuilderWithConstructor that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -72,11 +72,11 @@ class CodeGeneratorBuilderTest {
     void userBuilderWithConstructorDefaultTest() throws IOException {
         final String generatedClassName = "GeneratedUserBuilderWithConstructorDefaultClass";
 
-        BuilderGenerator<UserBuilderWithConstructor> builderGenerator = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        BuilderGenerator<UserBuilderWithConstructor> builder = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         UserBuilderWithConstructor user = new UserBuilderWithConstructor.UserBuilder().build();
 
-        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
+        builder.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserBuilderWithConstructor that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -86,7 +86,7 @@ class CodeGeneratorBuilderTest {
     void userWithDefectTest() throws IOException {
         final String generatedClassName = "GeneratedUserWithDefectClass";
 
-        BuilderGenerator<UserWithDefect> builderGenerator = new BuilderGenerator<>(UserWithDefect.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        BuilderGenerator<UserWithDefect> builder = new BuilderGenerator<>(UserWithDefect.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         UserWithDefect.UserBuilder userBuilder = UserWithDefect.builder()
                 .name("John Doe");
@@ -94,7 +94,7 @@ class CodeGeneratorBuilderTest {
         userBuilder.created(42);
         UserWithDefect user = userBuilder.build();
 
-        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
+        builder.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserWithDefect that = createObject(generatedClassName);
         assertEquals(user, that);
@@ -104,13 +104,13 @@ class CodeGeneratorBuilderTest {
     void fieldsCanBeCreatedUsingBuildersTest() throws IOException {
         final String generatedClassName = "GeneratedFieldsCanBeCreatedUsingBuildersClass";
 
-        BuilderGenerator<SendingMoneyTransfer> builderGenerator = new BuilderGenerator<>(SendingMoneyTransfer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        BuilderGenerator<SendingMoneyTransfer> builder = new BuilderGenerator<>(SendingMoneyTransfer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User userFrom = User.builder().created(102).age(18).name("John Doe").coins(new long[]{10, 20, 30}).build();
         User userTo = User.builder().created(56).age(42).name("Gordon Freeman").build();
         SendingMoneyTransfer sendingMoneyTransfer = SendingMoneyTransfer.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
 
-        builderGenerator.generateCode(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
+        builder.generateCode(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
 
         SendingMoneyTransfer that = createObject(generatedClassName);
         assertEquals(sendingMoneyTransfer, that);
@@ -120,13 +120,13 @@ class CodeGeneratorBuilderTest {
     void fieldsCanBeCreatedUsingBuildersWithPojoTest() throws IOException {
         final String generatedClassName = "GeneratedFieldsCanBeCreatedUsingBuildersWithPojoClass";
 
-        BuilderGenerator<SendingMoneyTransferWithPojo> builderGenerator = new BuilderGenerator<>(SendingMoneyTransferWithPojo.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        BuilderGenerator<SendingMoneyTransferWithPojo> builder = new BuilderGenerator<>(SendingMoneyTransferWithPojo.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User userFrom = User.builder().created(102).age(18).name("John Doe").build();
         UserPojo userTo = new UserPojo("Gordon Freeman", 56, 42);
         SendingMoneyTransferWithPojo sendingMoneyTransfer = SendingMoneyTransferWithPojo.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
 
-        builderGenerator.generateCode(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
+        builder.generateCode(sendingMoneyTransfer, Paths.get(OUTPUT_DIRECTORY));
 
         SendingMoneyTransferWithPojo that = createObject(generatedClassName);
         assertEquals(sendingMoneyTransfer, that);
@@ -136,11 +136,11 @@ class CodeGeneratorBuilderTest {
     void builderInAnotherPackageTest() throws IOException {
         final String generatedClassName = "GeneratedBuilderInAnotherPackageClass";
 
-        BuilderGenerator<UserWithBuilderInAnotherPackage> builderGenerator = new BuilderGenerator<>(UserWithBuilderInAnotherPackage.class, PACKAGE_NAME, generatedClassName, METHOD_NAME, UserBuilder.class);
+        BuilderGenerator<UserWithBuilderInAnotherPackage> builder = new BuilderGenerator<>(UserWithBuilderInAnotherPackage.class, PACKAGE_NAME, generatedClassName, METHOD_NAME, UserBuilder.class);
 
         UserWithBuilderInAnotherPackage user = new UserBuilder().created(102).age(18).name("John Doe").build();
 
-        builderGenerator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
+        builder.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
         UserWithBuilderInAnotherPackage that = createObject(generatedClassName);
         assertEquals(user, that);

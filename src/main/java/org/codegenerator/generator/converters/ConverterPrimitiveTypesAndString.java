@@ -12,6 +12,7 @@ import java.util.function.Function;
 import static org.codegenerator.Utils.throwIf;
 
 public class ConverterPrimitiveTypesAndString implements Converter {
+    public static final ConverterPrimitiveTypesAndString INSTANCE = new ConverterPrimitiveTypesAndString();
     private final Map<Class<?>, Function<Object, String>> converter = new HashMap<>();
 
     public ConverterPrimitiveTypesAndString() {
@@ -44,5 +45,9 @@ public class ConverterPrimitiveTypesAndString implements Converter {
         Class<?> clazz = o.getClass();
         throwIf(!canConvert(o), new IllegalArgumentException());
         return converter.getOrDefault(clazz, Object::toString).apply(o);
+    }
+    public static String convert(@NotNull Object o) {
+        Class<?> clazz = o.getClass();
+        return INSTANCE.converter.getOrDefault(clazz, Object::toString).apply(o);
     }
 }

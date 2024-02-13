@@ -5,16 +5,20 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Array;
 import java.util.*;
+import java.util.function.Supplier;
+
+import static org.codegenerator.Utils.throwUnless;
 
 public class ArrayNode implements Node {
     private final Class<?> clazz;
     private final Object[] value;
     private final Map<Object, Node> fields = new HashMap<>();
     private final Map<Object, Node> visited;
+    private final Supplier<Integer> power;
 
-    public ArrayNode(@NotNull Class<?> clazz, Object value, Map<Object, Node> visited) {
+    ArrayNode(@NotNull Class<?> clazz, Object value, Map<Object, Node> visited) {
         this.clazz = clazz;
-        if (!clazz.isArray()) throw new IllegalArgumentException();
+        throwUnless(clazz.isArray(), new IllegalArgumentException());
         int length = Array.getLength(value);
         Object[] newValue = new Object[length];
         for (int i = 0; i < length; i++) {
@@ -22,6 +26,10 @@ public class ArrayNode implements Node {
         }
         this.value = newValue;
         this.visited = visited;
+
+        visited.put(value, this);
+        extract();
+        power = NodeUtils.createPowerSupplier(fields);
     }
 
     @Override
@@ -36,11 +44,13 @@ public class ArrayNode implements Node {
 
     @Override
     public void extract() {
+        Class<?> componentType = clazz.getComponentType();
         for (int i = 0; i < value.length; i++) {
-            if (visited.containsKey(value[i])) {
-                fields.put(i, visited.get(value[i]));
+            Node node = visited.get(value[i]);
+            if (node != null) {
+                fields.put(i, node);
             } else {
-                Node node = Node.createNode(value[i], visited);
+                node = NodeUtils.createNode(componentType, value[i], visited);
                 fields.put(i, node);
                 node.extract();
             }
@@ -53,13 +63,19 @@ public class ArrayNode implements Node {
     }
 
     @Override
+    public int power() {
+        return power.get();
+    }
+
+    @Override
     public int diff(Node that) {
-        if (!(that instanceof ArrayNode)) return Integer.MAX_VALUE;
+        if (!(that instanceof ArrayNode)) return power();
         int diff = 0;
         for (Map.Entry<Object, Node> entry : fields.entrySet()) {
-            if (!Objects.equals(that.get(entry.getKey()), entry.getValue())) {
-                diff++;
-            }
+            int curDiff = NodeUtils.diff(entry.getValue(), that.get(entry.getKey()));
+            // diff + curDiff >= MAX => curDiff >= MAX - diff
+            if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
+            diff += curDiff;
         }
         return diff;
     }

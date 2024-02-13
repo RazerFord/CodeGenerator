@@ -1,13 +1,13 @@
 package org.codegenerator.generator;
 
-import org.codegenerator.Call;
+import org.codegenerator.generator.methodsequencefinders.internal.MethodSequenceFinderInternal;
+import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.nio.file.Path;
-import java.util.List;
 
 public interface Generator<T> {
     /**
@@ -56,7 +56,29 @@ public interface Generator<T> {
             Path path
     ) throws IOException;
 
-    List<Call<Executable>> generateReflectionCalls(@NotNull T finalObject);
+    /**
+     * Finds methods that were called during the lifetime of objects.
+     * Each method is represented by `Executable`
+     *
+     * @param finalObject object for which you need to find a sequence of methods
+     * @return life history of the object
+     */
+    History<Executable> generateReflectionCalls(@NotNull T finalObject);
 
-    List<Call<JcMethod>> generateJacoDBCalls(@NotNull T finalObject);
+    /**
+     * Finds methods that were called during the lifetime of objects.
+     * Each method is represented by `JcMethod`
+     *
+     * @param finalObject object for which you need to find a sequence of methods
+     * @return life history of the object
+     */
+    History<JcMethod> generateJacoDBCalls(@NotNull T finalObject);
+
+    /**
+     * Registers a finder of methods for the class
+     *
+     * @param clazz class
+     * @param finder finder of methods
+     */
+    void registerFinder(Class<?> clazz, MethodSequenceFinderInternal finder);
 }

@@ -4,7 +4,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.codegenerators.MethodCodeGenerator;
 import org.codegenerator.generator.codegenerators.buildables.Buildable;
-import org.codegenerator.generator.methodsequencefinders.BuilderMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.internal.BuilderMethodSequenceFinder;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 

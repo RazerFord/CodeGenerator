@@ -7,11 +7,12 @@ import java.util.*;
 
 public class Leaf implements Node {
     public static final Node NULL_NODE = new Leaf(null, null, null);
+    private static final int POWER = 1;
     private final Class<?> clazz;
     private final Object value;
     private final Map<Object, Node> fields = Collections.emptyMap();
 
-    public Leaf(Class<?> clazz, Object value, Map<Object, Node> ignoredVisited) {
+    Leaf(Class<?> clazz, Object value, Map<Object, Node> ignoredVisited) {
         this.clazz = clazz;
         this.value = value;
     }
@@ -37,11 +38,15 @@ public class Leaf implements Node {
     }
 
     @Override
-    public int diff(@NotNull Node that) {
-        if (!(that instanceof Leaf)) return Integer.MAX_VALUE;
-        return Objects.equals(value, that.getValue()) ? 0 : 1;
+    public int power() {
+        return POWER;
     }
 
+    @Override
+    public int diff(@NotNull Node that) {
+        if (!(that instanceof Leaf)) return power();
+        return Objects.equals(value, that.getValue()) ? 0 : power();
+    }
 
     @Override
     public int size() {

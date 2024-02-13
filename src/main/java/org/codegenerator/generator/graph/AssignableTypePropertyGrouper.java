@@ -12,10 +12,12 @@ import static org.codegenerator.Utils.callSupplierWrapper;
 
 public class AssignableTypePropertyGrouper implements Supplier<Map<Class<?>, List<Object>>> {
     private final Object o;
+    private final Class<?> clazz;
     private Supplier<Map<Class<?>, List<Object>>> supplier;
 
     @Contract(pure = true)
     public AssignableTypePropertyGrouper(@NotNull Object o) {
+        clazz = o.getClass();
         this.o = o;
         supplier = () -> {
             Map<Class<?>, List<Object>> result = prepareTypeToValues(o);
@@ -28,12 +30,15 @@ public class AssignableTypePropertyGrouper implements Supplier<Map<Class<?>, Lis
         return supplier.get();
     }
 
+    public Class<?> getClazz() {
+        return clazz;
+    }
+
     public Object getObject() {
         return o;
     }
 
     private @NotNull Map<Class<?>, List<Object>> prepareTypeToValues(@NotNull Object o) {
-        Class<?> clazz = o.getClass();
         Map<Class<?>, List<Object>> typeToValues = new HashMap<>();
         for (Field field : clazz.getDeclaredFields()) {
             List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
