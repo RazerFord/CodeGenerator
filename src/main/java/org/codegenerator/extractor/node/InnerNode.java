@@ -52,7 +52,9 @@ public class InnerNode implements Node {
                 if (node != null) {
                     fields.put(field, node);
                 } else {
-                    node = NodeUtils.createNode(field.getType(), o, visited);
+                    Class<?> type = field.getType();
+                    if (field.getGenericType() == type) node = NodeUtils.createNode(type, o, visited);
+                    else node = NodeUtils.createNode(o, visited);
                     fields.put(field, node);
                 }
             }
