@@ -81,9 +81,11 @@ public class Utils {
     }
 
     public static JcClasspath toJcClasspath(@NotNull JcDatabase db, Class<?>... classes) throws ExecutionException, InterruptedException {
-        List<File> fileList = Arrays.stream(classes).map(it ->
-                Utils.callSupplierWrapper(() -> new File(it.getProtectionDomain().getCodeSource().getLocation().toURI()))
-        ).collect(Collectors.toList());
+        List<File> fileList = Arrays.stream(classes)
+                .filter(it -> it.getProtectionDomain().getCodeSource() != null)
+                .map(it -> it.getProtectionDomain().getCodeSource().getLocation())
+                .map(it -> Utils.callSupplierWrapper(() -> new File(it.toURI()))
+                ).collect(Collectors.toList());
         return db.asyncClasspath(fileList).get();
     }
 
