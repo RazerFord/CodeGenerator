@@ -54,7 +54,6 @@ public class InnerNode implements Node {
                 } else {
                     node = NodeUtils.createNode(field.getType(), o, visited);
                     fields.put(field, node);
-                    node.extract();
                 }
             }
             clz = clz.getSuperclass();

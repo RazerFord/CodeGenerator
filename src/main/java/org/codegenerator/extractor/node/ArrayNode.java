@@ -52,7 +52,6 @@ public class ArrayNode implements Node {
             } else {
                 node = NodeUtils.createNode(componentType, value[i], visited);
                 fields.put(i, node);
-                node.extract();
             }
         }
     }
