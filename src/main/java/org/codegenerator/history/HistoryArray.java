@@ -43,4 +43,9 @@ public class HistoryArray<T> implements HistoryNode<T> {
     public Class<?> getCreatorType() {
         return creator;
     }
+
+    @Override
+    public boolean isGeneric() {
+        return false;
+    }
 }

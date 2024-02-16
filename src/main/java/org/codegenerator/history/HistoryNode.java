@@ -12,4 +12,6 @@ public interface HistoryNode<T> {
     HistoryType getType();
 
     Class<?> getCreatorType();
+
+    boolean isGeneric();
 }

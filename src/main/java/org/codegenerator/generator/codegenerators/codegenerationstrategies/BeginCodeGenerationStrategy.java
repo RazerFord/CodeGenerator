@@ -21,7 +21,7 @@ public class BeginCodeGenerationStrategy implements CodeGenerationStrategy {
         HistoryNode<Executable> node = stack.element().getFirst();
         switch (node.getType()) {
             case OBJECT:
-                return StrategyFactory.getCodeGenerationStrategy(node.getCreatorType());
+                return StrategyFactory.getCodeGenerationStrategy(node);
             case ARRAY:
                 return new ArrayCodeGenerationStrategy();
             case PRIMITIVE:

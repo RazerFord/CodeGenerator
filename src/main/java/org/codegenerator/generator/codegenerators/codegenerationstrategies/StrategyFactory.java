@@ -2,6 +2,7 @@ package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
 import org.codegenerator.generator.methodsequencefinders.internal.BuilderMethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.internal.POJOMethodSequenceFinder;
+import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,8 +17,8 @@ public class StrategyFactory {
     private static final Map<Class<?>, Supplier<CodeGenerationStrategy>> CLASS_TO_STRATEGY = getClassToStrategy();
 
     @Contract("_ -> new")
-    static @NotNull CodeGenerationStrategy getCodeGenerationStrategy(Class<?> clazz) {
-        return CLASS_TO_STRATEGY.getOrDefault(clazz, () -> {
+    static @NotNull CodeGenerationStrategy getCodeGenerationStrategy(@NotNull HistoryNode<?> node) {
+        return CLASS_TO_STRATEGY.getOrDefault(node.getCreatorType(), () -> {
             throw new IllegalArgumentException();
         }).get();
     }

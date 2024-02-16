@@ -59,8 +59,8 @@ public class Utils {
             Class<?> typeArg = arg.getClass();
             String methodName = createNewMethodName(typeArg, methodNameSuffix);
             MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
-                    .addModifiers(PUBLIC, STATIC).
-                    returns(typeArg);
+                    .addModifiers(PUBLIC, STATIC)
+                    .returns(typeArg);
 
             stack.add(new Pair<>(node, methodBuilder));
             return methodName + "()";

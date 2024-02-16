@@ -54,4 +54,9 @@ public class HistoryObject<T> implements HistoryNode<T> {
     public Class<?> getCreatorType() {
         return creator;
     }
+
+    @Override
+    public boolean isGeneric() {
+        return object != null && object.getClass().getTypeParameters().length != 0;
+    }
 }
