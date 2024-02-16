@@ -18,8 +18,8 @@ class GenericClassesTest {
     private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
 
     @Test
-    void withoutSetterForOneFieldTest() throws IOException {
-        final String generatedClassName = "WithoutSetterForOneFieldClass";
+    void oneGenericFieldTest() throws IOException {
+        final String generatedClassName = "OneGenericFieldClass";
         POJOGenerator<OneField<Integer>> generator = new POJOGenerator<>(OneField.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         OneField<Integer> oneField = new OneField<>();
