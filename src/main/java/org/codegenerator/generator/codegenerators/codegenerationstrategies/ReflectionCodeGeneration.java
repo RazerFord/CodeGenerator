@@ -44,7 +44,7 @@ public class ReflectionCodeGeneration {
 
         if (historyNode.getSetterUsingReflections().isEmpty()) return;
 
-        addIfNonExists(typeBuilder);
+        addMethodGetFieldsIfNonExists(typeBuilder);
         methodBuilder.addCode(createMap(variableName));
         methodBuilder.addCode(beginTryCatch());
 
@@ -114,7 +114,7 @@ public class ReflectionCodeGeneration {
      * }
      * </pre>
      */
-    private void addIfNonExists(TypeSpec.@NotNull Builder typeBuilder) {
+    private void addMethodGetFieldsIfNonExists(TypeSpec.@NotNull Builder typeBuilder) {
         ParameterSpec parameterSpec = ParameterSpec.builder(Class.class, "clazz").build();
         if (typeBuilder.methodSpecs.stream()
                 .noneMatch(m -> m.name.equals(methodName) && m.parameters.equals(Collections.singletonList(parameterSpec)))) {

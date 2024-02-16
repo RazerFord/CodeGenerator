@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.codegenerator.generator.converters.ConverterPrimitiveTypesAndString;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
@@ -26,22 +27,20 @@ public class Utils {
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
             @NotNull HistoryCall<Executable> call
     ) {
-        Map<String, String> argumentMap = new HashMap<>();
-        StringBuilder format = new StringBuilder("(");
+        Map<String, String> argsMap = new HashMap<>();
+        StringBuilder fmt = new StringBuilder("(");
         Object[] args = call.getArgs();
+
         for (int i = 0; i < args.length; i++) {
-            String argFormat = String.format("arg%s", i);
-            String stringRepresentation = toRepresentation(methodNameSuffix, call.getHistoryArg(i), stack);
-            argumentMap.put(argFormat, stringRepresentation);
-            format.append(String.format("$%s:L,", argFormat));
+            String argFmt = String.format("arg%s", i);
+            argsMap.put(argFmt, toRepresentation(methodNameSuffix, call.getHistoryArg(i), stack));
+            fmt.append(String.format("$%s:L,", argFmt));
         }
-        if (args.length > 0) {
-            format.setCharAt(format.length() - 1, ')');
-        } else {
-            format.append(")");
-        }
+        if (args.length > 0) fmt.setCharAt(fmt.length() - 1, ')');
+        else fmt.append(")");
+
         return CodeBlock.builder()
-                .addNamed(format.toString(), argumentMap)
+                .addNamed(fmt.toString(), argsMap)
                 .build();
     }
 
@@ -63,7 +62,7 @@ public class Utils {
                     .returns(typeArg);
 
             stack.add(new Pair<>(node, methodBuilder));
-            return methodName + "()";
+            return callMethod(methodName);
         }
     }
 
@@ -72,6 +71,11 @@ public class Utils {
         if (clazz.isArray()) {
             return String.format("createArray%s%s", StringUtils.capitalize(simpleName.replaceAll("(\\[])", "")), methodNameSuffix);
         }
-        return String.format("create%s%s", simpleName, methodNameSuffix);
+        return String.format("create%s%s", StringUtils.capitalize(simpleName), methodNameSuffix);
+    }
+
+    @Contract(pure = true)
+    private static @NotNull String callMethod(String methodName) {
+        return methodName + "()";
     }
 }

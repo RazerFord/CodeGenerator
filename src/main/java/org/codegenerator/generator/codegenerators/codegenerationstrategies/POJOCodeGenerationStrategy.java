@@ -36,13 +36,12 @@ public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
         Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
         HistoryNode<Executable> historyNode = p.getFirst();
         MethodSpec.Builder methodBuilder = p.getSecond();
-        Class<?> clazz = historyNode.getObject().getClass();
 
         Statement statement = new Init();
 
         for (HistoryCall<Executable> call : historyNode.getHistoryCalls()) {
             CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
-            statement = statement.append(codeBlockBuilder, call.getMethod(), variableName, clazz);
+            statement = statement.append(codeBlockBuilder, call.getMethod(), variableName);
 
             String suffix = String.valueOf(typeBuilder.methodSpecs.size() + stack.size());
             CodeBlock codeBlock = codeBlockBuilder.add(Utils.createCall(suffix, stack, call)).build();
@@ -61,8 +60,7 @@ public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
         Statement append(
                 CodeBlock.Builder codeBlockBuilder,
                 Executable executable,
-                String variableName,
-                Class<?> variableType
+                String variableName
         );
     }
 
@@ -71,11 +69,10 @@ public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
         @Override
         public @NotNull Statement append(
                 CodeBlock.@NotNull Builder codeBlockBuilder,
-                Executable executable,
-                String variableName,
-                Class<?> variableType
+                @NotNull Executable executable,
+                String variableName
         ) {
-            codeBlockBuilder.add("$1T $2L = new $1T", variableType, variableName);
+            codeBlockBuilder.add("$1T $2L = new $1T", executable.getDeclaringClass(), variableName);
             return new Call();
         }
     }
@@ -86,8 +83,7 @@ public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
         public @NotNull Statement append(
                 CodeBlock.@NotNull Builder codeBlockBuilder,
                 @NotNull Executable executable,
-                String variableName,
-                Class<?> variableType
+                String variableName
         ) {
             codeBlockBuilder.add("$L.$L", variableName, executable.getName());
             return this;
