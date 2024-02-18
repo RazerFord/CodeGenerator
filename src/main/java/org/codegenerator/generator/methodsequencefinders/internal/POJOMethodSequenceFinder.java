@@ -2,14 +2,11 @@ package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
-import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.ConstructorStateGraph;
 import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.StateGraph;
 import org.codegenerator.generator.graph.edges.Edge;
-import org.codegenerator.generator.graph.edges.EdgeConstructor;
-import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
@@ -29,34 +26,12 @@ import java.util.function.Function;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
-    private final ReflectionMethodSequenceFinder reflectionMethodSequenceFinder = new ReflectionMethodSequenceFinder();
     private final StateGraph stateGraph = new StateGraph();
     private final ConstructorStateGraph constructorStateGraph = new ConstructorStateGraph();
 
     @Override
     public boolean canTry(Object object) {
         return true;
-    }
-
-    public List<Buildable> findBuildableList(@NotNull Object object) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
-        EdgeConstructor edgeConstructor = constructorStateGraph.findPath(assignableTypePropertyGrouper);
-        Path path = stateGraph.findPath(assignableTypePropertyGrouper, edgeConstructor::invoke);
-        List<EdgeMethod> methods = path.getMethods();
-
-        Class<?> clazz = object.getClass();
-        List<Buildable> buildableList = new ArrayList<>();
-        if (methods.isEmpty() && path.getDeviation() == 0) {
-            buildableList.add(new ReturnConstructorCall(clazz, edgeConstructor.getArgs()));
-        } else {
-            buildableList.add(new ConstructorCall(clazz, VARIABLE_NAME, edgeConstructor.getArgs()));
-            methods.forEach(it -> buildableList.add(new MethodCall(it.getMethod(), it.getArgs())));
-            if (path.getDeviation() != 0) {
-                reflectionMethodSequenceFinder.updateBuildableList(VARIABLE_NAME, object, path.getActualObject(), buildableList);
-            }
-            buildableList.add(new ReturnExpression(VARIABLE_NAME));
-        }
-        return buildableList;
     }
 
     @Override
@@ -111,6 +86,4 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
 
         return new ResultFindingImpl(path.getActualObject(), deviation, suspect);
     }
-
-    private static final String VARIABLE_NAME = "object";
 }

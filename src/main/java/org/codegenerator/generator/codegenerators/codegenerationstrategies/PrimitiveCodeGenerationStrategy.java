@@ -3,7 +3,7 @@ package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import kotlin.Pair;
-import org.codegenerator.generator.converters.ConverterPrimitiveTypesAndString;
+import org.codegenerator.generator.converters.PrimitiveConverter;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,7 @@ public class PrimitiveCodeGenerationStrategy implements CodeGenerationStrategy {
         Object object = p.getFirst().getObject();
         MethodSpec.Builder methodBuilder = p.getSecond();
 
-        methodBuilder.addStatement("return $L", ConverterPrimitiveTypesAndString.convert(object));
+        methodBuilder.addStatement("return $L", PrimitiveConverter.convert(object));
         typeBuilder.addMethod(methodBuilder.build());
         return new BeginCodeGenerationStrategy();
     }

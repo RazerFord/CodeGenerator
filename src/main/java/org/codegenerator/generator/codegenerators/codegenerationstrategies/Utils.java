@@ -4,7 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import kotlin.Pair;
 import org.apache.commons.lang3.StringUtils;
-import org.codegenerator.generator.converters.ConverterPrimitiveTypesAndString;
+import org.codegenerator.generator.converters.PrimitiveConverter;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
@@ -52,8 +52,8 @@ public class Utils {
         Object arg = node.getObject();
         if (arg == null) {
             return "null";
-        } else if (ConverterPrimitiveTypesAndString.INSTANCE.canConvert(arg)) {
-            return ConverterPrimitiveTypesAndString.convert(arg);
+        } else if (PrimitiveConverter.canConvert(arg)) {
+            return PrimitiveConverter.convert(arg);
         } else {
             Class<?> typeArg = arg.getClass();
             String methodName = createNewMethodName(typeArg, methodNameSuffix);

@@ -1,7 +1,6 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.codegenerator.Utils;
-import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
@@ -16,31 +15,7 @@ import java.util.*;
 import static org.codegenerator.Utils.throwIf;
 
 public class ReflectionMethodSequenceFinder {
-    private static final String METHOD_NAME = "getFields";
-    private static final String MAP_NAME = "map";
     private final Map<Class<?>, List<Field>> cachedFields = new IdentityHashMap<>();
-
-    public void updateBuildableList(
-            String variableName,
-            @NotNull Object expected,
-            @NotNull Object actual,
-            @NotNull List<Buildable> buildableList
-    ) {
-        List<Field> fields = checkAndGetFields(expected, actual);
-
-        buildableList.add(new MapGetterField(METHOD_NAME));
-        buildableList.add(new CreationMapGetterVariable(variableName, MAP_NAME, METHOD_NAME));
-        buildableList.add(CodeBlockBuildable.beginTryCatch());
-
-        for (Field field : fields) {
-            Object expectedValue = Utils.callSupplierWrapper(() -> field.get(expected));
-            Object actualValue = Utils.callSupplierWrapper(() -> field.get(actual));
-            if (!equals(expectedValue, actualValue)) {
-                buildableList.add(new FieldSetter(field, MAP_NAME, variableName, expectedValue));
-            }
-        }
-        buildableList.add(CodeBlockBuildable.endTryCatch(IllegalAccessException.class));
-    }
 
     public <T> ResultFinding findSetter(
             @NotNull Object expected,

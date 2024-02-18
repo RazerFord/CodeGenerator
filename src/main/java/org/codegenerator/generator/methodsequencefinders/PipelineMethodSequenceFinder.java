@@ -1,7 +1,6 @@
 package org.codegenerator.generator.methodsequencefinders;
 
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
-import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.internal.MethodSequenceFinderInternal;
 import org.codegenerator.generator.methodsequencefinders.internal.NullMethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.internal.ReflectionMethodSequenceFinder;
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
-import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +25,6 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
 
     public PipelineMethodSequenceFinder(List<Function<Object, ? extends MethodSequenceFinderInternal>> methodSequenceFinderFunctions) {
         this.methodSequenceFinderFunctions = methodSequenceFinderFunctions;
-    }
-
-    @Override
-    public List<Buildable> findBuildableList(@NotNull Object object) {
-        @SuppressWarnings("unchecked")
-        List<Buildable>[] list = new ArrayList[1];
-        findCallsRecursiveBase(object, (m, o) -> list[0] = m.findBuildableList(o));
-        return list[0];
     }
 
     @Override

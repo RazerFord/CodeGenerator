@@ -1,6 +1,5 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
-import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.WrapperResultFinding;
 import org.codegenerator.history.History;
@@ -11,17 +10,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Executable;
 import java.util.Collections;
-import java.util.List;
 
 public class NullMethodSequenceFinder implements MethodSequenceFinderInternal {
     @Override
     public boolean canTry(Object object) {
         return object == null;
-    }
-
-    @Override
-    public List<Buildable> findBuildableList(@Nullable Object object) {
-        return Collections.emptyList();
     }
 
     @Override

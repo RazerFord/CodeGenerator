@@ -8,7 +8,6 @@ import org.codegenerator.Utils;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
-import org.codegenerator.generator.codegenerators.buildables.*;
 import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
 import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.StateGraph;
@@ -38,8 +37,10 @@ import java.util.stream.Collectors;
 import static org.codegenerator.Utils.throwIf;
 
 public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal {
+    private static final String BUILDER_CONSTRUCTOR_FOUND = "Builder constructor not found";
+    private static final String BUILDER_NOT_FOUND = "Builder not found";
+
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
-    private final ReflectionMethodSequenceFinder reflectionMethodSequenceFinder = new ReflectionMethodSequenceFinder();
     private final Class<?> clazz;
     private final Class<?>[] classes;
     private final LazyMethodFinder methodFinder;
@@ -58,11 +59,6 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     @Override
     public boolean canTry(Object object) {
         return true;
-    }
-
-    public List<Buildable> findBuildableList(@NotNull Object object) {
-        Pair<BuilderInfo, Path> found = methodFinder.find(object);
-        return createBuildableList(object, found);
     }
 
     @Override
@@ -169,67 +165,6 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         } catch (IOException | ExecutionException e) {
             throw new JacoDBException(e);
         }
-    }
-
-    private @NotNull List<Buildable> createBuildableList(@NotNull Object object, @NotNull Pair<BuilderInfo, Path> found) {
-        BuilderInfo builderInfo = found.getFirst();
-        Path path = found.getSecond();
-        List<EdgeMethod> methods = path.getMethods();
-
-        List<Buildable> buildableList = new ArrayList<>();
-        Class<?> builderClazz = builderInfo.builderClazz;
-        Method builderBuildMethod = builderInfo.builderBuildMethod;
-        Executable builderConstructor = builderInfo.builderConstructor;
-
-        if (methods.isEmpty() && path.getDeviation() == 0) {
-            buildableList.add(new ReturnCreatingChainingMethod(builderClazz, builderConstructor));
-            buildableList.add(new FinalChainingMethod(builderBuildMethod));
-            return buildableList;
-        }
-        buildableList.add(new BuilderCreationMethod(builderClazz, VARIABLE_NAME, builderConstructor));
-
-        boolean beginChain = false;
-        int lastIndex = 0;
-        for (int i = 0; i < methods.size(); i++) {
-            EdgeMethod edgeMethod = methods.get(i);
-            if (!beginChain) {
-                if (edgeMethod.getMethod().getReturnType() == builderClazz) {
-                    buildableList.add(new InitialChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
-                    beginChain = true;
-                    lastIndex = i + 1;
-                } else {
-                    buildableList.add(new MethodCall(edgeMethod.getMethod(), edgeMethod.getArgs()));
-                }
-            } else {
-                if (edgeMethod.getMethod().getReturnType() == builderClazz) {
-                    buildableList.add(new MiddleChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
-                } else {
-                    buildableList.add(new FinalChainingMethod(edgeMethod.getMethod(), edgeMethod.getArgs()));
-                    beginChain = false;
-                    lastIndex = -1;
-                }
-            }
-        }
-
-        if (lastIndex != -1 && path.getDeviation() == 0) {
-            EdgeMethod edgeMethod = methods.get(lastIndex - 1);
-            buildableList.set(lastIndex, new ReturnMiddleChainingMethod(edgeMethod.getMethod(), VARIABLE_NAME, edgeMethod.getArgs()));
-            buildableList.add(new FinalChainingMethod(builderBuildMethod));
-        } else {
-            if (path.getDeviation() == 0) {
-                buildableList.add(new ReturnExpression(String.format("%s.%s()", VARIABLE_NAME, builderBuildMethod.getName())));
-            } else {
-                String newVariableName = VARIABLE_NAME + "Built";
-                buildableList.add(CodeBlockBuildable.createVariableBuilt(builderBuildMethod.getReturnType(), newVariableName, VARIABLE_NAME, builderBuildMethod.getName()));
-
-                Object actual = Utils.callSupplierWrapper(() -> builderInfo.builderBuildMethod.invoke(path.getActualObject()));
-                reflectionMethodSequenceFinder.updateBuildableList(newVariableName, object, actual, buildableList);
-
-                buildableList.add(new ReturnExpression(newVariableName));
-            }
-        }
-
-        return buildableList;
     }
 
     private Method findBuildMethod(@NotNull Class<?> cls) {
@@ -382,8 +317,4 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             return o -> Utils.callSupplierWrapper(() -> method.invoke(o));
         }
     }
-
-    private static final String VARIABLE_NAME = "object";
-    private static final String BUILDER_CONSTRUCTOR_FOUND = "Builder constructor not found";
-    private static final String BUILDER_NOT_FOUND = "Builder not found";
 }

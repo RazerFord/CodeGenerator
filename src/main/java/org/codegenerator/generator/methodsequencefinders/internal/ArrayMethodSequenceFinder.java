@@ -1,6 +1,5 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
-import org.codegenerator.generator.codegenerators.buildables.Buildable;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.WrapperResultFinding;
 import org.codegenerator.history.History;
@@ -18,11 +17,6 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
     @Override
     public boolean canTry(@NotNull Object object) {
         return object.getClass().isArray();
-    }
-
-    @Override
-    public List<Buildable> findBuildableList(@NotNull Object object) {
-        throw new UnsupportedOperationException();
     }
 
     @Override
