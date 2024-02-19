@@ -5,8 +5,10 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import kotlin.Pair;
 import org.apache.commons.lang3.StringUtils;
+import org.codegenerator.generator.codegenerators.ContextGenerator;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryNode;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
@@ -27,7 +29,12 @@ public class ArrayCodeGenerationStrategy implements CodeGenerationStrategy {
     }
 
     @Override
-    public CodeGenerationStrategy generate(
+    public CodeGenerationStrategy generate(@NotNull ContextGenerator context) {
+        return generate(context.getTypeBuilder(), context.getStack(), context.getHistory());
+    }
+
+    @Contract("_, _, _ -> new")
+    private @NotNull CodeGenerationStrategy generate(
             TypeSpec.@NotNull Builder typeBuilder,
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
             History<Executable> history

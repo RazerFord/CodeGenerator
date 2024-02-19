@@ -4,7 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import kotlin.Pair;
-import org.codegenerator.history.History;
+import org.codegenerator.generator.codegenerators.ContextGenerator;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
@@ -28,10 +28,14 @@ public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
     }
 
     @Override
-    public CodeGenerationStrategy generate(
+    public CodeGenerationStrategy generate(@NotNull ContextGenerator context) {
+        return generate(context.getTypeBuilder(), context.getStack());
+    }
+
+    @Contract("_, _ -> new")
+    private @NotNull CodeGenerationStrategy generate(
             TypeSpec.@NotNull Builder typeBuilder,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
-            History<Executable> history
+            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
     ) {
         Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
         HistoryNode<Executable> historyNode = p.getFirst();

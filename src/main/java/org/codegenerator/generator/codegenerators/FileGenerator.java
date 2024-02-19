@@ -28,15 +28,30 @@ public class FileGenerator {
             String methodName
     ) {
         TypeSpec.Builder typeBuilder = getTypeBuilder(className);
-        MethodSpec.Builder methodBuilder = getMethodBuilder(source, methodName);
+        @NotNull ContextGenerator context = buildContext(typeBuilder, source, methodName, history);
+        Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack = context.getStack();
 
-        Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack = new ArrayDeque<>(Collections.singleton(new Pair<>(history.get(source), methodBuilder)));
         while (!stack.isEmpty()) {
-            codeGenerationStrategy = codeGenerationStrategy.generate(typeBuilder, stack, history);
+            codeGenerationStrategy = codeGenerationStrategy.generate(context);
         }
 
-        TypeSpec type = typeBuilder.build();
-        return JavaFile.builder(packageName, type).build();
+        return JavaFile.builder(packageName, typeBuilder.build()).build();
+    }
+
+    @NotNull ContextGenerator buildContext(
+            TypeSpec.Builder typeBuilder,
+            Object source,
+            String methodName,
+            @NotNull History<Executable> history
+    ) {
+        MethodSpec.Builder methodBuilder = getMethodBuilder(source, methodName);
+        Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack = new ArrayDeque<>(Collections.singleton(new Pair<>(history.get(source), methodBuilder)));
+
+        return ContextGenerator.builder()
+                .setHistory(history)
+                .setTypeBuilder(typeBuilder)
+                .setStack(stack)
+                .build();
     }
 
     @NotNull
