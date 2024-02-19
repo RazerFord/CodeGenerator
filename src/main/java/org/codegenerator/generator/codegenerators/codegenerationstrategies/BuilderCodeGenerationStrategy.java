@@ -44,10 +44,10 @@ public class BuilderCodeGenerationStrategy implements CodeGenerationStrategy {
         HistoryNode<Executable> historyNode = p.getFirst();
         MethodSpec.Builder methodBuilder = p.getSecond();
 
-        List<Pair<? extends Statement, List<HistoryCall<Executable>>>> pairs = splitListIntoZones(historyNode.getHistoryCalls());
+        List<Pair<? extends Statement, List<HistoryCall<Executable>>>> pairs = splitListIntoZones(historyNode.getHistoryCalls(), new CallCreator(typeBuilder, stack));
 
         for (Pair<? extends Statement, List<HistoryCall<Executable>>> pair : pairs) {
-            process(pair, typeBuilder, methodBuilder, stack);
+            process(pair, methodBuilder);
         }
         reflectionCodeGeneration.generate(variableName, typeBuilder, p, stack);
         methodBuilder.addStatement("return $L", variableName);
@@ -56,33 +56,29 @@ public class BuilderCodeGenerationStrategy implements CodeGenerationStrategy {
     }
 
     private @NotNull List<Pair<? extends Statement, List<HistoryCall<Executable>>>> splitListIntoZones(
-            @NotNull List<HistoryCall<Executable>> calls
+            @NotNull List<HistoryCall<Executable>> calls,
+            CallCreator callCreator
     ) {
         int length = calls.size();
         return Arrays.asList(
-                new Pair<>(new Init(), calls.subList(0, 1)),
-                new Pair<>(new Call(), calls.subList(1, length - 1)),
-                new Pair<>(new Complete(variableName), calls.subList(length - 1, length))
+                new Pair<>(new Init(callCreator), calls.subList(0, 1)),
+                new Pair<>(new Call(callCreator), calls.subList(1, length - 1)),
+                new Pair<>(new Complete(variableName, callCreator), calls.subList(length - 1, length))
         );
     }
 
     private void process(
             @NotNull Pair<? extends Statement, List<HistoryCall<Executable>>> pair,
-            TypeSpec.Builder typeBuilder,
-            MethodSpec.Builder methodBuilder,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            MethodSpec.Builder methodBuilder
     ) {
         Statement statement = pair.getFirst();
 
         for (HistoryCall<Executable> call : pair.getSecond()) {
-
             CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
-            statement.append(codeBlockBuilder, call.getMethod(), builderVariableName);
 
-            String suffix = String.valueOf(typeBuilder.methodSpecs.size() + stack.size());
-            CodeBlock codeBlock = codeBlockBuilder.add(Utils.createCall(suffix, stack, call)).build();
+            statement.append(codeBlockBuilder, call, builderVariableName);
 
-            methodBuilder.addStatement(codeBlock);
+            methodBuilder.addStatement(codeBlockBuilder.build());
         }
     }
 
@@ -90,20 +86,27 @@ public class BuilderCodeGenerationStrategy implements CodeGenerationStrategy {
     private interface Statement {
         void append(
                 CodeBlock.Builder codeBlockBuilder,
-                Executable executable,
+                HistoryCall<Executable> call,
                 String variableName
         );
     }
 
     private static class Init implements Statement {
+        private final CallCreator callCreator;
+
+        public Init(CallCreator callCreator) {
+            this.callCreator = callCreator;
+        }
+
         @Contract(pure = true)
         @Override
         public void append(
                 CodeBlock.@NotNull Builder codeBlockBuilder,
-                @NotNull Executable executable,
+                @NotNull HistoryCall<Executable> call,
                 String variableName
         ) {
             CodeBlock codeBlock;
+            Executable executable = call.getMethod();
             Class<?> declaringClass = executable.getDeclaringClass();
             if (executable instanceof Constructor<?>) {
                 codeBlock = CodeBlock.builder()
@@ -119,38 +122,49 @@ public class BuilderCodeGenerationStrategy implements CodeGenerationStrategy {
             } else {
                 throw new IllegalArgumentException();
             }
-            codeBlockBuilder.add(codeBlock);
+            codeBlockBuilder.add(codeBlock)
+                    .add(callCreator.create(call));
         }
     }
 
     private static class Call implements Statement {
+        private final CallCreator callCreator;
+
+        public Call(CallCreator callCreator) {
+            this.callCreator = callCreator;
+        }
+
         @Contract(pure = true)
         @Override
         public void append(
                 CodeBlock.@NotNull Builder codeBlockBuilder,
-                @NotNull Executable executable,
+                @NotNull HistoryCall<Executable> call,
                 String variableName
         ) {
-            codeBlockBuilder.add("$L.$L", variableName, executable.getName());
+            codeBlockBuilder.add("$L.$L", variableName, call.getMethod().getName())
+                    .add(callCreator.create(call));
         }
     }
 
     private static class Complete implements Statement {
         private final String newVariableName;
+        private final CallCreator callCreator;
 
-        public Complete(String newVariableName) {
+        public Complete(String newVariableName, CallCreator callCreator) {
             this.newVariableName = newVariableName;
+            this.callCreator = callCreator;
         }
 
         @Contract(pure = true)
         @Override
         public void append(
                 CodeBlock.@NotNull Builder codeBlockBuilder,
-                @NotNull Executable executable,
+                @NotNull HistoryCall<Executable> call,
                 String variableName
         ) {
-            Method method = (Method) executable;
-            codeBlockBuilder.add("$T $L = $L.$L", method.getReturnType(), newVariableName, variableName, executable.getName());
+            Method method = (Method) call.getMethod();
+            codeBlockBuilder.add("$T $L = $L.$L", method.getReturnType(), newVariableName, variableName, method.getName())
+                    .add(callCreator.create(call));
         }
     }
 }

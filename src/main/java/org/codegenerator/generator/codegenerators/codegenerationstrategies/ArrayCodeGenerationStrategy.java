@@ -53,9 +53,8 @@ public class ArrayCodeGenerationStrategy implements CodeGenerationStrategy {
     ) {
         methodBuilder.addStatement(initArray(object));
         for (int i = 0, length = Array.getLength(object); i < length; i++) {
-            String suffix = String.valueOf(typeBuilder.methodSpecs.size() + stack.size());
-            String call = Utils.toRepresentation(suffix, history.get(Array.get(object, i)), stack);
-
+            UniqueMethodNameGenerator nameGenerator = new UniqueMethodNameGenerator(typeBuilder, stack);
+            String call = Utils.toRepresentation(nameGenerator, history.get(Array.get(object, i)), stack);
             methodBuilder.addStatement("$L[$L] = $L", variableName, i, call);
         }
         methodBuilder.addStatement("return $L", variableName);

@@ -49,8 +49,8 @@ public class ReflectionCodeGeneration {
         methodBuilder.addCode(beginTryCatch());
 
         for (SetterUsingReflection<Executable> call : historyNode.getSetterUsingReflections()) {
-            String suffix = String.valueOf(typeBuilder.methodSpecs.size() + stack.size());
-            String value = Utils.toRepresentation(suffix, call.getHistoryArg(), stack);
+            UniqueMethodNameGenerator nameGenerator = new UniqueMethodNameGenerator(typeBuilder, stack);
+            String value = Utils.toRepresentation(nameGenerator, call.getHistoryArg(), stack);
             methodBuilder.addCode(setField(variableName, value, call.getField()));
         }
         methodBuilder.addCode(endTryCatch());

@@ -3,7 +3,6 @@ package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import kotlin.Pair;
-import org.apache.commons.lang3.StringUtils;
 import org.codegenerator.generator.converters.PrimitiveConverter;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
@@ -23,7 +22,7 @@ public class Utils {
     }
 
     public static @NotNull CodeBlock createCall(
-            String methodNameSuffix,
+            UniqueMethodNameGenerator nameGenerator,
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
             @NotNull HistoryCall<Executable> call
     ) {
@@ -33,7 +32,7 @@ public class Utils {
 
         for (int i = 0; i < args.length; i++) {
             String argFmt = String.format("arg%s", i);
-            argsMap.put(argFmt, toRepresentation(methodNameSuffix, call.getHistoryArg(i), stack));
+            argsMap.put(argFmt, toRepresentation(nameGenerator, call.getHistoryArg(i), stack));
             fmt.append(String.format("$%s:L,", argFmt));
         }
         if (args.length > 0) fmt.setCharAt(fmt.length() - 1, ')');
@@ -45,7 +44,7 @@ public class Utils {
     }
 
     public static String toRepresentation(
-            String methodNameSuffix,
+            UniqueMethodNameGenerator nameGenerator,
             @NotNull HistoryNode<Executable> node,
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
     ) {
@@ -56,7 +55,7 @@ public class Utils {
             return PrimitiveConverter.convert(arg);
         } else {
             Class<?> typeArg = arg.getClass();
-            String methodName = createNewMethodName(typeArg, methodNameSuffix);
+            String methodName = nameGenerator.generate(typeArg);
             MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName)
                     .addModifiers(PUBLIC, STATIC)
                     .returns(typeArg);
@@ -64,14 +63,6 @@ public class Utils {
             stack.add(new Pair<>(node, methodBuilder));
             return callMethod(methodName);
         }
-    }
-
-    public static @NotNull String createNewMethodName(@NotNull Class<?> clazz, String methodNameSuffix) {
-        String simpleName = clazz.getSimpleName();
-        if (clazz.isArray()) {
-            return String.format("createArray%s%s", StringUtils.capitalize(simpleName.replaceAll("(\\[])", "")), methodNameSuffix);
-        }
-        return String.format("create%s%s", StringUtils.capitalize(simpleName), methodNameSuffix);
     }
 
     @Contract(pure = true)

@@ -15,10 +15,12 @@ public class StrategyFactory {
     }
 
     private static final Map<Class<?>, Supplier<CodeGenerationStrategy>> CLASS_TO_STRATEGY = getClassToStrategy();
+    private static final Map<Class<?>, Supplier<CodeGenerationStrategy>> CLASS_TO_GENERIC_STRATEGY = getClassToGenericStrategy();
 
     @Contract("_ -> new")
     static @NotNull CodeGenerationStrategy getCodeGenerationStrategy(@NotNull HistoryNode<?> node) {
-        return CLASS_TO_STRATEGY.getOrDefault(node.getCreatorType(), () -> {
+        Map<Class<?>, Supplier<CodeGenerationStrategy>> map = node.isGeneric() ? CLASS_TO_GENERIC_STRATEGY : CLASS_TO_STRATEGY;
+        return map.getOrDefault(node.getCreatorType(), () -> {
             throw new IllegalArgumentException();
         }).get();
     }
@@ -27,6 +29,12 @@ public class StrategyFactory {
         Map<Class<?>, Supplier<CodeGenerationStrategy>> map = new HashMap<>();
         map.put(POJOMethodSequenceFinder.class, POJOCodeGenerationStrategy::new);
         map.put(BuilderMethodSequenceFinder.class, BuilderCodeGenerationStrategy::new);
+        return map;
+    }
+
+    private static @NotNull Map<Class<?>, Supplier<CodeGenerationStrategy>> getClassToGenericStrategy() {
+        Map<Class<?>, Supplier<CodeGenerationStrategy>> map = new HashMap<>();
+        map.put(POJOMethodSequenceFinder.class, POJOGenericCodeGenerationStrategy::new);
         return map;
     }
 }
