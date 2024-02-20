@@ -193,7 +193,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             int[] index = new int[]{0};
             Class<?>[] classes1 = new Class[jcMethod.getParameters().size()];
             jcMethod.getParameters()
-                    .forEach(it -> classes1[index[0]++] = Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getName())));
+                    .forEach(it -> classes1[index[0]++] = Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getType().getTypeName())));
 
             return loadedClass.getMethod(jcMethod.getName(), classes1);
         } catch (

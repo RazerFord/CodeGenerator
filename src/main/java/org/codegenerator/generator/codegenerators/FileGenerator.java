@@ -1,9 +1,8 @@
 package org.codegenerator.generator.codegenerators;
 
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 import kotlin.Pair;
+import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
 import org.codegenerator.generator.codegenerators.codegenerationstrategies.BeginCodeGenerationStrategy;
 import org.codegenerator.generator.codegenerators.codegenerationstrategies.CodeGenerationStrategy;
 import org.codegenerator.history.History;
@@ -52,6 +51,7 @@ public class FileGenerator {
         return ContextGenerator.builder()
                 .setTypeBuilder(typeBuilder)
                 .setMethods(new ArrayList<>())
+                .setGenericResolver(new GenericResolver(history))
                 .setStack(stack)
                 .setHistory(history)
                 .build();

@@ -1,10 +1,9 @@
 package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 import kotlin.Pair;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
+import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
@@ -30,10 +29,11 @@ public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy
 
     @Override
     public CodeGenerationStrategy generate(@NotNull ContextGenerator context) {
-        return generate(context.getTypeBuilder(), context.getMethods(), context.getStack());
+        return generate(context.getGenericResolver(), context.getTypeBuilder(), context.getMethods(), context.getStack());
     }
 
     private @NotNull CodeGenerationStrategy generate(
+            GenericResolver resolver,
             TypeSpec.@NotNull Builder typeBuilder,
             @NotNull List<MethodSpec.Builder> methods,
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
@@ -42,7 +42,9 @@ public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy
         HistoryNode<Executable> historyNode = p.getFirst();
         MethodSpec.Builder methodBuilder = p.getSecond();
 
-        Statement statement = new Init(new CallCreator(methods, stack));
+        addGenericVariable(resolver, historyNode, methodBuilder);
+
+        Statement statement = new Init(new CallCreator(methods, stack), resolver, historyNode);
 
         for (HistoryCall<Executable> call : historyNode.getHistoryCalls()) {
             CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
@@ -67,9 +69,17 @@ public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy
 
     private static class Init implements Statement {
         private final CallCreator callCreator;
+        private final GenericResolver resolver;
+        private final HistoryNode<Executable> node;
 
-        public Init(CallCreator callCreator) {
+        public Init(
+                CallCreator callCreator,
+                GenericResolver resolver,
+                HistoryNode<Executable> node
+        ) {
             this.callCreator = callCreator;
+            this.resolver = resolver;
+            this.node = node;
         }
 
 
@@ -80,7 +90,7 @@ public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy
                 @NotNull HistoryCall<Executable> call,
                 String variableName
         ) {
-            codeBlockBuilder.add("$1T $2L = new $1T", call.getMethod().getDeclaringClass(), variableName)
+            codeBlockBuilder.add("$T $L = new $T<>", resolver.resolve(node), variableName, call.getMethod().getDeclaringClass())
                     .add(callCreator.create(call));
             return new Call(callCreator);
         }
@@ -103,6 +113,22 @@ public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy
             codeBlockBuilder.add("$L.$L", variableName, call.getMethod().getName())
                     .add(callCreator.create(call));
             return this;
+        }
+    }
+
+    private void addGenericVariable(
+            @NotNull GenericResolver resolver,
+            HistoryNode<Executable> node,
+            MethodSpec.Builder method
+    ) {
+        TypeName typeName = resolver.resolve(node);
+        if (typeName instanceof ParameterizedTypeName) {
+            ParameterizedTypeName typeName1 = (ParameterizedTypeName) typeName;
+            for (TypeName typeName2 : typeName1.typeArguments) {
+                if (typeName2 instanceof TypeVariableName) {
+                    method.addTypeVariable((TypeVariableName) typeName2);
+                }
+            }
         }
     }
 }

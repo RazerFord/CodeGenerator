@@ -1,9 +1,9 @@
 package org.codegenerator.generator.codegenerators;
 
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import kotlin.Pair;
+import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
@@ -12,25 +12,24 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Executable;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 
 public class ContextGenerator {
     private final TypeSpec.Builder typeBuilder;
     private final List<MethodSpec.Builder> methods;
-    private final Map<TypeName, TypeName> typeByParameter;
+    private final GenericResolver genericResolver;
     private final Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack;
     private final History<Executable> history;
 
     public ContextGenerator(
             TypeSpec.Builder typeBuilder,
             List<MethodSpec.Builder> methods,
-            Map<TypeName, TypeName> typeByParameter,
+            GenericResolver genericResolver,
             Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
             History<Executable> history
     ) {
         this.typeBuilder = typeBuilder;
         this.methods = methods;
-        this.typeByParameter = typeByParameter;
+        this.genericResolver = genericResolver;
         this.stack = stack;
         this.history = history;
     }
@@ -43,8 +42,8 @@ public class ContextGenerator {
         return methods;
     }
 
-    public Map<TypeName, TypeName> getTypeByParameter() {
-        return typeByParameter;
+    public GenericResolver getGenericResolver() {
+        return genericResolver;
     }
 
     public Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> getStack() {
@@ -66,7 +65,7 @@ public class ContextGenerator {
 
         private TypeSpec.Builder typeBuilder;
         private List<MethodSpec.Builder> methods;
-        private Map<TypeName, TypeName> typeByParameter;
+        private GenericResolver genericResolver;
         private Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack;
         private History<Executable> history;
 
@@ -88,12 +87,12 @@ public class ContextGenerator {
             return this;
         }
 
-        public Map<TypeName, TypeName> getTypeByParameter() {
-            return typeByParameter;
+        public GenericResolver getGenericResolver() {
+            return genericResolver;
         }
 
-        public Builder setTypeByParameter(Map<TypeName, TypeName> typeByParameter) {
-            this.typeByParameter = typeByParameter;
+        public Builder setGenericResolver(GenericResolver genericResolver) {
+            this.genericResolver = genericResolver;
             return this;
         }
 
@@ -116,7 +115,7 @@ public class ContextGenerator {
         }
 
         public ContextGenerator build() {
-            return new ContextGenerator(typeBuilder, methods, typeByParameter, stack, history);
+            return new ContextGenerator(typeBuilder, methods, genericResolver, stack, history);
         }
     }
 }

@@ -18,6 +18,7 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.swap;
@@ -26,6 +27,12 @@ public class Utils {
     public static <T extends RuntimeException> void throwIf(boolean cond, T exception) {
         if (cond) {
             throw exception;
+        }
+    }
+
+    public static <T extends RuntimeException> void throwIf(boolean cond, Supplier<T> supplier) {
+        if (cond) {
+            throw supplier.get();
         }
     }
 
