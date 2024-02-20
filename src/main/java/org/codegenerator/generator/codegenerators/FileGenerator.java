@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 
@@ -35,6 +36,7 @@ public class FileGenerator {
             codeGenerationStrategy = codeGenerationStrategy.generate(context);
         }
 
+        context.getMethods().forEach(m -> typeBuilder.addMethod(m.build()));
         return JavaFile.builder(packageName, typeBuilder.build()).build();
     }
 
@@ -48,9 +50,10 @@ public class FileGenerator {
         Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack = new ArrayDeque<>(Collections.singleton(new Pair<>(history.get(source), methodBuilder)));
 
         return ContextGenerator.builder()
-                .setHistory(history)
                 .setTypeBuilder(typeBuilder)
+                .setMethods(new ArrayList<>())
                 .setStack(stack)
+                .setHistory(history)
                 .build();
     }
 

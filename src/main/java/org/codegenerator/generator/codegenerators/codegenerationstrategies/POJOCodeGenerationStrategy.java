@@ -12,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
 import java.util.Deque;
+import java.util.List;
 
 public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
     private static final String VARIABLE_NAME = "object";
@@ -29,29 +30,30 @@ public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
 
     @Override
     public CodeGenerationStrategy generate(@NotNull ContextGenerator context) {
-        return generate(context.getTypeBuilder(), context.getStack());
+        return generate(context.getTypeBuilder(), context.getMethods(), context.getStack());
     }
 
-    @Contract("_, _ -> new")
     private @NotNull CodeGenerationStrategy generate(
             TypeSpec.@NotNull Builder typeBuilder,
+            @NotNull List<MethodSpec.Builder> methods,
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
     ) {
         Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
         HistoryNode<Executable> historyNode = p.getFirst();
         MethodSpec.Builder methodBuilder = p.getSecond();
 
-        Statement statement = new Init(new CallCreator(typeBuilder, stack));
+        Statement statement = new Init(new CallCreator(methods, stack));
 
         for (HistoryCall<Executable> call : historyNode.getHistoryCalls()) {
             CodeBlock.Builder codeBlockBuilder = CodeBlock.builder();
             statement = statement.append(codeBlockBuilder, call, variableName);
             methodBuilder.addStatement(codeBlockBuilder.build());
         }
-        reflectionCodeGeneration.generate(variableName, typeBuilder, p, stack);
+        reflectionCodeGeneration.generate(variableName, typeBuilder, methods, p, stack);
         methodBuilder.addStatement("return $L", variableName);
 
-        typeBuilder.addMethod(methodBuilder.build());
+        methods.add(methodBuilder);
+
         return new BeginCodeGenerationStrategy();
     }
 

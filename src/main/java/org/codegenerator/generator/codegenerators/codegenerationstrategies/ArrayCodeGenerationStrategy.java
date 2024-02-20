@@ -2,18 +2,17 @@ package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
 import kotlin.Pair;
 import org.apache.commons.lang3.StringUtils;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryNode;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.util.Deque;
+import java.util.List;
 
 public class ArrayCodeGenerationStrategy implements CodeGenerationStrategy {
     private static final String VARIABLE_NAME = "object";
@@ -30,12 +29,11 @@ public class ArrayCodeGenerationStrategy implements CodeGenerationStrategy {
 
     @Override
     public CodeGenerationStrategy generate(@NotNull ContextGenerator context) {
-        return generate(context.getTypeBuilder(), context.getStack(), context.getHistory());
+        return generate(context.getMethods(), context.getStack(), context.getHistory());
     }
 
-    @Contract("_, _, _ -> new")
     private @NotNull CodeGenerationStrategy generate(
-            TypeSpec.@NotNull Builder typeBuilder,
+            @NotNull List<MethodSpec.Builder> methods,
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
             History<Executable> history
     ) {
@@ -44,9 +42,9 @@ public class ArrayCodeGenerationStrategy implements CodeGenerationStrategy {
         Object object = p.getFirst().getObject();
         MethodSpec.Builder methodBuilder = p.getSecond();
 
-        addStatements(object, history, typeBuilder, methodBuilder, stack);
+        addStatements(object, history, methods, methodBuilder, stack);
 
-        typeBuilder.addMethod(methodBuilder.build());
+        methods.add(methodBuilder);
 
         return new BeginCodeGenerationStrategy();
     }
@@ -54,13 +52,13 @@ public class ArrayCodeGenerationStrategy implements CodeGenerationStrategy {
     private void addStatements(
             @NotNull Object object,
             @NotNull History<Executable> history,
-            TypeSpec.@NotNull Builder typeBuilder,
+            @NotNull List<MethodSpec.Builder> methods,
             MethodSpec.@NotNull Builder methodBuilder,
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
     ) {
         methodBuilder.addStatement(initArray(object));
         for (int i = 0, length = Array.getLength(object); i < length; i++) {
-            UniqueMethodNameGenerator nameGenerator = new UniqueMethodNameGenerator(typeBuilder, stack);
+            UniqueMethodNameGenerator nameGenerator = new UniqueMethodNameGenerator(methods, stack);
             String call = Utils.toRepresentation(nameGenerator, history.get(Array.get(object, i)), stack);
             methodBuilder.addStatement("$L[$L] = $L", variableName, i, call);
         }

@@ -36,26 +36,27 @@ public class BuilderCodeGenerationStrategy implements CodeGenerationStrategy {
 
     @Override
     public CodeGenerationStrategy generate(@NotNull ContextGenerator context) {
-        return generate(context.getTypeBuilder(), context.getStack());
+        return generate(context.getTypeBuilder(), context.getMethods(), context.getStack());
     }
 
-    @Contract("_, _ -> new")
     private @NotNull CodeGenerationStrategy generate(
             TypeSpec.@NotNull Builder typeBuilder,
+            @NotNull List<MethodSpec.Builder> methods,
             @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
     ) {
         Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
         HistoryNode<Executable> historyNode = p.getFirst();
         MethodSpec.Builder methodBuilder = p.getSecond();
 
-        List<Pair<? extends Statement, List<HistoryCall<Executable>>>> pairs = splitListIntoZones(historyNode.getHistoryCalls(), new CallCreator(typeBuilder, stack));
+        List<Pair<? extends Statement, List<HistoryCall<Executable>>>> pairs = splitListIntoZones(historyNode.getHistoryCalls(), new CallCreator(methods, stack));
 
         for (Pair<? extends Statement, List<HistoryCall<Executable>>> pair : pairs) {
             process(pair, methodBuilder);
         }
-        reflectionCodeGeneration.generate(variableName, typeBuilder, p, stack);
+        reflectionCodeGeneration.generate(variableName, typeBuilder, methods, p, stack);
         methodBuilder.addStatement("return $L", variableName);
-        typeBuilder.addMethod(methodBuilder.build());
+        methods.add(methodBuilder);
+
         return new BeginCodeGenerationStrategy();
     }
 

@@ -9,10 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -36,6 +33,7 @@ public class ReflectionCodeGeneration {
     public void generate(
             String variableName,
             TypeSpec.Builder typeBuilder,
+            List<MethodSpec.Builder> methods,
             @NotNull Pair<HistoryNode<Executable>, MethodSpec.Builder> historyNodeBuilderPair,
             Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
     ) {
@@ -49,7 +47,7 @@ public class ReflectionCodeGeneration {
         methodBuilder.addCode(beginTryCatch());
 
         for (SetterUsingReflection<Executable> call : historyNode.getSetterUsingReflections()) {
-            UniqueMethodNameGenerator nameGenerator = new UniqueMethodNameGenerator(typeBuilder, stack);
+            UniqueMethodNameGenerator nameGenerator = new UniqueMethodNameGenerator(methods, stack);
             String value = Utils.toRepresentation(nameGenerator, call.getHistoryArg(), stack);
             methodBuilder.addCode(setField(variableName, value, call.getField()));
         }

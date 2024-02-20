@@ -13,6 +13,7 @@ import java.lang.reflect.Executable;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
@@ -27,17 +28,14 @@ public class Utils {
             @NotNull HistoryCall<Executable> call
     ) {
         Map<String, String> argsMap = new HashMap<>();
-        StringBuilder fmt = new StringBuilder("(");
+        StringJoiner fmt = new StringJoiner(", ", "(", ")");
         Object[] args = call.getArgs();
 
         for (int i = 0; i < args.length; i++) {
             String argFmt = String.format("arg%s", i);
             argsMap.put(argFmt, toRepresentation(nameGenerator, call.getHistoryArg(i), stack));
-            fmt.append(String.format("$%s:L,", argFmt));
+            fmt.add(String.format("$%s:L", argFmt));
         }
-        if (args.length > 0) fmt.setCharAt(fmt.length() - 1, ')');
-        else fmt.append(")");
-
         return CodeBlock.builder()
                 .addNamed(fmt.toString(), argsMap)
                 .build();
