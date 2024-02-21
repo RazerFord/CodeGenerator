@@ -1,8 +1,8 @@
 package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
-import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.*;
 import kotlin.Pair;
+import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
 import org.codegenerator.generator.converters.PrimitiveConverter;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
@@ -60,6 +60,24 @@ public class Utils {
 
             stack.add(new Pair<>(node, methodBuilder));
             return callMethod(methodName);
+        }
+    }
+
+    public static void addGenericVariable(
+            @NotNull GenericResolver resolver,
+            HistoryNode<Executable> node,
+            MethodSpec.Builder method
+    ) {
+        TypeName typeName = resolver.resolve(node);
+        addGenericVariableHelper(typeName, method);
+    }
+
+    private static void addGenericVariableHelper(TypeName typeName, MethodSpec.Builder method) {
+        if (typeName instanceof TypeVariableName) {
+            method.addTypeVariable((TypeVariableName) typeName);
+        } else if (typeName instanceof ParameterizedTypeName) {
+            ParameterizedTypeName typeName1 = (ParameterizedTypeName) typeName;
+            typeName1.typeArguments.forEach(it -> addGenericVariableHelper(it, method));
         }
     }
 

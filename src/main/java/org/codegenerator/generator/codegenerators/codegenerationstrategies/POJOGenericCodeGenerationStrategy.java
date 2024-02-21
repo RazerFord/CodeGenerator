@@ -13,6 +13,8 @@ import java.lang.reflect.Executable;
 import java.util.Deque;
 import java.util.List;
 
+import static org.codegenerator.generator.codegenerators.codegenerationstrategies.Utils.addGenericVariable;
+
 public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy {
     private static final String VARIABLE_NAME = "object";
 
@@ -113,24 +115,6 @@ public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy
             codeBlockBuilder.add("$L.$L", variableName, call.getMethod().getName())
                     .add(callCreator.create(call));
             return this;
-        }
-    }
-
-    private void addGenericVariable(
-            @NotNull GenericResolver resolver,
-            HistoryNode<Executable> node,
-            MethodSpec.Builder method
-    ) {
-        TypeName typeName = resolver.resolve(node);
-        addGenericVariableHelper(typeName, method);
-    }
-
-    private void addGenericVariableHelper(TypeName typeName, MethodSpec.Builder method) {
-        if (typeName instanceof TypeVariableName) {
-            method.addTypeVariable((TypeVariableName) typeName);
-        } else if (typeName instanceof ParameterizedTypeName) {
-            ParameterizedTypeName typeName1 = (ParameterizedTypeName) typeName;
-            typeName1.typeArguments.forEach(it -> addGenericVariableHelper(it, method));
         }
     }
 }

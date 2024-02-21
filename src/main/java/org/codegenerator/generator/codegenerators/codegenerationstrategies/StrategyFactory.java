@@ -35,6 +35,7 @@ public class StrategyFactory {
     private static @NotNull Map<Class<?>, Supplier<CodeGenerationStrategy>> getClassToGenericStrategy() {
         Map<Class<?>, Supplier<CodeGenerationStrategy>> map = new HashMap<>();
         map.put(POJOMethodSequenceFinder.class, POJOGenericCodeGenerationStrategy::new);
+        map.put(BuilderMethodSequenceFinder.class, BuilderGenericCodeGenerationStrategy::new);
         return map;
     }
 }

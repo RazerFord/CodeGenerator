@@ -16,7 +16,7 @@ import java.util.*;
 
 public class GenericResolver {
     private final Map<HistoryType, TriConsumer<History<Executable>, HistoryNode<Executable>, Map<Object, Type>>> typeToConsumer = new EnumMap<>(HistoryType.class);
-    private final Map<Object, TypeName> cachedTypes = new IdentityHashMap<>();
+    private final Map<Object, TypeName> cachedTypeNames = new IdentityHashMap<>();
     private final History<Executable> history;
 
     public GenericResolver(History<Executable> history) {
@@ -26,9 +26,9 @@ public class GenericResolver {
     }
 
     public TypeName resolve(@NotNull HistoryNode<Executable> node) {
-        return cachedTypes.computeIfAbsent(node.getObject(), o1 -> {
+        return cachedTypeNames.computeIfAbsent(node.getObject(), o1 -> {
             recursiveResolve(history, node, new HashMap<>());
-            return cachedTypes.get(o1);
+            return cachedTypeNames.get(o1);
         });
     }
 
@@ -52,7 +52,7 @@ public class GenericResolver {
     ) {
         Object array = node.getObject();
         Class<?> type = array.getClass();
-        cachedTypes.put(array, TypeName.get(type));
+        cachedTypeNames.put(array, TypeName.get(type));
         for (int i = 0, length = Array.getLength(array); i < length; i++) {
             recursiveResolve(history, history.get(Array.get(array, i)), typeToType);
         }
@@ -65,7 +65,7 @@ public class GenericResolver {
     ) {
         Object o = node.getObject();
         Class<?> type = node.getObject().getClass();
-        cachedTypes.put(o, TypeName.get(type));
+        cachedTypeNames.put(o, TypeName.get(type));
     }
 
     private void processObject(
@@ -78,7 +78,7 @@ public class GenericResolver {
         TypeVariable<? extends GenericDeclaration>[] typeParameters = type.getTypeParameters();
 
         if (typeParameters.length == 0) {
-            cachedTypes.put(object, ClassName.get(type));
+            cachedTypeNames.put(object, ClassName.get(type));
             return;
         }
         Map<Type, Object> typeToObject = new HashMap<>();
@@ -96,15 +96,37 @@ public class GenericResolver {
         TypeName[] types = new TypeName[typeParameters.length];
         for (int i = 0; i < typeParameters.length; i++) {
             TypeVariable<? extends GenericDeclaration> typeVariable = typeParameters[i];
-            types[i] = cachedTypes.getOrDefault(typeToObject.get(typeVariable), TypeVariableName.get(typeVariable));
+            types[i] = getType(typeToObject, typeVariable);
         }
         TypeName parameterizedTypeName = ParameterizedTypeName.get(rawType, types);
-        cachedTypes.put(object, parameterizedTypeName);
+        cachedTypeNames.put(object, parameterizedTypeName);
+    }
+
+    private TypeName getType(@NotNull Map<Type, Object> typeToObject, TypeVariable<? extends GenericDeclaration> typeVariable) {
+        return cachedTypeNames.getOrDefault(typeToObject.get(typeVariable), TypeVariableName.get(typeVariable));
     }
 
     private void init() {
         typeToConsumer.put(HistoryType.PRIMITIVE, this::processPrimitive);
         typeToConsumer.put(HistoryType.ARRAY, this::processArray);
         typeToConsumer.put(HistoryType.OBJECT, this::processObject);
+    }
+
+    public static class GenericTypeName {
+        private final Class<?> clazz;
+        private final List<Map.Entry<TypeVariable<? extends GenericDeclaration>, TypeName>> types;
+
+        public GenericTypeName(Class<?> clazz, List<Map.Entry<TypeVariable<? extends GenericDeclaration>, TypeName>> types) {
+            this.clazz = clazz;
+            this.types = types;
+        }
+
+        public Class<?> getClazz() {
+            return clazz;
+        }
+
+        public Map.Entry<TypeVariable<? extends GenericDeclaration>, TypeName> getTypeByIndex(int i) {
+            return types.get(i);
+        }
     }
 }
