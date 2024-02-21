@@ -122,13 +122,15 @@ public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy
             MethodSpec.Builder method
     ) {
         TypeName typeName = resolver.resolve(node);
-        if (typeName instanceof ParameterizedTypeName) {
+        addGenericVariableHelper(typeName, method);
+    }
+
+    private void addGenericVariableHelper(TypeName typeName, MethodSpec.Builder method) {
+        if (typeName instanceof TypeVariableName) {
+            method.addTypeVariable((TypeVariableName) typeName);
+        } else if (typeName instanceof ParameterizedTypeName) {
             ParameterizedTypeName typeName1 = (ParameterizedTypeName) typeName;
-            for (TypeName typeName2 : typeName1.typeArguments) {
-                if (typeName2 instanceof TypeVariableName) {
-                    method.addTypeVariable((TypeVariableName) typeName2);
-                }
-            }
+            typeName1.typeArguments.forEach(it -> addGenericVariableHelper(it, method));
         }
     }
 }

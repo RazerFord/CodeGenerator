@@ -3,6 +3,7 @@ package org.codegenerator.generator.codegenerators.codegenerationelements;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeVariableName;
 import org.apache.commons.lang3.function.TriConsumer;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
@@ -14,33 +15,32 @@ import java.lang.reflect.*;
 import java.util.*;
 
 public class GenericResolver {
-    private final Map<HistoryType, TriConsumer<History<Executable>, HistoryNode<Executable>, Map<Type, Type>>> typeToConsumer = new EnumMap<>(HistoryType.class);
+    private final Map<HistoryType, TriConsumer<History<Executable>, HistoryNode<Executable>, Map<Object, Type>>> typeToConsumer = new EnumMap<>(HistoryType.class);
     private final Map<Object, TypeName> cachedTypes = new IdentityHashMap<>();
     private final History<Executable> history;
 
     public GenericResolver(History<Executable> history) {
         this.history = history;
-        typeToConsumer.put(HistoryType.PRIMITIVE, this::processPrimitive);
-        typeToConsumer.put(HistoryType.ARRAY, this::processArray);
-        typeToConsumer.put(HistoryType.OBJECT, this::processObject);
+
+        init();
     }
 
     public TypeName resolve(@NotNull HistoryNode<Executable> node) {
-        return resolve(node.getObject());
-    }
-
-    public TypeName resolve(Object o) {
-        HistoryNode<Executable> node = history.get(o);
         return cachedTypes.computeIfAbsent(node.getObject(), o1 -> {
             recursiveResolve(history, node, new HashMap<>());
             return cachedTypes.get(o1);
         });
     }
 
+    public TypeName resolve(Object o) {
+        HistoryNode<Executable> node = history.get(o);
+        return resolve(node);
+    }
+
     private void recursiveResolve(
             @NotNull History<Executable> history,
             @NotNull HistoryNode<Executable> node,
-            Map<Type, Type> typeToType
+            Map<Object, Type> typeToType
     ) {
         Objects.requireNonNull(typeToConsumer.get(node.getType())).accept(history, node, typeToType);
     }
@@ -48,61 +48,63 @@ public class GenericResolver {
     private void processArray(
             @NotNull History<Executable> history,
             @NotNull HistoryNode<Executable> node,
-            @NotNull Map<Type, Type> typeToType
+            @NotNull Map<Object, Type> typeToType
     ) {
-        Object o = node.getObject();
         Object array = node.getObject();
         Class<?> type = array.getClass();
-        typeToType.put(type, type);
+        cachedTypes.put(array, TypeName.get(type));
         for (int i = 0, length = Array.getLength(array); i < length; i++) {
             recursiveResolve(history, history.get(Array.get(array, i)), typeToType);
         }
-        cachedTypes.put(o, TypeName.get(type));
     }
 
     private void processPrimitive(
             @NotNull History<Executable> ignored,
             @NotNull HistoryNode<Executable> node,
-            @NotNull Map<Type, Type> typeToType
+            @NotNull Map<Object, Type> typeToType
     ) {
         Object o = node.getObject();
         Class<?> type = node.getObject().getClass();
-        typeToType.put(type, type);
         cachedTypes.put(o, TypeName.get(type));
     }
 
     private void processObject(
             @NotNull History<Executable> history,
             @NotNull HistoryNode<Executable> node,
-            @NotNull Map<Type, Type> typeToType
+            @NotNull Map<Object, Type> typeToType
     ) {
-        Class<?> clazz = node.getObject().getClass();
-        TypeVariable<? extends GenericDeclaration>[] typeParameters = clazz.getTypeParameters();
+        Object object = node.getObject();
+        Class<?> type = object.getClass();
+        TypeVariable<? extends GenericDeclaration>[] typeParameters = type.getTypeParameters();
 
         if (typeParameters.length == 0) {
-            cachedTypes.put(node.getObject(), ClassName.get(clazz));
+            cachedTypes.put(object, ClassName.get(type));
             return;
         }
-
-        Arrays.asList(typeParameters).forEach(tp -> typeToType.put(tp, tp));
-
+        Map<Type, Object> typeToObject = new HashMap<>();
         for (HistoryCall<Executable> call : node.getHistoryCalls()) {
             Type[] types = call.getMethod().getGenericParameterTypes();
             Object[] args = call.getArgs();
             assert types.length == args.length;
             for (int i = 0; i < types.length; i++) {
-                HistoryNode<Executable> next = call.getHistoryArg(i);
-                recursiveResolve(history, next, typeToType);
-                typeToType.put(types[i], typeToType.get(next.getObject().getClass()));
+                recursiveResolve(history, call.getHistoryArg(i), typeToType);
+                typeToObject.put(types[i], args[i]);
             }
         }
 
-        ClassName rawType = ClassName.get(clazz);
+        ClassName rawType = ClassName.get(type);
         TypeName[] types = new TypeName[typeParameters.length];
         for (int i = 0; i < typeParameters.length; i++) {
-            types[i] = TypeName.get(typeToType.get(typeParameters[i]));
+            TypeVariable<? extends GenericDeclaration> typeVariable = typeParameters[i];
+            types[i] = cachedTypes.getOrDefault(typeToObject.get(typeVariable), TypeVariableName.get(typeVariable));
         }
         TypeName parameterizedTypeName = ParameterizedTypeName.get(rawType, types);
-        cachedTypes.put(node.getObject(), parameterizedTypeName);
+        cachedTypes.put(object, parameterizedTypeName);
+    }
+
+    private void init() {
+        typeToConsumer.put(HistoryType.PRIMITIVE, this::processPrimitive);
+        typeToConsumer.put(HistoryType.ARRAY, this::processArray);
+        typeToConsumer.put(HistoryType.OBJECT, this::processObject);
     }
 }
