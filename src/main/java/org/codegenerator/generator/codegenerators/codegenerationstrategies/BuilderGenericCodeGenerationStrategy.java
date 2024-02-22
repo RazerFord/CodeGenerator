@@ -7,7 +7,7 @@ import kotlin.Pair;
 import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
 import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
-import org.codegenerator.generator.methodsequencefinders.internal.BuilderMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.internal.POJOMethodSequenceFinder;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
@@ -42,9 +42,14 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
     @Override
     public CodeGenerationStrategy generate(@NotNull ContextGenerator context) {
         HistoryNode<Executable> node = context.getStack().getFirst().getFirst();
+        MethodSpec.Builder methodBuilder = context.getStack().getFirst().getSecond();
+        GenericResolver resolver = context.getGenericResolver();
         Object builder = buildBuilder(node.getHistoryCalls());
+
         updateGenericResolver(builder, context.getGenericResolver(), context.getHistory(), node);
-        return generate(builder, context.getGenericResolver(), context.getTypeBuilder(), context.getMethods(), context.getStack());
+        addGenericVariable(resolver, node, methodBuilder);
+
+        return generate(builder, resolver, context.getTypeBuilder(), context.getMethods(), context.getStack());
     }
 
     private @NotNull CodeGenerationStrategy generate(
@@ -58,10 +63,8 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
         HistoryNode<Executable> historyNode = p.getFirst();
         MethodSpec.Builder methodBuilder = p.getSecond();
 
-        addGenericVariable(resolver, historyNode, methodBuilder);
-
         List<Pair<? extends Statement, List<HistoryCall<Executable>>>> pairs = splitListIntoZones(
-                builder, resolver, historyNode.getHistoryCalls(), new CallCreator(methods, stack)
+                historyNode.getObject(), builder, resolver, historyNode.getHistoryCalls(), new CallCreator(methods, stack)
         );
 
         for (Pair<? extends Statement, List<HistoryCall<Executable>>> pair : pairs) {
@@ -75,6 +78,7 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
     }
 
     private @NotNull List<Pair<? extends Statement, List<HistoryCall<Executable>>>> splitListIntoZones(
+            Object object,
             Object builder,
             GenericResolver resolver,
             @NotNull List<HistoryCall<Executable>> calls,
@@ -84,7 +88,7 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
         return Arrays.asList(
                 new Pair<>(new Init(callCreator, resolver, builder), calls.subList(0, 1)),
                 new Pair<>(new Call(callCreator), calls.subList(1, length - 1)),
-                new Pair<>(new Complete(variableName, callCreator), calls.subList(length - 1, length))
+                new Pair<>(new Complete(variableName, callCreator, resolver, object), calls.subList(length - 1, length))
         );
     }
 
@@ -173,10 +177,19 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
     private static class Complete implements Statement {
         private final String newVariableName;
         private final CallCreator callCreator;
+        private final GenericResolver resolver;
+        private final Object builder;
 
-        public Complete(String newVariableName, CallCreator callCreator) {
+        public Complete(
+                String newVariableName,
+                CallCreator callCreator,
+                GenericResolver resolver,
+                Object builder
+        ) {
             this.newVariableName = newVariableName;
             this.callCreator = callCreator;
+            this.resolver = resolver;
+            this.builder = builder;
         }
 
         @Contract(pure = true)
@@ -187,7 +200,7 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
                 String variableName
         ) {
             Method method = (Method) call.getMethod();
-            codeBlockBuilder.add("$T $L = $L.$L", method.getReturnType(), newVariableName, variableName, method.getName())
+            codeBlockBuilder.add("$T $L = $L.$L", resolver.resolve(builder), newVariableName, variableName, method.getName())
                     .add(callCreator.create(call));
         }
     }
@@ -229,6 +242,6 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
             HistoryCall<Executable> call = calls.get(i);
             calls1.add(new HistoryCall<>(history, call.getMethod(), call.getArgs()));
         }
-        history.put(builder, new HistoryObject<>(builder, calls1, Collections.emptyList(), BuilderMethodSequenceFinder.class));
+        history.put(builder, new HistoryObject<>(builder, calls1, Collections.emptyList(), POJOMethodSequenceFinder.class));
     }
 }

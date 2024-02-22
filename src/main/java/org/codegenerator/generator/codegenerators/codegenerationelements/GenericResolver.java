@@ -5,6 +5,8 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import org.apache.commons.lang3.function.TriConsumer;
+import org.codegenerator.Utils;
+import org.codegenerator.generator.methodsequencefinders.internal.BuilderMethodSequenceFinder;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
@@ -13,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.function.Supplier;
 
 public class GenericResolver {
     private final Map<HistoryType, TriConsumer<History<Executable>, HistoryNode<Executable>, Map<Object, Type>>> typeToConsumer = new EnumMap<>(HistoryType.class);
@@ -35,6 +38,24 @@ public class GenericResolver {
     public TypeName resolve(Object o) {
         HistoryNode<Executable> node = history.get(o);
         return resolve(node);
+    }
+
+    public ResolvedTypeName getResolvedTypeName(@NotNull HistoryNode<Executable> node) {
+        return new ResolvedTypeName(node.getObject().getClass(), resolve(node));
+    }
+
+    public ResolvedTypeName getResolvedTypeName(Object o) {
+        return getResolvedTypeName(history.get(o));
+    }
+
+    public TypeName unCachedResolve(@NotNull HistoryNode<Executable> node) {
+        cachedTypeNames.remove(node.getObject());
+        return resolve(node);
+    }
+
+    public TypeName unCachedResolve(Object o) {
+        cachedTypeNames.remove(o);
+        return resolve(o);
     }
 
     private void recursiveResolve(
@@ -92,18 +113,57 @@ public class GenericResolver {
             }
         }
 
+        cachedTypeNames.put(object, getType(typeToObject, node, typeParameters));
+    }
+
+    private @NotNull TypeName getType(
+            @NotNull Map<Type, Object> typeToObject,
+            @NotNull HistoryNode<Executable> node,
+            TypeVariable<? extends GenericDeclaration> @NotNull [] typeParameters
+    ) {
+        Class<?> type = node.getObject().getClass();
+        Class<?> creator = node.getCreatorType();
+        if (creator == BuilderMethodSequenceFinder.class) {
+            return getTypeBuilder(typeToObject, node, typeParameters);
+        } else {
+            return getType(typeToObject, type, typeParameters);
+        }
+    }
+
+    private @NotNull TypeName getTypeBuilder(
+            @NotNull Map<Type, Object> typeToObject,
+            @NotNull HistoryNode<Executable> node,
+            TypeVariable<? extends GenericDeclaration> @NotNull [] typeParameters
+    ) {
+        List<HistoryCall<Executable>> calls = node.getHistoryCalls();
+        Method build = (Method) calls.get(calls.size() - 1).getMethod();
+
+        ParameterizedType retType = (ParameterizedType) build.getGenericReturnType();
+        Class<?> type = node.getObject().getClass();
+        Supplier<IllegalArgumentException> exceptionSupplier = IllegalArgumentException::new;
+        Utils.throwIf(type != retType.getRawType(), exceptionSupplier);
+
+        Type[] types = retType.getActualTypeArguments();
+        Map<Type, Object> newTypeToObject = new HashMap<>();
+        for (int i = 0; i < types.length; i++) {
+            Object o = typeToObject.get(types[i]);
+            newTypeToObject.put(typeParameters[i], o);
+        }
+        return getType(newTypeToObject, type, typeParameters);
+    }
+
+    private @NotNull TypeName getType(
+            @NotNull Map<Type, Object> typeToObject,
+            @NotNull Class<?> type,
+            TypeVariable<? extends GenericDeclaration> @NotNull [] typeParameters
+    ) {
         ClassName rawType = ClassName.get(type);
         TypeName[] types = new TypeName[typeParameters.length];
         for (int i = 0; i < typeParameters.length; i++) {
             TypeVariable<? extends GenericDeclaration> typeVariable = typeParameters[i];
-            types[i] = getType(typeToObject, typeVariable);
+            types[i] = cachedTypeNames.getOrDefault(typeToObject.get(typeVariable), TypeVariableName.get(typeVariable));
         }
-        TypeName parameterizedTypeName = ParameterizedTypeName.get(rawType, types);
-        cachedTypeNames.put(object, parameterizedTypeName);
-    }
-
-    private TypeName getType(@NotNull Map<Type, Object> typeToObject, TypeVariable<? extends GenericDeclaration> typeVariable) {
-        return cachedTypeNames.getOrDefault(typeToObject.get(typeVariable), TypeVariableName.get(typeVariable));
+        return ParameterizedTypeName.get(rawType, types);
     }
 
     private void init() {
@@ -112,17 +172,30 @@ public class GenericResolver {
         typeToConsumer.put(HistoryType.OBJECT, this::processObject);
     }
 
-    public static class GenericTypeName {
+    public static class ResolvedTypeName {
         private final Class<?> clazz;
-        private final List<Map.Entry<TypeVariable<? extends GenericDeclaration>, TypeName>> types;
+        private final List<Map.Entry<TypeVariable<? extends GenericDeclaration>, TypeName>> types = new ArrayList<>();
 
-        public GenericTypeName(Class<?> clazz, List<Map.Entry<TypeVariable<? extends GenericDeclaration>, TypeName>> types) {
+        public ResolvedTypeName(
+                @NotNull Class<?> clazz,
+                TypeName type
+        ) {
             this.clazz = clazz;
-            this.types = types;
+            TypeVariable<? extends GenericDeclaration>[] parameters = clazz.getTypeParameters();
+            if (type instanceof ParameterizedTypeName) {
+                ParameterizedTypeName parameterizedType = (ParameterizedTypeName) type;
+                for (int i = 0; i < parameters.length; i++) {
+                    types.add(new AbstractMap.SimpleEntry<>(parameters[i], parameterizedType.typeArguments.get(i)));
+                }
+            }
         }
 
         public Class<?> getClazz() {
             return clazz;
+        }
+
+        public int numberParameters() {
+            return types.size();
         }
 
         public Map.Entry<TypeVariable<? extends GenericDeclaration>, TypeName> getTypeByIndex(int i) {
