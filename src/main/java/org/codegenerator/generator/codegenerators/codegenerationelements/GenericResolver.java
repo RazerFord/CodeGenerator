@@ -157,46 +157,58 @@ public class GenericResolver {
             @NotNull Class<?> type,
             TypeVariable<? extends GenericDeclaration> @NotNull [] typeParameters
     ) {
-        @NotNull Map<Type, Bounds> bounds = getBounds(typeToObject);
+        @NotNull Map<Type, Bounds> bounds = getBounds(typeParameters, typeToObject);
         ClassName rawType = ClassName.get(type);
         TypeName[] types = new TypeName[typeParameters.length];
         for (int i = 0; i < typeParameters.length; i++) {
             TypeVariable<? extends GenericDeclaration> typeVariable = typeParameters[i];
             Bounds bound = bounds.get(typeVariable);
             if (bound != null) {
-                types[i] = TypeName.get(bound.concreteType);
+                if (bound.concreteType == null) {
+                    TypeName[] types1 = bound.lower
+                            .stream()
+                            .filter(bounds::containsKey)
+                            .map(t -> bounds.get(t).getType())
+                            .map(t -> cachedTypeNames.getOrDefault(typeToObject.get(t), TypeName.get(t)))
+                            .toArray(TypeName[]::new);
+                    types[i] = TypeVariableName.get(bound.type.getTypeName(), types1);
+                } else {
+                    types[i] = cachedTypeNames.getOrDefault(typeToObject.get(typeVariable), TypeName.get(bound.concreteType));
+                }
             } else {
+                // TODO: let's remove
                 types[i] = cachedTypeNames.getOrDefault(typeToObject.get(typeVariable), TypeVariableName.get(typeVariable));
             }
         }
         return ParameterizedTypeName.get(rawType, types);
     }
 
-    private @NotNull Map<Type, Bounds> getBounds(@NotNull Map<Type, Object> typeToObject) {
+    private @NotNull Map<Type, Bounds> getBounds(
+            TypeVariable<? extends GenericDeclaration> @NotNull [] typeParameters,
+            @NotNull Map<Type, Object> typeToObject
+    ) {
         Map<Type, Bounds> bounds = new HashMap<>();
-        typeToObject.forEach((k, v) -> bounds.put(k, new Bounds(bounds, k, v.getClass())));
+        for (Type type : typeParameters) {
+            Class<?> concrete = null;
+            Object value = typeToObject.get(type);
+            if (value != null) concrete = value.getClass();
+            bounds.put(type, new Bounds(bounds, type, concrete));
+        }
 
-        for (Type t : typeToObject.keySet()) {
-            if (t instanceof TypeVariable) {
-                TypeVariable<?> tv = (TypeVariable<?>) t;
-                for (Type t1 : tv.getBounds()) {
-                    Bounds bounds1 = bounds.get(t1);
-                    if (bounds1 != null) {
-                        bounds1.upper.add(t);
-                    }
-                    bounds1 = bounds.get(t);
-                    if (bounds1 != null) {
-                        bounds1.lower.add(t1);
-                    }
+        for (TypeVariable<?> t : typeParameters) {
+            for (Type t1 : t.getBounds()) {
+                Bounds bounds1 = bounds.get(t1);
+                if (bounds1 != null) {
+                    bounds1.upper.add(t);
+                }
+                bounds1 = bounds.get(t);
+                if (bounds1 != null) {
+                    bounds1.lower.add(t1);
                 }
             }
         }
-        findConcreteType(bounds);
+        bounds.forEach((k, v) -> v.resolve());
         return bounds;
-    }
-
-    private void findConcreteType(@NotNull Map<Type, Bounds> typeBoundsMap) {
-        typeBoundsMap.forEach((k, v) -> v.resolve());
     }
 
     private void init() {
@@ -250,6 +262,10 @@ public class GenericResolver {
             this.concreteType = concreteType;
         }
 
+        private Type getType() {
+            return concreteType == null ? type : concreteType;
+        }
+
         private void resolve() {
             if (resolved) return;
             resolveLower();
@@ -270,6 +286,9 @@ public class GenericResolver {
             for (Type t : upper) {
                 if (t instanceof TypeVariable) {
                     Bounds bounds1 = typeBounds.get(t);
+
+                    if (bounds1.concreteType == null) continue;
+
                     concreteType = Utils.findClosestCommonSuperOrInterface(concreteType, bounds1.concreteType);
                 }
             }
