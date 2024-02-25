@@ -175,6 +175,25 @@ public class Utils {
         return result;
     }
 
+    public static Class<?> findClosestCommonSuper(@NotNull Class<?> a, Class<?> b) {
+        while (!a.isAssignableFrom(b)) {
+            a = a.getSuperclass();
+        }
+        return a;
+    }
+
+    public static Class<?> findClosestCommonSuperOrInterface(@NotNull Class<?> a, Class<?> b) {
+        while (!a.isAssignableFrom(b)) {
+            for (Class<?> i : a.getInterfaces()) {
+                if (i.isAssignableFrom(b)) {
+                    return i;
+                }
+            }
+            a = a.getSuperclass();
+        }
+        return a;
+    }
+
     private static final @NotNull @UnmodifiableView Map<Class<?>, String> PRIMITIVES_TO_DESCRIPTOR = getPrimitiveToDescriptor();
 
     private static @NotNull @UnmodifiableView Map<Class<?>, String> getPrimitiveToDescriptor() {

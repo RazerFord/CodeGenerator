@@ -54,7 +54,8 @@ public class POJOGenericCodeGenerationStrategy implements CodeGenerationStrategy
             methodBuilder.addStatement(codeBlockBuilder.build());
         }
         reflectionCodeGeneration.generate(variableName, typeBuilder, methods, p, stack);
-        methodBuilder.addStatement("return $L", variableName);
+        methodBuilder.addStatement("return $L", variableName)
+                .returns(resolver.resolve(historyNode.getObject()));
 
         methods.add(methodBuilder);
         return new BeginCodeGenerationStrategy();
