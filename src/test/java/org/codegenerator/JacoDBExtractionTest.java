@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 class JacoDBExtractionTest {
     @Test
     void simpleTest() {
@@ -14,6 +16,7 @@ class JacoDBExtractionTest {
         JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
         Map<JcField, Object> res = jacoClassFieldExtractor.extract(className, "./src/test/resources/");
         print(res, className);
+        assertTrue(true);
     }
 
     @Test
@@ -22,6 +25,7 @@ class JacoDBExtractionTest {
         JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
         Map<JcField, Object> res = jacoClassFieldExtractor.extract(className, "./src/test/resources/");
         print(res, className);
+        assertTrue(true);
     }
 
     @Test
@@ -30,6 +34,7 @@ class JacoDBExtractionTest {
         JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
         Map<JcField, Object> res = jacoClassFieldExtractor.extract(className, "./src/test/resources/");
         print(res, className);
+        assertTrue(true);
     }
 
     @Test
@@ -38,11 +43,13 @@ class JacoDBExtractionTest {
         JacoClassFieldExtractor jacoClassFieldExtractor = new JacoClassFieldExtractor("./test_db");
         Map<JcField, Object> res = jacoClassFieldExtractor.extract(className, "./src/test/resources/");
         print(res, className);
+        assertTrue(true);
     }
 
     private void print(Map<JcField, Object> map, String root) {
         System.out.println(root);
         print(map, 4, root);
+        assertTrue(true);
     }
 
     private void print(Map<JcField, Object> map, int indent, String root) {

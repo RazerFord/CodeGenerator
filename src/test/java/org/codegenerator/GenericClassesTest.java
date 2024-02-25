@@ -1,34 +1,118 @@
 package org.codegenerator;
 
+import org.codegenerator.generator.BuilderGenerator;
 import org.codegenerator.generator.POJOGenerator;
-import org.codegenerator.resourcesgeneric.OneField;
+import org.codegenerator.testclasses.generic.*;
+import org.codegenerator.testclasses.generic.persons.BestClient;
+import org.codegenerator.testclasses.generic.persons.Boss;
+import org.codegenerator.testclasses.generic.persons.Client;
+import org.codegenerator.testclasses.generic.persons.Person;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import static org.codegenerator.Common.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GenericClassesTest {
-    private static final String OUTPUT_DIRECTORY = "./";
-    private static final String PACKAGE_NAME = "generatedclass";
-    private static final String METHOD_NAME = "generate";
-    private static final String CLASS_PATH_PREFIX = "./generatedclass/";
-    private static final String CLASS_NAME_PREFIX = "generatedclass.";
-    private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
-
     @Test
     void oneGenericFieldTest() throws IOException {
         final String generatedClassName = "OneGenericFieldClass";
-        POJOGenerator<OneField<Integer>> generator = new POJOGenerator<>(OneField.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        POJOGenerator<OneField<OneField<OneField<Integer>>>> generator = new POJOGenerator<>(OneField.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
+        OneField<OneField<OneField<Integer>>> oneField0 = new OneField<>();
+        OneField<OneField<Integer>> oneField1 = new OneField<>();
+        oneField1.setValue(createOneFieldInteger());
+        oneField0.setValue(oneField1);
+
+        generator.generateCode(oneField0, Paths.get(OUTPUT_DIRECTORY));
+
+        OneField<OneField<OneField<Integer>>> other = createObject(generatedClassName);
+
+        assertEquals(oneField0, other);
+    }
+
+    @Test
+    void twoGenericFieldTest() throws IOException {
+        final String generatedClassName = "TwoGenericFieldClass";
+        POJOGenerator<TwoFields<OneField<Integer>, TwoFields<String, TwoFields<Object, String>>>> generator =
+                new POJOGenerator<>(TwoFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        TwoFields<OneField<Integer>, TwoFields<String, TwoFields<Object, String>>> twoFields0 = new TwoFields<>();
+        twoFields0.setFirst(createOneFieldInteger());
+        TwoFields<String, TwoFields<Object, String>> twoFields1 = new TwoFields<>();
+        TwoFields<Object, String> twoFields2 = new TwoFields<>();
+        twoFields2.setSecond("hello world");
+        twoFields1.setFirst("John Doe");
+        twoFields1.setSecond(twoFields2);
+        twoFields0.setSecond(twoFields1);
+
+        generator.generateCode(twoFields0, Paths.get(OUTPUT_DIRECTORY));
+
+        TwoFields<OneField<Integer>, TwoFields<String, TwoFields<Object, String>>> other = createObject(generatedClassName);
+
+        assertEquals(twoFields0, other);
+    }
+
+    @Test
+    void twoGenericFieldWithBoundsTest() throws IOException {
+        final String generatedClassName = "TwoGenericFieldWithBoundsClass";
+        POJOGenerator<TwoFieldsWithBounds<Person, Boss>> generator =
+                new POJOGenerator<>(TwoFieldsWithBounds.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        TwoFieldsWithBounds<Person, Boss> twoFieldWithBounds = new TwoFieldsWithBounds<>();
+        twoFieldWithBounds.setFirst(new Client("Nikola Tesla"));
+        twoFieldWithBounds.setSecond(new Boss("John Doe"));
+
+        generator.generateCode(twoFieldWithBounds, Paths.get(OUTPUT_DIRECTORY));
+
+        TwoFieldsWithBounds<Person, Boss> other = createObject(generatedClassName);
+
+        assertEquals(twoFieldWithBounds, other);
+    }
+
+    @Test
+    void genericBuilderTest() throws IOException {
+        final String generatedClassName = "GenericBuilderClass";
+        BuilderGenerator<PointWithBuilder<Integer, Double, Long>> generator =
+                new BuilderGenerator<>(PointWithBuilder.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        PointWithBuilder<Integer, Double, Long> pointWithBuilder = PointWithBuilder.<Integer, Double, Long>builder()
+                .setX(42)
+                .setY(42.)
+                .setZ(42L)
+                .build();
+
+        generator.generateCode(pointWithBuilder, Paths.get(OUTPUT_DIRECTORY));
+
+        PointWithBuilder<Integer, Double, Long> other = createObject(generatedClassName);
+
+        assertEquals(pointWithBuilder, other);
+    }
+
+    @Test
+    void threeGenericFieldTest() throws IOException {
+        final String generatedClassName = "ThreeGenericFieldClass";
+        POJOGenerator<ThreeFieldsWithSpecificBounds<Client, BestClient, BestClient>> generator =
+                new POJOGenerator<>(ThreeFieldsWithSpecificBounds.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        ThreeFieldsWithSpecificBounds<Client, BestClient, BestClient> threeFields0 = new ThreeFieldsWithSpecificBounds<>();
+        threeFields0.setFirst(new Client("John Doe"));
+        threeFields0.setSecond(new BestClient("Boss", 12));
+        threeFields0.setThird(new BestClient("Boss", 20));
+
+        generator.generateCode(threeFields0, Paths.get(OUTPUT_DIRECTORY));
+
+        ThreeFieldsWithSpecificBounds<Client, BestClient, BestClient> other = createObject(generatedClassName);
+
+        assertEquals(threeFields0, other);
+    }
+
+    private static @NotNull OneField<Integer> createOneFieldInteger() {
         OneField<Integer> oneField = new OneField<>();
         oneField.setValue(42);
-
-        generator.generateCode(oneField, Paths.get(OUTPUT_DIRECTORY));
-
-        OneField<Integer> other = generatedCodeCompiler.createObject(generatedClassName);
-
-        assertEquals(oneField, other);
+        return oneField;
     }
 }

@@ -10,7 +10,7 @@ import org.codegenerator.generator.methodsequencefinders.internal.BuilderMethodS
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
-import org.codegenerator.history.HistoryType;
+import org.codegenerator.ItemType;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.*;
@@ -18,7 +18,7 @@ import java.util.*;
 import java.util.function.Supplier;
 
 public class GenericResolver {
-    private final Map<HistoryType, TriConsumer<History<Executable>, HistoryNode<Executable>, Map<Object, Type>>> typeToConsumer = new EnumMap<>(HistoryType.class);
+    private final Map<ItemType, TriConsumer<History<Executable>, HistoryNode<Executable>, Map<Object, Type>>> typeToConsumer = new EnumMap<>(ItemType.class);
     private final Map<Object, TypeName> cachedTypeNames = new IdentityHashMap<>();
     private final History<Executable> history;
 
@@ -173,10 +173,19 @@ public class GenericResolver {
                             .toArray(TypeName[]::new);
                     types[i] = TypeVariableName.get(bound.type.getTypeName(), types1);
                 } else {
-                    types[i] = cachedTypeNames.getOrDefault(typeToObject.get(typeVariable), TypeName.get(bound.concreteType));
+                    Object object = typeToObject.get(typeVariable);
+                    TypeName typeName;
+                    if (object != null) {
+                        type = Utils.findClosestCommonSuperOrInterface(object.getClass(), bound.concreteType);
+                        typeName = object.getClass() != type || !cachedTypeNames.containsKey(object) ?
+                                TypeName.get(bound.concreteType) :
+                                cachedTypeNames.get(object);
+                    } else {
+                        typeName = cachedTypeNames.getOrDefault(typeToObject.get(typeVariable), TypeName.get(bound.concreteType));
+                    }
+                    types[i] = typeName;
                 }
             } else {
-                // TODO: let's remove
                 types[i] = cachedTypeNames.getOrDefault(typeToObject.get(typeVariable), TypeVariableName.get(typeVariable));
             }
         }
@@ -212,9 +221,9 @@ public class GenericResolver {
     }
 
     private void init() {
-        typeToConsumer.put(HistoryType.PRIMITIVE, this::processPrimitive);
-        typeToConsumer.put(HistoryType.ARRAY, this::processArray);
-        typeToConsumer.put(HistoryType.OBJECT, this::processObject);
+        typeToConsumer.put(ItemType.PRIMITIVE, this::processPrimitive);
+        typeToConsumer.put(ItemType.ARRAY, this::processArray);
+        typeToConsumer.put(ItemType.OBJECT, this::processObject);
     }
 
     public static class ResolvedTypeName {

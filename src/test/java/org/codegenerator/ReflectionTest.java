@@ -2,27 +2,21 @@ package org.codegenerator;
 
 import org.codegenerator.generator.BuilderGenerator;
 import org.codegenerator.generator.POJOGenerator;
-import org.codegenerator.resourcescodegeneratorbuilder.Sum;
-import org.codegenerator.resourcescodegeneratorpojo.Accumulator;
-import org.codegenerator.resourcescodegeneratorpojo.AccumulatorHolder;
-import org.codegenerator.resourcescodegeneratorpojo.ChildWithParentWithPrivateField;
-import org.codegenerator.resourcescodegeneratorpojo.ParentWithPrivateField;
+import org.codegenerator.testclasses.codegeneratorbuilder.Sum;
+import org.codegenerator.testclasses.codegeneratorpojo.Accumulator;
+import org.codegenerator.testclasses.codegeneratorpojo.AccumulatorHolder;
+import org.codegenerator.testclasses.codegeneratorpojo.ChildWithParentWithPrivateField;
+import org.codegenerator.testclasses.codegeneratorpojo.ParentWithPrivateField;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.Paths;
 
+import static org.codegenerator.Common.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ReflectionTest {
-    private static final String OUTPUT_DIRECTORY = "./";
-    private static final String PACKAGE_NAME = "generatedclass";
-    private static final String METHOD_NAME = "generate";
-    private static final String CLASS_PATH_PREFIX = "./generatedclass/";
-    private static final String CLASS_NAME_PREFIX = "generatedclass.";
-    private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
-
     @Test
     void withoutSetterForOneFieldTest() throws IOException {
         final String generatedClassName = "WithoutSetterForOneFieldClass";
@@ -35,7 +29,7 @@ class ReflectionTest {
         accumulator.setB(10);
         generator.generateCode(accumulator, Paths.get(OUTPUT_DIRECTORY));
 
-        Accumulator other = generatedCodeCompiler.createObject(generatedClassName);
+        Accumulator other = createObject(generatedClassName);
         assertEquals(accumulator, other);
     }
 
@@ -57,7 +51,7 @@ class ReflectionTest {
 
         generator.generateCode(accumulatorHolder, Paths.get(OUTPUT_DIRECTORY));
 
-        AccumulatorHolder other = generatedCodeCompiler.createObject(generatedClassName);
+        AccumulatorHolder other = createObject(generatedClassName);
         assertEquals(accumulatorHolder, other);
     }
 
@@ -70,7 +64,7 @@ class ReflectionTest {
 
         generator.generateCode(sum, Paths.get(OUTPUT_DIRECTORY));
 
-        Sum other = generatedCodeCompiler.createObject(generatedClassName);
+        Sum other = createObject(generatedClassName);
         assertEquals(sum, other);
     }
 
@@ -86,7 +80,7 @@ class ReflectionTest {
 
         generator.generateCode(child, Paths.get(OUTPUT_DIRECTORY));
 
-        ChildWithParentWithPrivateField other = generatedCodeCompiler.createObject(generatedClassName);
+        ChildWithParentWithPrivateField other = createObject(generatedClassName);
         assertEquals(child, other);
     }
 }

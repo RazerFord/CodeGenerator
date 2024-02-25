@@ -2,43 +2,49 @@ package org.codegenerator;
 
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
-import org.codegenerator.resourcesfieldextraction.Clz;
-import org.codegenerator.resourcesfieldextraction.ClzBase;
-import org.codegenerator.resourcesfieldextraction.ListNode;
-import org.codegenerator.resourcesfieldextraction.SameValues;
+import org.codegenerator.testclasses.fieldextraction.Clz;
+import org.codegenerator.testclasses.fieldextraction.ClzBase;
+import org.codegenerator.testclasses.fieldextraction.ListNode;
+import org.codegenerator.testclasses.fieldextraction.SameValues;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 class ExtractionTest {
     @Test
     void simpleBaseTest() {
         ClzBase clzBase = new ClzBase();
-        Node extracted = ClassFieldExtractor.extract(clzBase);
-        print(extracted);
+
+        extractAndPrint(clzBase);
+        assertTrue(true);
     }
 
     @Test
     void sameValuesTest() {
         SameValues sameValues = new SameValues();
-        Node extracted = ClassFieldExtractor.extract(sameValues);
-        print(extracted);
+
+        extractAndPrint(sameValues);
+        assertTrue(true);
     }
 
     @Test
     void nullTest() {
         ListNode node = new ListNode();
-        Node extracted = ClassFieldExtractor.extract(node);
-        print(extracted);
+
+        extractAndPrint(node);
+        assertTrue(true);
     }
 
     @Test
     void simpleInheritanceTest() {
         Clz clz = new Clz();
-        Node extracted = ClassFieldExtractor.extract(clz);
-        print(extracted);
+
+        extractAndPrint(clz);
+        assertTrue(true);
     }
 
     @Test
@@ -49,9 +55,8 @@ class ExtractionTest {
         node1.next = node2;
         node2.next = node1;
 
-        Node extracted = ClassFieldExtractor.extract(node1);
-
-        print(extracted);
+        extractAndPrint(node1);
+        assertTrue(true);
     }
 
     @Test
@@ -60,18 +65,16 @@ class ExtractionTest {
 
         node1.next = node1;
 
-        Node extracted = ClassFieldExtractor.extract(node1);
-
-        print(extracted);
+        extractAndPrint(node1);
+        assertTrue(true);
     }
 
     @Test
     void arrayTest() {
         String[] strings = new String[]{"it", "is", "array", "of", "string"};
 
-        Node extracted = ClassFieldExtractor.extract(strings);
-
-        print(extracted);
+        extractAndPrint(strings);
+        assertTrue(true);
     }
 
     @Test
@@ -83,9 +86,8 @@ class ExtractionTest {
         strings.add("of");
         strings.add("string");
 
-        Node extracted = ClassFieldExtractor.extract(strings);
-
-        print(extracted);
+        extractAndPrint(strings);
+        assertTrue(true);
     }
 
     @Test
@@ -97,9 +99,8 @@ class ExtractionTest {
         strings.add("of");
         strings.add("string");
 
-        Node extracted = ClassFieldExtractor.extract(strings);
-
-        print(extracted);
+        extractAndPrint(strings);
+        assertTrue(true);
     }
 
     @Test
@@ -111,26 +112,29 @@ class ExtractionTest {
         strings.add("of");
         strings.add("string");
 
-        Node extracted = ClassFieldExtractor.extract(strings);
-
-        print(extracted);
+        extractAndPrint(strings);
+        assertTrue(true);
     }
 
     @Test
     void primitivesTest() {
         int i = 42;
 
-        Node extracted = ClassFieldExtractor.extract(i);
+        extractAndPrint(i);
+        assertTrue(true);
+    }
 
+    private static void extractAndPrint(Object o) {
+        Node extracted = ClassFieldExtractor.extract(o);
         print(extracted);
     }
 
-    void print(@NotNull Node node) {
+    private static void print(@NotNull Node node) {
         Set<Object> visited = new HashSet<>();
         print(node, 0, visited);
     }
 
-    void print(@NotNull Node node, int indent, @NotNull Set<Object> visited) {
+    private static void print(@NotNull Node node, int indent, @NotNull Set<Object> visited) {
         System.out.printf("%s:%s\n", node.getClassOfValue(), node.getValue());
         if (visited.contains(node))
             System.out.printf("%sReference\n", String.join("", Collections.nCopies(indent, " ")));

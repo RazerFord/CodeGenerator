@@ -1,23 +1,17 @@
 package org.codegenerator;
 
 import org.codegenerator.generator.BuilderGenerator;
-import org.codegenerator.resourcescodegeneratorbuilder.*;
-import org.codegenerator.resourcescodegeneratorbuilder.otherpackage.UserBuilder;
+import org.codegenerator.testclasses.codegeneratorbuilder.*;
+import org.codegenerator.testclasses.codegeneratorbuilder.otherpackage.UserBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import static org.codegenerator.Common.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CodeGeneratorBuilderTest {
-    private static final String OUTPUT_DIRECTORY = "./";
-    private static final String PACKAGE_NAME = "generatedclass";
-    private static final String METHOD_NAME = "generate";
-    private static final String CLASS_PATH_PREFIX = "./generatedclass/";
-    private static final String CLASS_NAME_PREFIX = "generatedclass.";
-    private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
-
     @Test
     void userBuilderTest() throws IOException {
         final String generatedClassName = "GeneratedUserClass";
@@ -144,9 +138,5 @@ class CodeGeneratorBuilderTest {
 
         UserWithBuilderInAnotherPackage that = createObject(generatedClassName);
         assertEquals(user, that);
-    }
-
-    <R> R createObject(String generatedClassName) {
-        return generatedCodeCompiler.createObject(generatedClassName);
     }
 }

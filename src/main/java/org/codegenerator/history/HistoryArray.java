@@ -1,6 +1,8 @@
 package org.codegenerator.history;
 
 
+import org.codegenerator.ItemType;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -35,8 +37,8 @@ public class HistoryArray<T> implements HistoryNode<T> {
     }
 
     @Override
-    public HistoryType getType() {
-        return HistoryType.ARRAY;
+    public ItemType getType() {
+        return ItemType.ARRAY;
     }
 
     @Override

@@ -40,10 +40,14 @@ public class AssignableTypePropertyGrouper implements Supplier<Map<Class<?>, Lis
 
     private @NotNull Map<Class<?>, List<Object>> prepareTypeToValues(@NotNull Object o) {
         Map<Class<?>, List<Object>> typeToValues = new HashMap<>();
-        for (Field field : clazz.getDeclaredFields()) {
-            List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
-            field.setAccessible(true);
-            list.add(callSupplierWrapper(() -> field.get(o)));
+        Class<?> clazz1 = clazz;
+        while (clazz1 != Object.class) {
+            for (Field field : clazz1.getDeclaredFields()) {
+                List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
+                field.setAccessible(true);
+                list.add(callSupplierWrapper(() -> field.get(o)));
+            }
+            clazz1 = clazz1.getSuperclass();
         }
         mergeValuesOfSameTypes(typeToValues);
         return typeToValues;

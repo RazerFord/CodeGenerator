@@ -1,5 +1,7 @@
 package org.codegenerator.history;
 
+import org.codegenerator.ItemType;
+
 import java.util.List;
 
 public interface HistoryNode<T> {
@@ -9,7 +11,7 @@ public interface HistoryNode<T> {
 
     List<SetterUsingReflection<T>> getSetterUsingReflections();
 
-    HistoryType getType();
+    ItemType getType();
 
     Class<?> getCreatorType();
 

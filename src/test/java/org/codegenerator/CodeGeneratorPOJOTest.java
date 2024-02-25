@@ -1,7 +1,7 @@
 package org.codegenerator;
 
 import org.codegenerator.generator.POJOGenerator;
-import org.codegenerator.resourcescodegeneratorpojo.*;
+import org.codegenerator.testclasses.codegeneratorpojo.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -9,16 +9,10 @@ import org.junit.jupiter.api.Timeout;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import static org.codegenerator.Common.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CodeGeneratorPOJOTest {
-    private static final String OUTPUT_DIRECTORY = "./";
-    private static final String PACKAGE_NAME = "generatedclass";
-    private static final String METHOD_NAME = "generateCode";
-    private static final String CLASS_PATH_PREFIX = "./generatedclass/";
-    private static final String CLASS_NAME_PREFIX = "generatedclass.";
-    private static final GeneratedCodeCompiler generatedCodeCompiler = new GeneratedCodeCompiler(OUTPUT_DIRECTORY, CLASS_PATH_PREFIX, CLASS_NAME_PREFIX, METHOD_NAME);
-
     @Test
     void setterPointTest() throws IOException {
         final String generatedClassName = "GeneratedPointClass";
@@ -488,9 +482,5 @@ class CodeGeneratorPOJOTest {
 
         multidimensionalPointArray.setPoints(array);
         return multidimensionalPointArray;
-    }
-
-    <R> R createObject(String generatedClassName) {
-        return generatedCodeCompiler.createObject(generatedClassName);
     }
 }
