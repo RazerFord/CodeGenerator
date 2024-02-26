@@ -1,6 +1,7 @@
 package org.codegenerator;
 
-import org.codegenerator.generator.POJOGenerator;
+import org.codegenerator.generator.Generator;
+import org.codegenerator.generator.Generators;
 import org.codegenerator.testclasses.codegeneratorpojo.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterPointTest() throws IOException {
         final String generatedClassName = "GeneratedPointClass";
-        POJOGenerator<Point> generator = new POJOGenerator<>(Point.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(Point.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         Point point = new Point();
         point.setX(100);
@@ -31,7 +32,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void defaultPointArgumentsTest() throws IOException {
         final String generatedClassName = "GeneratedPointClass";
-        POJOGenerator<Point> generator = new POJOGenerator<>(Point.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(Point.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         Point point = new Point();
         point.setX(0);
@@ -46,7 +47,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterUserTest() throws IOException {
         final String generatedClassName = "GeneratedUserClass";
-        POJOGenerator<User> generator = new POJOGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User user = new User();
         user.setName("Alex");
@@ -61,7 +62,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void defaultUserArgumentsTest() throws IOException {
         final String generatedClassName = "GeneratedUserClass";
-        POJOGenerator<User> generator = new POJOGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User user = new User();
         generator.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
@@ -73,7 +74,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterAllPrimitiveTypesTest() throws IOException {
         final String generatedClassName = "GeneratedAllPrimitiveTypesClass";
-        POJOGenerator<AllPrimitiveTypes> generator = new POJOGenerator<>(AllPrimitiveTypes.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(AllPrimitiveTypes.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         AllPrimitiveTypes allPrimitiveTypes = new AllPrimitiveTypes();
         allPrimitiveTypes.setByte((byte) 1);
@@ -92,7 +93,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterPointComplexTest() throws IOException {
         final String generatedClassName = "GeneratedPointComplexClass";
-        POJOGenerator<PointComplex> generator = new POJOGenerator<>(PointComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(PointComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         PointComplex point = new PointComplex();
         point.setX(100);
@@ -107,7 +108,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterUserComplexTest() throws IOException {
         final String generatedClassName = "GeneratedUserComplexClass";
-        POJOGenerator<UserComplex> generator = new POJOGenerator<>(UserComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(UserComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         UserComplex user = new UserComplex();
         user.setNameAgeWeight("Alex", 12, 42);
@@ -120,7 +121,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterAllPrimitiveTypesComplexTest() throws IOException {
         final String generatedClassName = "GeneratedAllPrimitiveTypesComplexClass";
-        POJOGenerator<AllPrimitiveTypesComplex> generator = new POJOGenerator<>(AllPrimitiveTypesComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(AllPrimitiveTypesComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         AllPrimitiveTypesComplex allPrimitiveTypes = new AllPrimitiveTypesComplex();
         allPrimitiveTypes.setByte((byte) 1);
@@ -139,7 +140,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterAllPrimitiveTypesMixedTest() throws IOException {
         final String generatedClassName = "GeneratedAllPrimitiveTypesMixedClass";
-        POJOGenerator<AllPrimitiveTypesMixed> generator = new POJOGenerator<>(AllPrimitiveTypesMixed.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(AllPrimitiveTypesMixed.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         AllPrimitiveTypesMixed allPrimitiveTypes = new AllPrimitiveTypesMixed();
         allPrimitiveTypes.setByte((byte) 1);
@@ -159,7 +160,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterAllPrimitiveTypesBoxedTest() throws IOException {
         final String generatedClassName = "GeneratedAllBoxedTypesMixedClass";
-        POJOGenerator<AllBoxedTypesMixed> generator = new POJOGenerator<>(AllBoxedTypesMixed.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(AllBoxedTypesMixed.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         AllBoxedTypesMixed allBoxedTypes = new AllBoxedTypesMixed();
         allBoxedTypes.setByte((byte) 1);
@@ -179,7 +180,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterBoxingUnboxingTest() throws IOException {
         final String generatedClassName = "GeneratedOneFieldBoxingUnboxingClass";
-        POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         OneFieldBoxingUnboxing oneFieldBoxingUnboxing = new OneFieldBoxingUnboxing();
         oneFieldBoxingUnboxing.setJ(42);
@@ -192,7 +193,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterBoxingUnboxingWithDefaultArgsTest() throws IOException {
         final String generatedClassName = "GeneratedOneFieldBoxingUnboxingDefaultClass";
-        POJOGenerator<OneFieldBoxingUnboxing> generator = new POJOGenerator<>(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(OneFieldBoxingUnboxing.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         OneFieldBoxingUnboxing oneFieldBoxingUnboxing = new OneFieldBoxingUnboxing();
         generator.generateCode(oneFieldBoxingUnboxing, Paths.get(OUTPUT_DIRECTORY));
@@ -204,7 +205,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterWithArrayPrimitiveTypesTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithArrayOfPrimitiveTypesClass";
-        POJOGenerator<ClassWithArrayOfPrimitiveTypes> generator = new POJOGenerator<>(ClassWithArrayOfPrimitiveTypes.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(ClassWithArrayOfPrimitiveTypes.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         ClassWithArrayOfPrimitiveTypes classWithArrayOfPrimitiveTypes = new ClassWithArrayOfPrimitiveTypes();
         int[] array = new int[]{1, 2, 4, 2, 5};
@@ -218,7 +219,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterWithArrayNonPrimitiveTypesTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithArrayOfNonPrimitiveTypesClass";
-        POJOGenerator<Points> generator = new POJOGenerator<>(Points.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(Points.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         Points points = new Points();
         Point[] array = new Point[5];
@@ -243,7 +244,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterWithOtherPOJOTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithOtherPOJOClass";
-        POJOGenerator<ClassWithOtherPOJO> generator = new POJOGenerator<>(ClassWithOtherPOJO.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(ClassWithOtherPOJO.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         ClassWithOtherPOJO classWithOtherPOJO = new ClassWithOtherPOJO();
         Point point = new Point();
@@ -260,7 +261,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterWithManyPOJOTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyPOJOClass";
-        POJOGenerator<ClassWithManyPOJO> generator = new POJOGenerator<>(ClassWithManyPOJO.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(ClassWithManyPOJO.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         ClassWithManyPOJO classWithManyPOJO = new ClassWithManyPOJO();
 
@@ -293,7 +294,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void nonDefaultConstructor() throws IOException {
         final String generatedClassName = "GeneratedUserComplexConstructorClass";
-        POJOGenerator<UserComplexConstructor> generator = new POJOGenerator<>(UserComplexConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(UserComplexConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         UserComplexConstructor userComplexConstructor = new UserComplexConstructor("Anonymous");
         userComplexConstructor.setName("John Doe");
@@ -308,7 +309,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void veryManySetterDefaultTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyDefaultFieldsClass";
-        POJOGenerator<ClassWithManyFields> generator = new POJOGenerator<>(ClassWithManyFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(ClassWithManyFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         ClassWithManyFields classWithManyFields = new ClassWithManyFields();
 
@@ -321,7 +322,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void veryManySetterTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyFieldsClass";
-        POJOGenerator<ClassWithManyFields> generator = new POJOGenerator<>(ClassWithManyFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(ClassWithManyFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         ClassWithManyFields classWithManyFields = new ClassWithManyFields();
         classWithManyFields.setField1("field1");
@@ -368,7 +369,7 @@ class CodeGeneratorPOJOTest {
     @Timeout(20)
     void veryManySetterComplexTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyFieldsComplexClass";
-        POJOGenerator<ClassWithManyFieldsComplex> generator = new POJOGenerator<>(ClassWithManyFieldsComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(ClassWithManyFieldsComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         ClassWithManyFieldsComplex classWithManyFieldsComplex = new ClassWithManyFieldsComplex();
         classWithManyFieldsComplex.setField1("field1");
@@ -414,7 +415,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterMultidimensionalIntArrayTest() throws IOException {
         final String generatedClassName = "GeneratedClassMultidimensionalIntArrayClass";
-        POJOGenerator<MultidimensionalIntArray> generator = new POJOGenerator<>(MultidimensionalIntArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(MultidimensionalIntArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         MultidimensionalIntArray multidimensionalIntArray = getMultidimensionalIntArray();
 
@@ -427,7 +428,7 @@ class CodeGeneratorPOJOTest {
     @Test
     void setterMultidimensionalPointArrayTest() throws IOException {
         final String generatedClassName = "GeneratedClassMultidimensionalPointArrayClass";
-        POJOGenerator<MultidimensionalPointArray> generator = new POJOGenerator<>(MultidimensionalPointArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(MultidimensionalPointArray.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         MultidimensionalPointArray multidimensionalPointArray = getMultidimensionalPointArray();
 

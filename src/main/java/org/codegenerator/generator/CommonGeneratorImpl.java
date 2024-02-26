@@ -4,20 +4,19 @@ import com.squareup.javapoet.JavaFile;
 import org.codegenerator.generator.codegenerators.FileGenerator;
 import org.codegenerator.generator.methodsequencefinders.MethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.PipelineMethodSequenceFinder;
-import org.codegenerator.generator.methodsequencefinders.internal.*;
+import org.codegenerator.generator.methodsequencefinders.internal.MethodSequenceFinderInternal;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.function.Function;
 
-public class BuilderGenerator<T> implements Generator<T> {
+public class CommonGeneratorImpl implements CommonGenerator {
     private static final String PACKAGE_NAME = "generatedclass";
     private static final String CLASS_NAME = "GeneratedClass";
     private static final String METHOD_NAME = "generate";
@@ -27,46 +26,40 @@ public class BuilderGenerator<T> implements Generator<T> {
     private final FileGenerator fileGenerator;
     private final MethodSequenceFinder methodSequenceFinder;
 
-    @Contract(pure = true)
-    public BuilderGenerator(@NotNull Class<?> clazz, Class<?>... classes) {
-        this(clazz, PACKAGE_NAME, CLASS_NAME, METHOD_NAME, classes);
+    public CommonGeneratorImpl() {
+        this(PACKAGE_NAME, CLASS_NAME, METHOD_NAME);
     }
 
-    public BuilderGenerator(
-            @NotNull Class<?> clazz,
+    public CommonGeneratorImpl(
             String packageName,
             String className,
-            String methodName,
-            Class<?>... classes
+            String methodName
     ) {
         this.packageName = packageName;
         this.className = className;
         this.methodName = methodName;
 
-        methodSequenceFinder = createPipeline(classes);
         fileGenerator = new FileGenerator();
-
-        registerFinder(clazz, new BuilderMethodSequenceFinder(clazz, classes));
+        methodSequenceFinder = new PipelineMethodSequenceFinder(new ArrayList<>());
     }
 
-    @Override
-    public void generateCode(@NotNull T object, Path path) throws IOException {
-        this.generateCode(object, packageName, className, methodName, path);
+    public void generateCode(@NotNull Object object, Path path) throws IOException {
+        generateCode(object, packageName, className, methodName, path);
     }
 
     @Override
     public void generateCode(
-            @NotNull T object,
+            @NotNull Object object,
             String className,
             String methodName,
             Path path
     ) throws IOException {
-        this.generateCode(object, packageName, className, methodName, path);
+        generateCode(object, packageName, className, methodName, path);
     }
 
     @Override
     public void generateCode(
-            @NotNull T object,
+            @NotNull Object object,
             String packageName,
             String className,
             String methodName,
@@ -80,12 +73,12 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Override
-    public History<Executable> generateReflectionCalls(@NotNull T object) {
+    public History<Executable> generateReflectionCalls(@NotNull Object object) {
         return methodSequenceFinder.findReflectionCalls(new TargetObject(object));
     }
 
     @Override
-    public History<JcMethod> generateJacoDBCalls(@NotNull T object) {
+    public History<JcMethod> generateJacoDBCalls(@NotNull Object object) {
         return methodSequenceFinder.findJacoDBCalls(new TargetObject(object));
     }
 
@@ -94,13 +87,18 @@ public class BuilderGenerator<T> implements Generator<T> {
         methodSequenceFinder.registerFinder(clazz, finder);
     }
 
-    private @NotNull MethodSequenceFinder createPipeline(Class<?>... classes) {
-        List<Function<TargetObject, ? extends MethodSequenceFinderInternal>> methodSequenceFinderList = new ArrayList<>();
-        methodSequenceFinderList.add(to -> new NullMethodSequenceFinder());
-        methodSequenceFinderList.add(to -> new PrimitiveMethodSequenceFinder());
-        methodSequenceFinderList.add(to -> new ArrayMethodSequenceFinder());
-        methodSequenceFinderList.add(to -> new BuilderMethodSequenceFinder(to.getClazz(), classes));
-        methodSequenceFinderList.add(to -> new POJOMethodSequenceFinder());
-        return new PipelineMethodSequenceFinder(methodSequenceFinderList);
+    @Override
+    public void registerPipeline(Collection<Function<TargetObject, ? extends MethodSequenceFinderInternal>> methodSequenceFinderList) {
+        methodSequenceFinder.register(methodSequenceFinderList);
+    }
+
+    @Override
+    public void registerPipeline(Function<TargetObject, ? extends MethodSequenceFinderInternal> methodSequenceFinder) {
+        this.methodSequenceFinder.register(methodSequenceFinder);
+    }
+
+    @Override
+    public void unregisterPipeline() {
+        methodSequenceFinder.unregister();
     }
 }

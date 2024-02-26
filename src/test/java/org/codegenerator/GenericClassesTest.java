@@ -1,7 +1,7 @@
 package org.codegenerator;
 
-import org.codegenerator.generator.BuilderGenerator;
-import org.codegenerator.generator.POJOGenerator;
+import org.codegenerator.generator.Generator;
+import org.codegenerator.generator.Generators;
 import org.codegenerator.testclasses.generic.*;
 import org.codegenerator.testclasses.generic.persons.BestClient;
 import org.codegenerator.testclasses.generic.persons.Boss;
@@ -20,7 +20,7 @@ class GenericClassesTest {
     @Test
     void oneGenericFieldTest() throws IOException {
         final String generatedClassName = "OneGenericFieldClass";
-        POJOGenerator<OneField<OneField<OneField<Integer>>>> generator = new POJOGenerator<>(OneField.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(OneField.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         OneField<OneField<OneField<Integer>>> oneField0 = new OneField<>();
         OneField<OneField<Integer>> oneField1 = new OneField<>();
@@ -37,8 +37,7 @@ class GenericClassesTest {
     @Test
     void twoGenericFieldTest() throws IOException {
         final String generatedClassName = "TwoGenericFieldClass";
-        POJOGenerator<TwoFields<OneField<Integer>, TwoFields<String, TwoFields<Object, String>>>> generator =
-                new POJOGenerator<>(TwoFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(TwoFields.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         TwoFields<OneField<Integer>, TwoFields<String, TwoFields<Object, String>>> twoFields0 = new TwoFields<>();
         twoFields0.setFirst(createOneFieldInteger());
@@ -59,8 +58,7 @@ class GenericClassesTest {
     @Test
     void twoGenericFieldWithBoundsTest() throws IOException {
         final String generatedClassName = "TwoGenericFieldWithBoundsClass";
-        POJOGenerator<TwoFieldsWithBounds<Person, Boss>> generator =
-                new POJOGenerator<>(TwoFieldsWithBounds.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(TwoFieldsWithBounds.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         TwoFieldsWithBounds<Person, Boss> twoFieldWithBounds = new TwoFieldsWithBounds<>();
         twoFieldWithBounds.setFirst(new Client("Nikola Tesla"));
@@ -76,8 +74,7 @@ class GenericClassesTest {
     @Test
     void genericBuilderTest() throws IOException {
         final String generatedClassName = "GenericBuilderClass";
-        BuilderGenerator<PointWithBuilder<Integer, Double, Long>> generator =
-                new BuilderGenerator<>(PointWithBuilder.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forBuilder(PointWithBuilder.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         PointWithBuilder<Integer, Double, Long> pointWithBuilder = PointWithBuilder.<Integer, Double, Long>builder()
                 .setX(42)
@@ -95,8 +92,7 @@ class GenericClassesTest {
     @Test
     void threeGenericFieldTest() throws IOException {
         final String generatedClassName = "ThreeGenericFieldClass";
-        POJOGenerator<ThreeFieldsWithSpecificBounds<Client, BestClient, BestClient>> generator =
-                new POJOGenerator<>(ThreeFieldsWithSpecificBounds.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(ThreeFieldsWithSpecificBounds.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         ThreeFieldsWithSpecificBounds<Client, BestClient, BestClient> threeFields0 = new ThreeFieldsWithSpecificBounds<>();
         threeFields0.setFirst(new Client("John Doe"));

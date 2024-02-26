@@ -1,6 +1,7 @@
 package org.codegenerator;
 
-import org.codegenerator.generator.POJOGenerator;
+import org.codegenerator.generator.Generator;
+import org.codegenerator.generator.Generators;
 import org.codegenerator.generator.methodsequencefinders.internal.ArrayMethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.internal.PrimitiveMethodSequenceFinder;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ class BuiltinTypesTest {
     @Test
     void integerTypeTest() throws IOException {
         final String generatedClassName = "GeneratedIntegerClass";
-        POJOGenerator<Integer> generator = new POJOGenerator<>(Integer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.standart(PACKAGE_NAME, generatedClassName, METHOD_NAME);
         generator.registerFinder(Integer.class, new PrimitiveMethodSequenceFinder());
 
         Integer i = 12;
@@ -29,7 +30,7 @@ class BuiltinTypesTest {
     @Test
     void stringTypeTest() throws IOException {
         final String generatedClassName = "GeneratedStringClass";
-        POJOGenerator<String> generator = new POJOGenerator<>(String.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.standart(PACKAGE_NAME, generatedClassName, METHOD_NAME);
         generator.registerFinder(String.class, new PrimitiveMethodSequenceFinder());
 
         String str = "Hello, world!";
@@ -42,7 +43,7 @@ class BuiltinTypesTest {
     @Test
     void arrayTest() throws IOException {
         final String generatedClassName = "GeneratedArrayClass";
-        POJOGenerator<String[]> generator = new POJOGenerator<>(String[].class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.standart(PACKAGE_NAME, generatedClassName, METHOD_NAME);
         generator.registerFinder(String[].class, new ArrayMethodSequenceFinder());
 
         String[] strings = {"Hello", ",", "world!"};

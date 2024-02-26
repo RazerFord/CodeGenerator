@@ -1,6 +1,7 @@
 package org.codegenerator;
 
-import org.codegenerator.generator.BuilderGenerator;
+import org.codegenerator.generator.Generator;
+import org.codegenerator.generator.Generators;
 import org.codegenerator.testclasses.codegeneratorbuilder.*;
 import org.codegenerator.testclasses.codegeneratorbuilder.otherpackage.UserBuilder;
 import org.junit.jupiter.api.Test;
@@ -16,13 +17,9 @@ class CodeGeneratorBuilderTest {
     void userBuilderTest() throws IOException {
         final String generatedClassName = "GeneratedUserClass";
 
-        BuilderGenerator<User> builder = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator builder = Generators.forBuilder(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
-        User user = User.builder()
-                .created(42)
-                .name("John Doe")
-                .age(17)
-                .build();
+        User user = User.builder().created(42).name("John Doe").age(17).build();
 
         builder.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
@@ -34,7 +31,7 @@ class CodeGeneratorBuilderTest {
     void userBuilderDefaultTest() throws IOException {
         final String generatedClassName = "GeneratedUserDefaultClass";
 
-        BuilderGenerator<User> builder = new BuilderGenerator<>(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator builder = Generators.forBuilder(User.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User user = User.builder().build();
 
@@ -48,13 +45,9 @@ class CodeGeneratorBuilderTest {
     void userBuilderWithConstructorTest() throws IOException {
         final String generatedClassName = "GeneratedUserBuilderWithConstructorClass";
 
-        BuilderGenerator<UserBuilderWithConstructor> builder = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator builder = Generators.forBuilder(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
-        UserBuilderWithConstructor user = new UserBuilderWithConstructor.UserBuilder()
-                .created(42)
-                .name("John Doe")
-                .age(17)
-                .build();
+        UserBuilderWithConstructor user = new UserBuilderWithConstructor.UserBuilder().created(42).name("John Doe").age(17).build();
 
         builder.generateCode(user, Paths.get(OUTPUT_DIRECTORY));
 
@@ -66,7 +59,7 @@ class CodeGeneratorBuilderTest {
     void userBuilderWithConstructorDefaultTest() throws IOException {
         final String generatedClassName = "GeneratedUserBuilderWithConstructorDefaultClass";
 
-        BuilderGenerator<UserBuilderWithConstructor> builder = new BuilderGenerator<>(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator builder = Generators.forBuilder(UserBuilderWithConstructor.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         UserBuilderWithConstructor user = new UserBuilderWithConstructor.UserBuilder().build();
 
@@ -80,10 +73,9 @@ class CodeGeneratorBuilderTest {
     void userWithDefectTest() throws IOException {
         final String generatedClassName = "GeneratedUserWithDefectClass";
 
-        BuilderGenerator<UserWithDefect> builder = new BuilderGenerator<>(UserWithDefect.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator builder = Generators.forBuilder(UserWithDefect.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
-        UserWithDefect.UserBuilder userBuilder = UserWithDefect.builder()
-                .name("John Doe");
+        UserWithDefect.UserBuilder userBuilder = UserWithDefect.builder().name("John Doe");
         userBuilder.age(17);
         userBuilder.created(42);
         UserWithDefect user = userBuilder.build();
@@ -98,7 +90,7 @@ class CodeGeneratorBuilderTest {
     void fieldsCanBeCreatedUsingBuildersTest() throws IOException {
         final String generatedClassName = "GeneratedFieldsCanBeCreatedUsingBuildersClass";
 
-        BuilderGenerator<SendingMoneyTransfer> builder = new BuilderGenerator<>(SendingMoneyTransfer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator builder = Generators.forBuilder(SendingMoneyTransfer.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User userFrom = User.builder().created(102).age(18).name("John Doe").coins(new long[]{10, 20, 30}).build();
         User userTo = User.builder().created(56).age(42).name("Gordon Freeman").build();
@@ -114,7 +106,7 @@ class CodeGeneratorBuilderTest {
     void fieldsCanBeCreatedUsingBuildersWithPojoTest() throws IOException {
         final String generatedClassName = "GeneratedFieldsCanBeCreatedUsingBuildersWithPojoClass";
 
-        BuilderGenerator<SendingMoneyTransferWithPojo> builder = new BuilderGenerator<>(SendingMoneyTransferWithPojo.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator builder = Generators.forBuilder(SendingMoneyTransferWithPojo.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         User userFrom = User.builder().created(102).age(18).name("John Doe").build();
         UserPojo userTo = new UserPojo("Gordon Freeman", 56, 42);
@@ -130,7 +122,7 @@ class CodeGeneratorBuilderTest {
     void builderInAnotherPackageTest() throws IOException {
         final String generatedClassName = "GeneratedBuilderInAnotherPackageClass";
 
-        BuilderGenerator<UserWithBuilderInAnotherPackage> builder = new BuilderGenerator<>(UserWithBuilderInAnotherPackage.class, PACKAGE_NAME, generatedClassName, METHOD_NAME, UserBuilder.class);
+        Generator builder = Generators.forBuilder(UserWithBuilderInAnotherPackage.class, PACKAGE_NAME, generatedClassName, METHOD_NAME, UserBuilder.class);
 
         UserWithBuilderInAnotherPackage user = new UserBuilder().created(102).age(18).name("John Doe").build();
 

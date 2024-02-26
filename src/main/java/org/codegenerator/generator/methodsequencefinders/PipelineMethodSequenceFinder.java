@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,26 @@ public class PipelineMethodSequenceFinder implements MethodSequenceFinder {
     @Override
     public void registerFinder(Class<?> clazz, MethodSequenceFinderInternal finder) {
         cachedFinders.put(clazz, finder);
+    }
+
+    @Override
+    public void register(Collection<Function<TargetObject, ? extends MethodSequenceFinderInternal>> methodSequenceFinderList) {
+        methodSequenceFinderFunctions.addAll(methodSequenceFinderList);
+    }
+
+    @Override
+    public void register(Function<TargetObject, ? extends MethodSequenceFinderInternal> methodSequenceFinder) {
+        methodSequenceFinderFunctions.add(methodSequenceFinder);
+    }
+
+    @Override
+    public void unregister() {
+        methodSequenceFinderFunctions.clear();
+    }
+
+    @Override
+    public void reset() {
+        cachedFinders.clear();
     }
 
     private void findReflectionCallsRecursive(@NotNull TargetObject targetObject, History<Executable> history) {

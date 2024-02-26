@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.nio.file.Path;
 
-public interface Generator<T> {
+public interface Generator {
     /**
      * Generates code with which you can get `object`
      * and saves it in the `path` directory
@@ -18,7 +18,7 @@ public interface Generator<T> {
      * @param path        directory where you want to save the file
      * @throws IOException – if an I/O error occurs
      */
-    void generateCode(@NotNull T object, Path path) throws IOException;
+    void generateCode(@NotNull Object object, Path path) throws IOException;
 
     /**
      * Generates code with which you can get `object`
@@ -32,7 +32,7 @@ public interface Generator<T> {
      * @throws IOException – if an I/O error occurs
      */
     void generateCode(
-            @NotNull T object,
+            @NotNull Object object,
             String packageName,
             String className,
             String methodName,
@@ -50,7 +50,7 @@ public interface Generator<T> {
      * @throws IOException – if an I/O error occurs
      */
     void generateCode(
-            @NotNull T object,
+            @NotNull Object object,
             String className,
             String methodName,
             Path path
@@ -63,7 +63,7 @@ public interface Generator<T> {
      * @param object object for which you need to find a sequence of methods
      * @return life history of the object
      */
-    History<Executable> generateReflectionCalls(@NotNull T object);
+    History<Executable> generateReflectionCalls(@NotNull Object object);
 
     /**
      * Finds methods that were called during the lifetime of objects.
@@ -72,7 +72,7 @@ public interface Generator<T> {
      * @param object object for which you need to find a sequence of methods
      * @return life history of the object
      */
-    History<JcMethod> generateJacoDBCalls(@NotNull T object);
+    History<JcMethod> generateJacoDBCalls(@NotNull Object object);
 
     /**
      * Registers a finder of methods for the class

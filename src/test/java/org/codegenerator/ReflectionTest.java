@@ -1,7 +1,7 @@
 package org.codegenerator;
 
-import org.codegenerator.generator.BuilderGenerator;
-import org.codegenerator.generator.POJOGenerator;
+import org.codegenerator.generator.Generator;
+import org.codegenerator.generator.Generators;
 import org.codegenerator.testclasses.codegeneratorbuilder.Sum;
 import org.codegenerator.testclasses.codegeneratorpojo.Accumulator;
 import org.codegenerator.testclasses.codegeneratorpojo.AccumulatorHolder;
@@ -20,7 +20,7 @@ class ReflectionTest {
     @Test
     void withoutSetterForOneFieldTest() throws IOException {
         final String generatedClassName = "WithoutSetterForOneFieldClass";
-        POJOGenerator<Accumulator> generator = new POJOGenerator<>(Accumulator.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(Accumulator.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         Accumulator accumulator = new Accumulator();
         accumulator.setA(12);
@@ -36,7 +36,7 @@ class ReflectionTest {
     @Test
     void withoutSetterForPojoTest() throws IOException {
         final String generatedClassName = "WithoutSetterForPojoClass";
-        POJOGenerator<AccumulatorHolder> generator = new POJOGenerator<>(AccumulatorHolder.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(AccumulatorHolder.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         Accumulator accumulatorA = new Accumulator();
         accumulatorA.setA(3);
@@ -58,9 +58,13 @@ class ReflectionTest {
     @Test
     void withoutSetterForBuilderTest() throws IOException {
         final String generatedClassName = "WithoutSetterForBuilderClass";
-        BuilderGenerator<Sum> generator = new BuilderGenerator<>(Sum.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forBuilder(Sum.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
-        Sum sum = new Sum.Builder().setA(12).setB(42).calculate().build();
+        Sum sum = new Sum.Builder()
+                .setA(12)
+                .setB(42)
+                .calculate()
+                .build();
 
         generator.generateCode(sum, Paths.get(OUTPUT_DIRECTORY));
 
@@ -71,7 +75,7 @@ class ReflectionTest {
     @Test
     void onlyReflectionTest() throws IOException, NoSuchFieldException, IllegalAccessException {
         final String generatedClassName = "OnlyReflectionClass";
-        POJOGenerator<ChildWithParentWithPrivateField> generator = new POJOGenerator<>(ChildWithParentWithPrivateField.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.forPojo(ChildWithParentWithPrivateField.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         ChildWithParentWithPrivateField child = new ChildWithParentWithPrivateField();
         Field fieldName = ParentWithPrivateField.class.getDeclaredField("name");
