@@ -8,12 +8,12 @@ import org.codegenerator.Utils;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
-import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
+import org.codegenerator.generator.TargetObject;
 import org.codegenerator.generator.graph.Path;
-import org.codegenerator.generator.graph.StateGraph;
+import org.codegenerator.generator.graph.LazyGraph;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
+import org.codegenerator.generator.graph.resultfinding.ResultFinding;
+import org.codegenerator.generator.graph.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryObject;
@@ -53,17 +53,17 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
 
         checkInvariants(builderInfoList);
 
-        methodFinder = new LazyMethodFinder(builderInfoList, new StateGraph());
+        methodFinder = new LazyMethodFinder(builderInfoList, new LazyGraph());
     }
 
     @Override
-    public boolean canTry(Object object) {
+    public boolean canTry(TargetObject targetObject) {
         return true;
     }
 
     @Override
-    public ResultFinding findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history) {
-        Pair<BuilderInfo, Path> found = methodFinder.find(finalObject);
+    public ResultFinding findReflectionCallsInternal(@NotNull TargetObject targetObject, History<Executable> history) {
+        Pair<BuilderInfo, Path> found = methodFinder.find(targetObject);
         BuilderInfo builderInfo = found.getFirst();
         Path path = found.getSecond();
         List<EdgeMethod> methods = path.getMethods();
@@ -78,16 +78,17 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
         }
         calls.add(new HistoryCall<>(history, builderInfo.builderBuildMethod));
 
-        history.put(finalObject, new HistoryObject<>(finalObject, calls, BuilderMethodSequenceFinder.class));
+        Object object = targetObject.getObject();
+        history.put(object, new HistoryObject<>(object, calls, BuilderMethodSequenceFinder.class));
 
         Object built = Utils.callSupplierWrapper(() -> builderInfo.builderBuildMethod.invoke(path.getActualObject()));
         return new ResultFindingImpl(built, path.getDeviation(), suspect);
     }
 
     @Override
-    public ResultFinding findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history) {
+    public ResultFinding findJacoDBCallsInternal(@NotNull TargetObject targetObject, History<JcMethod> history) {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            Pair<BuilderInfo, Path> found = methodFinder.find(finalObject);
+            Pair<BuilderInfo, Path> found = methodFinder.find(targetObject);
             BuilderInfo builderInfo = found.getFirst();
             Path path = found.getSecond();
             List<EdgeMethod> methods = path.getMethods();
@@ -105,7 +106,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
             addMethods(Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName())), history, methods, calls, suspect);
             addMethod(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, builderInfo.builderBuildMethod, calls);
 
-            history.put(finalObject, new HistoryObject<>(finalObject, calls, BuilderMethodSequenceFinder.class));
+            Object object = targetObject.getObject();
+            history.put(object, new HistoryObject<>(object, calls, BuilderMethodSequenceFinder.class));
 
             Object built = Utils.callSupplierWrapper(() -> builderInfo.builderBuildMethod.invoke(path.getActualObject()));
             return new ResultFindingImpl(built, path.getDeviation(), suspect);
@@ -261,37 +263,37 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal
     }
 
     private static class LazyMethodFinder {
-        private Function<Object, Pair<BuilderInfo, Path>> finder;
+        private Function<TargetObject, Pair<BuilderInfo, Path>> finder;
 
-        private LazyMethodFinder(List<BuilderInfo> builderInfoList, StateGraph stateGraph) {
-            initFinder(builderInfoList, stateGraph);
+        private LazyMethodFinder(List<BuilderInfo> builderInfoList, LazyGraph lazyGraph) {
+            initFinder(builderInfoList, lazyGraph);
         }
 
-        private Pair<BuilderInfo, Path> find(Object object) {
-            return finder.apply(object);
+        private Pair<BuilderInfo, Path> find(TargetObject targetObject) {
+            return finder.apply(targetObject);
         }
 
         private @NotNull Path find(
                 @NotNull BuilderInfo builderInfo,
-                @NotNull StateGraph stateGraph,
-                Object object
+                @NotNull LazyGraph lazyGraph,
+                TargetObject targetObject
         ) {
             Method builderBuildMethod = builderInfo.builderBuildMethod;
             Executable builderConstructor = builderInfo.builderConstructor;
 
-            return stateGraph.findPath(
-                    new AssignableTypePropertyGrouper(object),
+            return lazyGraph.findPath(
+                    targetObject,
                     createConstructorSupplier(builderConstructor),
                     createTerminationFunction(builderBuildMethod)
             );
         }
 
-        private void initFinder(List<BuilderInfo> builderInfoList, StateGraph stateGraph) {
-            finder = o -> {
+        private void initFinder(List<BuilderInfo> builderInfoList, LazyGraph lazyGraph) {
+            finder = (TargetObject o) -> {
                 for (BuilderInfo builderInfo : builderInfoList) {
                     try {
-                        @NotNull Path path = find(builderInfo, stateGraph, o);
-                        finder = o1 -> new Pair<>(builderInfo, find(builderInfo, stateGraph, o1));
+                        @NotNull Path path = find(builderInfo, lazyGraph, o);
+                        finder = o1 -> new Pair<>(builderInfo, find(builderInfo, lazyGraph, o1));
                         return new Pair<>(builderInfo, path);
                     } catch (Exception e) {
                         // this block must be empty

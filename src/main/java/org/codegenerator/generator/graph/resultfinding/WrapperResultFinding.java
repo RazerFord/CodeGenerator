@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.internal.resultfinding;
+package org.codegenerator.generator.graph.resultfinding;
 
 import java.util.Collections;
 import java.util.List;

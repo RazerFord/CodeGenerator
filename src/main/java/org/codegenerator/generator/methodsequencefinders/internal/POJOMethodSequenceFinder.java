@@ -2,13 +2,13 @@ package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
-import org.codegenerator.generator.graph.AssignableTypePropertyGrouper;
+import org.codegenerator.generator.TargetObject;
 import org.codegenerator.generator.graph.ConstructorStateGraph;
 import org.codegenerator.generator.graph.Path;
-import org.codegenerator.generator.graph.StateGraph;
+import org.codegenerator.generator.graph.LazyGraph;
 import org.codegenerator.generator.graph.edges.Edge;
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
+import org.codegenerator.generator.graph.resultfinding.ResultFinding;
+import org.codegenerator.generator.graph.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryObject;
@@ -26,27 +26,27 @@ import java.util.function.Function;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
-    private final StateGraph stateGraph = new StateGraph();
+    private final LazyGraph lazyGraph = new LazyGraph();
     private final ConstructorStateGraph constructorStateGraph = new ConstructorStateGraph();
 
     @Override
-    public boolean canTry(Object object) {
+    public boolean canTry(TargetObject targetObject) {
         return true;
     }
 
     @Override
-    public ResultFinding findReflectionCallsInternal(@NotNull Object object, History<Executable> history) {
-        return findCallsInternal(object, history, Edge::getMethod);
+    public ResultFinding findReflectionCallsInternal(@NotNull TargetObject targetObject, History<Executable> history) {
+        return findCallsInternal(targetObject, history, Edge::getMethod);
     }
 
     @Override
-    public ResultFinding findJacoDBCallsInternal(@NotNull Object object, History<JcMethod> history) {
+    public ResultFinding findJacoDBCallsInternal(@NotNull TargetObject targetObject, History<JcMethod> history) {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            Class<?> clazz = object.getClass();
+            Class<?> clazz = targetObject.getClazz();
             JcClassOrInterface jcClassOrInterface = Utils.toJcClassOrInterface(clazz, db);
             JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
 
-            return findCallsInternal(object, history, o -> o.toJcMethod(lookup));
+            return findCallsInternal(targetObject, history, o -> o.toJcMethod(lookup));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JacoDBException(e);
@@ -60,13 +60,12 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
     }
 
     private <T> @NotNull ResultFinding findCallsInternal(
-            @NotNull Object object,
+            @NotNull TargetObject targetObject,
             History<T> history,
             @NotNull Function<Edge<? extends Executable>, T> toMethod
     ) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(object);
-        Edge<? extends Executable> constructor = constructorStateGraph.findPath(assignableTypePropertyGrouper);
-        @NotNull Path path = stateGraph.findPath(assignableTypePropertyGrouper, constructor::invoke);
+        Edge<? extends Executable> constructor = constructorStateGraph.findPath(targetObject);
+        @NotNull Path path = lazyGraph.findPath(targetObject, constructor::invoke);
         List<? extends Edge<? extends Executable>> methods = path.getMethods();
 
         List<HistoryCall<T>> calls = new ArrayList<>();
@@ -80,6 +79,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
             suspect.addAll(Arrays.asList(args));
         }
 
+        Object object = targetObject.getObject();
         history.put(object, new HistoryObject<>(object, calls, POJOMethodSequenceFinder.class));
 
         int deviation = path.getDeviation();

@@ -1,12 +1,14 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
 import org.codegenerator.Utils;
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFindingImpl;
+import org.codegenerator.generator.TargetObject;
+import org.codegenerator.generator.graph.resultfinding.ResultFinding;
+import org.codegenerator.generator.graph.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryNode;
 import org.codegenerator.history.HistoryObject;
 import org.codegenerator.history.SetterUsingReflection;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
@@ -18,6 +20,15 @@ public class ReflectionMethodSequenceFinder {
     private final Map<Class<?>, List<Field>> cachedFields = new IdentityHashMap<>();
 
     public <T> ResultFinding findSetter(
+            @NotNull TargetObject expected,
+            @NotNull TargetObject actual,
+            History<T> history
+    ) {
+        return findSetterInternal(expected.getObject(), actual.getObject(), history);
+    }
+
+    @Contract("_, _, _ -> new")
+    private <T> @NotNull ResultFinding findSetterInternal(
             @NotNull Object expected,
             @NotNull Object actual,
             History<T> history

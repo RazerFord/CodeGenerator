@@ -1,7 +1,8 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.WrapperResultFinding;
+import org.codegenerator.generator.TargetObject;
+import org.codegenerator.generator.graph.resultfinding.ResultFinding;
+import org.codegenerator.generator.graph.resultfinding.WrapperResultFinding;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryArray;
 import org.jacodb.api.JcMethod;
@@ -15,18 +16,18 @@ import java.util.List;
 
 public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
     @Override
-    public boolean canTry(@NotNull Object object) {
-        return object.getClass().isArray();
+    public boolean canTry(@NotNull TargetObject targetObject) {
+        return targetObject.getClazz().isArray();
     }
 
     @Override
-    public ResultFinding findReflectionCallsInternal(@NotNull Object object, @NotNull History<Executable> history) {
-        return findCallsInternal(object, history);
+    public ResultFinding findReflectionCallsInternal(@NotNull TargetObject targetObject, @NotNull History<Executable> history) {
+        return findCallsInternal(targetObject.getObject(), history);
     }
 
     @Override
-    public ResultFinding findJacoDBCallsInternal(@NotNull Object object, @NotNull History<JcMethod> history) {
-        return findCallsInternal(object, history);
+    public ResultFinding findJacoDBCallsInternal(@NotNull TargetObject targetObject, @NotNull History<JcMethod> history) {
+        return findCallsInternal(targetObject.getObject(), history);
     }
 
     private <T> @NotNull ResultFinding findCallsInternal(@NotNull Object object, @NotNull History<T> history) {

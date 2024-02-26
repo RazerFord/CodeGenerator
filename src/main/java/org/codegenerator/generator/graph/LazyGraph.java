@@ -5,6 +5,7 @@ import kotlin.Triple;
 import org.codegenerator.Utils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
+import org.codegenerator.generator.TargetObject;
 import org.codegenerator.generator.graph.edges.EdgeGenerator;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.jetbrains.annotations.Contract;
@@ -15,21 +16,21 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-public class StateGraph {
+public class LazyGraph {
     private final EdgeGenerator edgeGenerator = new EdgeGenerator();
     private final Cloner cloner = Cloner.standard();
 
     public @NotNull Path findPath(
-            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
+            @NotNull TargetObject targetObject,
             @NotNull Supplier<Object> constructor,
             @NotNull UnaryOperator<Object> termination
     ) {
         Object beginObject = constructor.get();
         Class<?> clazz = beginObject.getClass();
         UnaryOperator<Object> copyObject = copyObject();
-        Object finalObject = assignableTypePropertyGrouper.getObject();
+        Object finalObject = targetObject.getObject();
 
-        List<EdgeMethod> methods = edgeGenerator.generate(clazz.getMethods(), assignableTypePropertyGrouper.get());
+        List<EdgeMethod> methods = edgeGenerator.generate(clazz.getMethods(), targetObject.get());
 
         Node finalNode = ClassFieldExtractor.extract(finalObject);
         Object beginObjectBuilt = termination.apply(beginObject);
@@ -51,10 +52,10 @@ public class StateGraph {
     }
 
     public @NotNull Path findPath(
-            @NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper,
+            @NotNull TargetObject targetObject,
             @NotNull Supplier<Object> constructor
     ) {
-        return findPath(assignableTypePropertyGrouper, constructor, UnaryOperator.identity());
+        return findPath(targetObject, constructor, UnaryOperator.identity());
     }
 
     private @NotNull Triple<Object, Node, PathNode> bfs(

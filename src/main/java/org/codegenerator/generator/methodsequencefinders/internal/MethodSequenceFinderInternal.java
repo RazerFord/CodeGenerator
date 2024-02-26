@@ -1,6 +1,7 @@
 package org.codegenerator.generator.methodsequencefinders.internal;
 
-import org.codegenerator.generator.methodsequencefinders.internal.resultfinding.ResultFinding;
+import org.codegenerator.generator.TargetObject;
+import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
@@ -8,9 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Executable;
 
 public interface MethodSequenceFinderInternal {
-    boolean canTry(Object object);
+    boolean canTry(TargetObject targetObject);
 
-    ResultFinding findReflectionCallsInternal(@NotNull Object finalObject, History<Executable> history);
+    ResultFinding findReflectionCallsInternal(@NotNull TargetObject targetObject, History<Executable> history);
 
-    ResultFinding findJacoDBCallsInternal(@NotNull Object finalObject, History<JcMethod> history);
+    ResultFinding findJacoDBCallsInternal(@NotNull TargetObject targetObject, History<JcMethod> history);
 }

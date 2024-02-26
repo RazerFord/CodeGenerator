@@ -11,20 +11,20 @@ import java.nio.file.Path;
 
 public interface Generator<T> {
     /**
-     * Generates code with which you can get `finalObject`
+     * Generates code with which you can get `object`
      * and saves it in the `path` directory
      *
-     * @param finalObject object for which you need to generateCode a sequence of methods
+     * @param object object for which you need to generateCode a sequence of methods
      * @param path        directory where you want to save the file
      * @throws IOException – if an I/O error occurs
      */
-    void generateCode(@NotNull T finalObject, Path path) throws IOException;
+    void generateCode(@NotNull T object, Path path) throws IOException;
 
     /**
-     * Generates code with which you can get `finalObject`
+     * Generates code with which you can get `object`
      * and saves it in the `path` directory
      *
-     * @param finalObject object for which you need to generateCode a sequence of methods
+     * @param object object for which you need to generateCode a sequence of methods
      * @param packageName the name of the package in which the generated code is placed
      * @param className   the name of the class into which the generated code is placed
      * @param methodName  name of the method that creates the object
@@ -32,7 +32,7 @@ public interface Generator<T> {
      * @throws IOException – if an I/O error occurs
      */
     void generateCode(
-            @NotNull T finalObject,
+            @NotNull T object,
             String packageName,
             String className,
             String methodName,
@@ -40,17 +40,17 @@ public interface Generator<T> {
     ) throws IOException;
 
     /**
-     * Generates code with which you can get `finalObject`
+     * Generates code with which you can get `object`
      * and saves it in the `path` directory
      *
-     * @param finalObject object for which you need to generateCode a sequence of methods
+     * @param object object for which you need to generateCode a sequence of methods
      * @param className   the name of the class into which the generated code is placed
      * @param methodName  name of the method that creates the object
      * @param path        directory where you want to save the file
      * @throws IOException – if an I/O error occurs
      */
     void generateCode(
-            @NotNull T finalObject,
+            @NotNull T object,
             String className,
             String methodName,
             Path path
@@ -60,19 +60,19 @@ public interface Generator<T> {
      * Finds methods that were called during the lifetime of objects.
      * Each method is represented by `Executable`
      *
-     * @param finalObject object for which you need to find a sequence of methods
+     * @param object object for which you need to find a sequence of methods
      * @return life history of the object
      */
-    History<Executable> generateReflectionCalls(@NotNull T finalObject);
+    History<Executable> generateReflectionCalls(@NotNull T object);
 
     /**
      * Finds methods that were called during the lifetime of objects.
      * Each method is represented by `JcMethod`
      *
-     * @param finalObject object for which you need to find a sequence of methods
+     * @param object object for which you need to find a sequence of methods
      * @return life history of the object
      */
-    History<JcMethod> generateJacoDBCalls(@NotNull T finalObject);
+    History<JcMethod> generateJacoDBCalls(@NotNull T object);
 
     /**
      * Registers a finder of methods for the class

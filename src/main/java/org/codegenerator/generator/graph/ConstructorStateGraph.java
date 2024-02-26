@@ -3,6 +3,7 @@ package org.codegenerator.generator.graph;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
+import org.codegenerator.generator.TargetObject;
 import org.codegenerator.generator.graph.edges.EdgeConstructor;
 import org.codegenerator.generator.graph.edges.EdgeGenerator;
 import org.jetbrains.annotations.NotNull;
@@ -14,18 +15,18 @@ import static org.codegenerator.Utils.throwIf;
 public class ConstructorStateGraph {
     private final EdgeGenerator edgeGenerator = new EdgeGenerator();
 
-    public @NotNull EdgeConstructor findPath(@NotNull AssignableTypePropertyGrouper assignableTypePropertyGrouper) {
+    public @NotNull EdgeConstructor findPath(@NotNull TargetObject targetObject) {
         List<EdgeConstructor> edgeConstructors = edgeGenerator.generate(
-                assignableTypePropertyGrouper.getClazz().getConstructors(),
-                assignableTypePropertyGrouper.get()
+                targetObject.getClazz().getConstructors(),
+                targetObject.get()
         );
-        return buildBeginObjectAndConstructorCall(assignableTypePropertyGrouper.getObject(), edgeConstructors);
+        return buildBeginObjectAndConstructorCall(targetObject.getObject(), edgeConstructors);
     }
 
     @SuppressWarnings("unused")
     public @NotNull EdgeConstructor findPath(Object finalObject) {
-        AssignableTypePropertyGrouper assignableTypePropertyGrouper = new AssignableTypePropertyGrouper(finalObject);
-        return findPath(assignableTypePropertyGrouper);
+        TargetObject targetObject = new TargetObject(finalObject);
+        return findPath(targetObject);
     }
 
     private @NotNull EdgeConstructor buildBeginObjectAndConstructorCall(Object finalObject, @NotNull List<EdgeConstructor> edges) {

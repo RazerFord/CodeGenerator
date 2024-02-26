@@ -50,43 +50,43 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     @Override
-    public void generateCode(@NotNull T finalObject, Path path) throws IOException {
-        this.generateCode(finalObject, packageName, className, methodName, path);
+    public void generateCode(@NotNull T object, Path path) throws IOException {
+        this.generateCode(object, packageName, className, methodName, path);
     }
 
     @Override
     public void generateCode(
-            @NotNull T finalObject,
+            @NotNull T object,
             String className,
             String methodName,
             Path path
     ) throws IOException {
-        this.generateCode(finalObject, packageName, className, methodName, path);
+        this.generateCode(object, packageName, className, methodName, path);
     }
 
     @Override
     public void generateCode(
-            @NotNull T finalObject,
+            @NotNull T object,
             String packageName,
             String className,
             String methodName,
             Path path
     ) throws IOException {
-        History<Executable> history = methodSequenceFinder.findReflectionCalls(finalObject);
+        History<Executable> history = methodSequenceFinder.findReflectionCalls(new TargetObject(object));
 
-        JavaFile javaFile = fileGenerator.generate(history, finalObject, packageName, className, methodName);
+        JavaFile javaFile = fileGenerator.generate(history, object, packageName, className, methodName);
 
         javaFile.writeTo(path);
     }
 
     @Override
-    public History<Executable> generateReflectionCalls(@NotNull T finalObject) {
-        return methodSequenceFinder.findReflectionCalls(finalObject);
+    public History<Executable> generateReflectionCalls(@NotNull T object) {
+        return methodSequenceFinder.findReflectionCalls(new TargetObject(object));
     }
 
     @Override
-    public History<JcMethod> generateJacoDBCalls(@NotNull T finalObject) {
-        return methodSequenceFinder.findJacoDBCalls(finalObject);
+    public History<JcMethod> generateJacoDBCalls(@NotNull T object) {
+        return methodSequenceFinder.findJacoDBCalls(new TargetObject(object));
     }
 
     @Override
@@ -95,12 +95,12 @@ public class BuilderGenerator<T> implements Generator<T> {
     }
 
     private @NotNull MethodSequenceFinder createPipeline(Class<?>... classes) {
-        List<Function<Object, ? extends MethodSequenceFinderInternal>> methodSequenceFinderList = new ArrayList<>();
-        methodSequenceFinderList.add(o -> new NullMethodSequenceFinder());
-        methodSequenceFinderList.add(o -> new PrimitiveMethodSequenceFinder());
-        methodSequenceFinderList.add(o -> new ArrayMethodSequenceFinder());
-        methodSequenceFinderList.add(o -> new BuilderMethodSequenceFinder(o.getClass(), classes));
-        methodSequenceFinderList.add(o -> new POJOMethodSequenceFinder());
+        List<Function<TargetObject, ? extends MethodSequenceFinderInternal>> methodSequenceFinderList = new ArrayList<>();
+        methodSequenceFinderList.add(to -> new NullMethodSequenceFinder());
+        methodSequenceFinderList.add(to -> new PrimitiveMethodSequenceFinder());
+        methodSequenceFinderList.add(to -> new ArrayMethodSequenceFinder());
+        methodSequenceFinderList.add(to -> new BuilderMethodSequenceFinder(to.getClazz(), classes));
+        methodSequenceFinderList.add(to -> new POJOMethodSequenceFinder());
         return new PipelineMethodSequenceFinder(methodSequenceFinderList);
     }
 }

@@ -1,4 +1,4 @@
-package org.codegenerator.generator.graph;
+package org.codegenerator.generator;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.Contract;
@@ -10,20 +10,22 @@ import java.util.function.Supplier;
 
 import static org.codegenerator.Utils.callSupplierWrapper;
 
-public class AssignableTypePropertyGrouper implements Supplier<Map<Class<?>, List<Object>>> {
+public class TargetObject {
     private final Object o;
     private final Class<?> clazz;
     private Supplier<Map<Class<?>, List<Object>>> supplier;
 
     @Contract(pure = true)
-    public AssignableTypePropertyGrouper(@NotNull Object o) {
-        clazz = o.getClass();
+    public TargetObject(Object o) {
         this.o = o;
-        supplier = () -> {
-            Map<Class<?>, List<Object>> result = prepareTypeToValues(o);
-            supplier = () -> result;
-            return result;
-        };
+
+        if (o != null) {
+            clazz = o.getClass();
+        } else {
+            clazz = null;
+        }
+
+        supplier = createLazySupplier();
     }
 
     public Map<Class<?>, List<Object>> get() {
@@ -67,5 +69,17 @@ public class AssignableTypePropertyGrouper implements Supplier<Map<Class<?>, Lis
                 }
             }
         }
+    }
+
+    @Contract(pure = true)
+    private @NotNull Supplier<Map<Class<?>, List<Object>>> createLazySupplier() {
+        return () -> {
+            if (o == null || ClassUtils.isPrimitiveOrWrapper(o.getClass())) {
+                return Collections.emptyMap();
+            }
+            Map<Class<?>, List<Object>> result = prepareTypeToValues(o);
+            supplier = () -> result;
+            return result;
+        };
     }
 }
