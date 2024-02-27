@@ -11,8 +11,13 @@ import java.util.Collection;
 import java.util.function.Function;
 
 /**
- * This interface provides methods for finding methods that may have been
- * called during the lifetime of an object, using reflection and JacoDB.
+ * This interface provides functionality for finding methods that may have
+ * been called during the lifetime of an object, using reflection and JacoDB.
+ * To find methods, the {@link MethodSequenceFinder} registered in the
+ * Pipeline will be iterated one by one.
+ * The method search is completed if:
+ * - Failed to find methods that were called on the object
+ * - All {@link MethodSequenceFinder} have been tried
  */
 public interface MethodSequencePipeline {
     /**

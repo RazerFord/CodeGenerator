@@ -113,13 +113,13 @@ public class ReflectionCodeGeneration {
      * </pre>
      */
     private void addMethodGetFieldsIfNonExists(TypeSpec.@NotNull Builder typeBuilder) {
-        ParameterSpec parameterSpec = ParameterSpec.builder(Class.class, "clazz").build();
+        ClassName classClassName = ClassName.get(Class.class);
+        TypeName wildcard = WildcardTypeName.subtypeOf(Object.class);
+        ParameterizedTypeName classType = ParameterizedTypeName.get(classClassName, wildcard);
+        ParameterSpec parameterSpec = ParameterSpec.builder(classType, "clazz").build();
         if (typeBuilder.methodSpecs.stream()
                 .noneMatch(m -> m.name.equals(methodName) && m.parameters.equals(Collections.singletonList(parameterSpec)))) {
             ClassName mapClassName = ClassName.get(Map.class);
-            ClassName classClassName = ClassName.get(Class.class);
-            TypeName wildcard = WildcardTypeName.subtypeOf(Object.class);
-            ParameterizedTypeName classType = ParameterizedTypeName.get(classClassName, wildcard);
             ParameterizedTypeName mapType = ParameterizedTypeName.get(Map.class, String.class, Field.class);
             ParameterizedTypeName mapMapType = ParameterizedTypeName.get(mapClassName, classType, mapType);
 
