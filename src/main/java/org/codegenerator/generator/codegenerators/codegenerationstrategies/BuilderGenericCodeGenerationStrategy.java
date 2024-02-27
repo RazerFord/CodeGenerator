@@ -7,7 +7,7 @@ import kotlin.Pair;
 import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
 import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
-import org.codegenerator.generator.methodsequencefinders.internal.POJOMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.concrete.POJOMethodSequenceFinder;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;

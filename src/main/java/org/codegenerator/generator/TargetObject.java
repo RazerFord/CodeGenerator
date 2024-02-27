@@ -19,11 +19,7 @@ public class TargetObject {
     public TargetObject(Object o) {
         this.o = o;
 
-        if (o != null) {
-            clazz = o.getClass();
-        } else {
-            clazz = null;
-        }
+        clazz = o != null ? o.getClass() : null;
 
         supplier = createLazySupplier();
     }

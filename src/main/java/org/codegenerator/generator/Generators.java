@@ -1,6 +1,6 @@
 package org.codegenerator.generator;
 
-import org.codegenerator.generator.methodsequencefinders.internal.*;
+import org.codegenerator.generator.methodsequencefinders.concrete.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.function.Function;
 
 public class Generators {
+    private Generators() {
+    }
+
     public static @NotNull CommonGenerator standart(Class<?>... classes) {
         CommonGenerator commonGenerator = new CommonGeneratorImpl();
         commonGenerator.registerPipeline(createFunctionsForBuilder(classes));
@@ -55,8 +58,8 @@ public class Generators {
         return commonGenerator;
     }
 
-    private static @NotNull List<Function<TargetObject, ? extends MethodSequenceFinderInternal>> createFunctionsForBuilder(Class<?>... classes) {
-        List<Function<TargetObject, ? extends MethodSequenceFinderInternal>> methodSequenceFinderList = new ArrayList<>();
+    private static @NotNull List<Function<TargetObject, ? extends MethodSequenceFinder>> createFunctionsForBuilder(Class<?>... classes) {
+        List<Function<TargetObject, ? extends MethodSequenceFinder>> methodSequenceFinderList = new ArrayList<>();
 
         methodSequenceFinderList.add(to -> new NullMethodSequenceFinder());
         methodSequenceFinderList.add(to -> new PrimitiveMethodSequenceFinder());
@@ -67,8 +70,8 @@ public class Generators {
         return methodSequenceFinderList;
     }
 
-    private static @NotNull List<Function<TargetObject, ? extends MethodSequenceFinderInternal>> createFunctionsForPojo(Class<?>... classes) {
-        List<Function<TargetObject, ? extends MethodSequenceFinderInternal>> functions = createFunctionsForBuilder(classes);
+    private static @NotNull List<Function<TargetObject, ? extends MethodSequenceFinder>> createFunctionsForPojo(Class<?>... classes) {
+        List<Function<TargetObject, ? extends MethodSequenceFinder>> functions = createFunctionsForBuilder(classes);
         int size = functions.size();
         Collections.swap(functions, size - 2, size - 1);
         return functions;

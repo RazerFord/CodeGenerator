@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.internal;
+package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import kotlin.Pair;
 import kotlin.sequences.Sequence;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.throwIf;
 
-public class BuilderMethodSequenceFinder implements MethodSequenceFinderInternal {
+public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     private static final String BUILDER_CONSTRUCTOR_FOUND = "Builder constructor not found";
     private static final String BUILDER_NOT_FOUND = "Builder not found";
 

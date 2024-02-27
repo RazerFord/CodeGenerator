@@ -68,7 +68,10 @@ public class EdgeGenerator {
         currPath.removeLast();
     }
 
-    public static Object @NotNull [] extractArgs(@NotNull List<Node> arguments, Map<Class<?>, List<Object>> typeToValues) {
+    public static Object @NotNull [] extractArgs(
+            @NotNull List<Node> arguments,
+            Map<Class<?>, List<Object>> typeToValues
+    ) {
         Object[] args = new Object[arguments.size()];
         for (int i = 0; i < arguments.size(); i++) {
             args[i] = typeToValues.get(arguments.get(i).getType()).get(arguments.get(i).getI());
@@ -82,9 +85,9 @@ public class EdgeGenerator {
      * Then the graph will be built:
      * <p>
      * (int, 0) ---> (int, 0)
-     *    |
+     *           |
      * (int, 1) ---> (int, 1)
-     *    |
+     *           |
      * (int, 2) ---> (int, 2)
      *
      * @param executable   method that can be executed. Usually this is an example `Constructor<?>` or `Method`

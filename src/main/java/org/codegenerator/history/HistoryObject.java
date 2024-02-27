@@ -1,7 +1,5 @@
 package org.codegenerator.history;
 
-import org.codegenerator.ItemType;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -10,7 +8,6 @@ public class HistoryObject<T> implements HistoryNode<T> {
     private final List<HistoryCall<T>> historyCalls;
     private final List<SetterUsingReflection<T>> setterUsingReflections;
     private final Class<?> creator;
-
 
     public HistoryObject(
             Object object,

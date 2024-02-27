@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.internal;
+package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.generator.TargetObject;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Executable;
 import java.util.Collections;
 
-public class PrimitiveMethodSequenceFinder implements MethodSequenceFinderInternal {
+public class PrimitiveMethodSequenceFinder implements MethodSequenceFinder {
     @Override
     public boolean canTry(@NotNull TargetObject targetObject) {
         Class<?> clazz = targetObject.getClazz();

@@ -2,6 +2,7 @@ package org.codegenerator;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.codegenerator.exceptions.CallWrapperException;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcClasspath;
 import org.jacodb.api.JcDatabase;
@@ -96,30 +97,30 @@ public class Utils {
         return db.asyncClasspath(fileList).get();
     }
 
-    public static <E> E callSupplierWrapper(SupplierWrapper<E> supplierWrapper) {
+    public static <T, E extends Exception> T callSupplierWrapper(SupplierWrapper<T, E> supplierWrapper) {
         try {
             return supplierWrapper.get();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new CallWrapperException(e);
         }
     }
 
     @FunctionalInterface
-    public interface SupplierWrapper<T> {
-        T get() throws Exception;
+    public interface SupplierWrapper<T, E extends Exception> {
+        T get() throws E;
     }
 
-    public static <E> void callRunnableWrapper(RunnableWrapper runnableWrapper) {
+    public static <E extends Exception> void callRunnableWrapper(RunnableWrapper<E> runnableWrapper) {
         try {
             runnableWrapper.run();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new CallWrapperException(e);
         }
     }
 
     @FunctionalInterface
-    public interface RunnableWrapper {
-        void run() throws Exception;
+    public interface RunnableWrapper<E extends Exception> {
+        void run() throws E;
     }
 
     public static @NotNull List<List<Integer>> combinations(List<Integer> inputSet, int k) {

@@ -1,7 +1,5 @@
 package org.codegenerator.history;
 
-import org.codegenerator.ItemType;
-
 import java.util.Collections;
 import java.util.List;
 

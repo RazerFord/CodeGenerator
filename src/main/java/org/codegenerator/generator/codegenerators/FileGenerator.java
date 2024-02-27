@@ -17,10 +17,24 @@ import java.util.Deque;
 
 import static javax.lang.model.element.Modifier.*;
 
+/**
+ * With this class, you can generate code that you can use to create the requested object.
+ */
 public class FileGenerator {
     private CodeGenerationStrategy codeGenerationStrategy = new BeginCodeGenerationStrategy();
 
-    public JavaFile generate(
+    /**
+     * Generates code that can be used to create the requested object.
+     *
+     * @param history     {@link History<Executable>} of the object
+     * @param source      requested object
+     * @param packageName the name of the package in which the generated code will be located
+     * @param className   generated Class Name
+     * @param methodName  the name of the method that will need to be called to retrieve the
+     *                    requested object
+     * @return file with the generated code
+     */
+    public @NotNull JavaFile generate(
             @NotNull History<Executable> history,
             @NotNull Object source,
             String packageName,
@@ -39,7 +53,7 @@ public class FileGenerator {
         return JavaFile.builder(packageName, typeBuilder.build()).build();
     }
 
-    @NotNull ContextGenerator buildContext(
+    private @NotNull ContextGenerator buildContext(
             TypeSpec.Builder typeBuilder,
             Object source,
             String methodName,
@@ -57,16 +71,14 @@ public class FileGenerator {
                 .build();
     }
 
-    @NotNull
-    private MethodSpec.Builder getMethodBuilder(@NotNull Object source, String methodName) {
+    private @NotNull MethodSpec.Builder getMethodBuilder(@NotNull Object source, String methodName) {
         return MethodSpec
                 .methodBuilder(methodName)
                 .addModifiers(PUBLIC, STATIC)
                 .returns(source.getClass());
     }
 
-    @NotNull
-    private TypeSpec.Builder getTypeBuilder(String className) {
+    private @NotNull TypeSpec.Builder getTypeBuilder(String className) {
         return TypeSpec
                 .classBuilder(className)
                 .addModifiers(PUBLIC, FINAL);

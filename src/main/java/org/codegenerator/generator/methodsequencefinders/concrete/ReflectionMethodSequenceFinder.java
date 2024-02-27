@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.internal;
+package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import org.codegenerator.Utils;
 import org.codegenerator.generator.TargetObject;

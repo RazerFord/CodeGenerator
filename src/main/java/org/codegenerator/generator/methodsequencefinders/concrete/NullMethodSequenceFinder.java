@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.internal;
+package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import org.codegenerator.generator.TargetObject;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Executable;
 import java.util.Collections;
 
-public class NullMethodSequenceFinder implements MethodSequenceFinderInternal {
+public class NullMethodSequenceFinder implements MethodSequenceFinder {
     @Override
     public boolean canTry(@NotNull TargetObject targetObject) {
         return targetObject.getObject() == null;

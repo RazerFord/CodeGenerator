@@ -1,7 +1,7 @@
 package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
-import org.codegenerator.generator.methodsequencefinders.internal.BuilderMethodSequenceFinder;
-import org.codegenerator.generator.methodsequencefinders.internal.POJOMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.concrete.BuilderMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.concrete.POJOMethodSequenceFinder;
 import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

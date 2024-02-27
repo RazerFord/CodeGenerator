@@ -6,11 +6,11 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import org.apache.commons.lang3.function.TriConsumer;
 import org.codegenerator.Utils;
-import org.codegenerator.generator.methodsequencefinders.internal.BuilderMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.concrete.BuilderMethodSequenceFinder;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
-import org.codegenerator.ItemType;
+import org.codegenerator.history.ItemType;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.*;

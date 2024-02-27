@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.internal;
+package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
-public class POJOMethodSequenceFinder implements MethodSequenceFinderInternal {
+public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
     private final LazyGraph lazyGraph = new LazyGraph();
     private final ConstructorStateGraph constructorStateGraph = new ConstructorStateGraph();

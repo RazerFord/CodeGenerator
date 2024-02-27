@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.internal;
+package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import org.codegenerator.generator.TargetObject;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ArrayMethodSequenceFinder implements MethodSequenceFinderInternal {
+public class ArrayMethodSequenceFinder implements MethodSequenceFinder {
     @Override
     public boolean canTry(@NotNull TargetObject targetObject) {
         return targetObject.getClazz().isArray();

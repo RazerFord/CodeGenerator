@@ -2,8 +2,8 @@ package org.codegenerator;
 
 import org.codegenerator.generator.Generator;
 import org.codegenerator.generator.Generators;
-import org.codegenerator.generator.methodsequencefinders.internal.ArrayMethodSequenceFinder;
-import org.codegenerator.generator.methodsequencefinders.internal.PrimitiveMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.concrete.ArrayMethodSequenceFinder;
+import org.codegenerator.generator.methodsequencefinders.concrete.PrimitiveMethodSequenceFinder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
