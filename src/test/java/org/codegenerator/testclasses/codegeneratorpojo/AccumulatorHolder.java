@@ -52,6 +52,7 @@ public class AccumulatorHolder {
         return "AccumulatorHolder{" +
                 "a=" + a +
                 ", b=" + b +
+                ", c=" + c +
                 '}';
     }
 }

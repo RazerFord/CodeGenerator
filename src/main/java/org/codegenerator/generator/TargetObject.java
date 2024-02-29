@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -41,6 +42,7 @@ public class TargetObject {
         Class<?> clazz1 = clazz;
         while (clazz1 != Object.class) {
             for (Field field : clazz1.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
                 List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
                 field.setAccessible(true);
                 list.add(callSupplierWrapper(() -> field.get(o)));

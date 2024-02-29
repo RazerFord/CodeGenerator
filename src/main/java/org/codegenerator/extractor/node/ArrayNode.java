@@ -20,11 +20,10 @@ public class ArrayNode implements Node {
         this.clazz = clazz;
         throwUnless(clazz.isArray(), new IllegalArgumentException());
         int length = Array.getLength(value);
-        Object[] newValue = new Object[length];
+        this.value = new Object[length];
         for (int i = 0; i < length; i++) {
-            newValue[i] = Array.get(value, i);
+            this.value[i] = Array.get(value, i);
         }
-        this.value = newValue;
         this.visited = visited;
 
         visited.put(value, this);
@@ -44,12 +43,14 @@ public class ArrayNode implements Node {
 
     @Override
     public void extract() {
-        Class<?> componentType = clazz.getComponentType();
         for (int i = 0; i < value.length; i++) {
             Node node = visited.get(value[i]);
             if (node != null) {
                 fields.put(i, node);
             } else {
+                Class<?> componentType = value[i] != null ?
+                        value[i].getClass() :
+                        clazz.getComponentType();
                 node = NodeUtils.createNode(componentType, value[i], visited);
                 fields.put(i, node);
             }
