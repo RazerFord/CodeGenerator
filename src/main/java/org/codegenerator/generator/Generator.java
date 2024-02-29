@@ -27,6 +27,23 @@ public interface Generator {
      * Generates code with which you can get `object`
      * and saves it in the `path` directory.
      *
+     * @param object     object for which you need to generateCode a sequence of methods
+     * @param className  the name of the class into which the generated code is placed
+     * @param methodName name of the method that creates the object
+     * @param path       directory where you want to save the file
+     * @throws IOException if an I/O error occurs
+     */
+    void generateCode(
+            @NotNull Object object,
+            String className,
+            String methodName,
+            Path path
+    ) throws IOException;
+
+    /**
+     * Generates code with which you can get `object`
+     * and saves it in the `path` directory.
+     *
      * @param object      object for which you need to generateCode a sequence of methods
      * @param packageName the name of the package in which the generated code is placed
      * @param className   the name of the class into which the generated code is placed
@@ -47,16 +64,45 @@ public interface Generator {
      * and saves it in the `path` directory.
      *
      * @param object     object for which you need to generateCode a sequence of methods
+     * @param appendable object to which the file is written
+     * @throws IOException if an I/O error occurs
+     */
+    void generateCode(@NotNull Object object, Appendable appendable) throws IOException;
+
+    /**
+     * Generates code with which you can get `object`
+     * and saves it in the `path` directory.
+     *
+     * @param object     object for which you need to generateCode a sequence of methods
      * @param className  the name of the class into which the generated code is placed
      * @param methodName name of the method that creates the object
-     * @param path       directory where you want to save the file
+     * @param appendable object to which the file is written
      * @throws IOException if an I/O error occurs
      */
     void generateCode(
             @NotNull Object object,
             String className,
             String methodName,
-            Path path
+            Appendable appendable
+    ) throws IOException;
+
+    /**
+     * Generates code with which you can get `object`
+     * and saves it in the `path` directory.
+     *
+     * @param object      object for which you need to generateCode a sequence of methods
+     * @param packageName the name of the package in which the generated code is placed
+     * @param className   the name of the class into which the generated code is placed
+     * @param methodName  name of the method that creates the object
+     * @param appendable  object to which the file is written
+     * @throws IOException if an I/O error occurs
+     */
+    void generateCode(
+            @NotNull Object object,
+            String packageName,
+            String className,
+            String methodName,
+            Appendable appendable
     ) throws IOException;
 
     /**

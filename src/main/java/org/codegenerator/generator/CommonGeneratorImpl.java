@@ -65,11 +65,37 @@ public class CommonGeneratorImpl implements CommonGenerator {
             String methodName,
             Path path
     ) throws IOException {
-        History<Executable> history = methodSequencePipeline.findReflectionCalls(new TargetObject(object));
-
-        JavaFile javaFile = fileGenerator.generate(history, object, packageName, className, methodName);
+        JavaFile javaFile = generateInternal(object, packageName, className, methodName);
 
         javaFile.writeTo(path);
+    }
+
+    @Override
+    public void generateCode(@NotNull Object object, Appendable appendable) throws IOException {
+        generateCode(object, packageName, className, methodName, appendable);
+    }
+
+    @Override
+    public void generateCode(
+            @NotNull Object object,
+            String className,
+            String methodName,
+            Appendable appendable
+    ) throws IOException {
+        generateCode(object, packageName, className, methodName, appendable);
+    }
+
+    @Override
+    public void generateCode(
+            @NotNull Object object,
+            String packageName,
+            String className,
+            String methodName,
+            Appendable appendable
+    ) throws IOException {
+        JavaFile javaFile = generateInternal(object, packageName, className, methodName);
+
+        javaFile.writeTo(appendable);
     }
 
     @Override
@@ -100,5 +126,15 @@ public class CommonGeneratorImpl implements CommonGenerator {
     @Override
     public void unregisterPipeline() {
         methodSequencePipeline.unregister();
+    }
+
+    private @NotNull JavaFile generateInternal(
+            @NotNull Object object,
+            String packageName,
+            String className,
+            String methodName
+    ) {
+        History<Executable> history = methodSequencePipeline.findReflectionCalls(new TargetObject(object));
+        return fileGenerator.generate(history, object, packageName, className, methodName);
     }
 }
