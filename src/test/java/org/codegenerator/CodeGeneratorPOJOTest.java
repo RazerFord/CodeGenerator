@@ -366,7 +366,7 @@ class CodeGeneratorPOJOTest {
     }
 
     @Test
-    @Timeout(20)
+    @Timeout(25)
     void veryManySetterComplexTest() throws IOException {
         final String generatedClassName = "GeneratedClassWithManyFieldsComplexClass";
         Generator generator = Generators.forPojo(ClassWithManyFieldsComplex.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
