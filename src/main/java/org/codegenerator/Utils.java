@@ -41,6 +41,10 @@ public class Utils {
         throwIf(!cond, exception);
     }
 
+    public static <T extends RuntimeException> void throwUnless(boolean cond, Supplier<T> exception) {
+        throwIf(!cond, exception);
+    }
+
     public static JcDatabase loadOrCreateDataBase(String dbname, JcFeature<?, ?>... jcFeatures) throws ExecutionException, InterruptedException {
         return JacoDB.async(new JcSettings()
                 .useProcessJavaRuntime()

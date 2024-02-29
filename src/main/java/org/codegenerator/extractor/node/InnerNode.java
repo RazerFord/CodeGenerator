@@ -1,29 +1,32 @@
 package org.codegenerator.extractor.node;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Supplier;
 
+import static org.codegenerator.Utils.throwIf;
+
 public class InnerNode implements Node {
-    private final Set<Object> visitedDuringEquals = new HashSet<>();
+    private boolean visited = false;
     private final Class<?> clazz;
     private final Object value;
-    private final Map<Object, Node> fields = new HashMap<>();
-    private final Map<Object, Node> visited;
+    private final Map<Object, Node> fields;
     private final Supplier<Integer> power;
 
-    InnerNode(Class<?> clazz, Object value, @NotNull Map<Object, Node> visited) {
+    InnerNode(@NotNull Class<?> clazz, Object value, @NotNull Map<Object, Node> visited) {
+        Supplier<? extends RuntimeException> supplier = () -> new IllegalArgumentException("InnerNode");
+        throwIf(clazz.isArray() || ClassUtils.isPrimitiveOrWrapper(clazz), supplier);
+
         this.clazz = clazz;
         this.value = value;
-        this.visited = visited;
 
         visited.put(value, this);
-        extract();
+        fields = Collections.unmodifiableMap(extract(visited));
         power = NodeUtils.createPowerSupplier(fields);
     }
 
@@ -35,31 +38,6 @@ public class InnerNode implements Node {
     @Override
     public Object getValue() {
         return value;
-    }
-
-    @Override
-    public void extract() {
-        Class<?> clz = clazz;
-
-        while (clz != null) {
-            for (Field field : clz.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
-
-                field.setAccessible(true);
-                Object o = Utils.callSupplierWrapper(() -> field.get(value));
-
-                Node node = visited.get(o);
-                if (node != null) {
-                    fields.put(field, node);
-                } else {
-                    Class<?> type = field.getType();
-                    if (field.getGenericType() == type) node = NodeUtils.createNode(type, o, visited);
-                    else node = NodeUtils.createNode(o, visited);
-                    fields.put(field, node);
-                }
-            }
-            clz = clz.getSuperclass();
-        }
     }
 
     @Override
@@ -83,6 +61,11 @@ public class InnerNode implements Node {
             diff += curDiff;
         }
         return diff;
+    }
+
+    @Override
+    public void accept(@NotNull NodeVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
@@ -110,36 +93,6 @@ public class InnerNode implements Node {
         return fields.get(o);
     }
 
-    @Nullable
-    @Override
-    public Node put(Object field, Node node) {
-        if (field instanceof Field) {
-            return fields.put(field, node);
-        }
-        throw new IllegalArgumentException();
-    }
-
-    @Override
-    public Node remove(Object o) {
-        return fields.remove(o);
-    }
-
-    @Override
-    public void putAll(@NotNull Map<?, ? extends Node> map) {
-        for (Map.Entry<?, ? extends Node> e : map.entrySet()) {
-            if (e.getKey() instanceof Field) {
-                fields.put(e.getKey(), e.getValue());
-            } else {
-                throw new IllegalArgumentException();
-            }
-        }
-    }
-
-    @Override
-    public void clear() {
-        fields.clear();
-    }
-
     @NotNull
     @Override
     public Set<Object> keySet() {
@@ -161,18 +114,44 @@ public class InnerNode implements Node {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof InnerNode)) return false;
-        InnerNode innerNode = (InnerNode) o;
         // If recursion is detected, true should be returned.
         // Since recursion could occur if `equals` of objects returned true
-        if (visitedDuringEquals.contains(o)) return true;
-        visitedDuringEquals.add(o);
+        if (visited) return true;
+        visited = true;
+        InnerNode innerNode = (InnerNode) o;
         boolean result = Objects.equals(value, innerNode.value) && innerNode.fields.equals(fields);
-        visitedDuringEquals.remove(o);
+        visited = false;
         return result;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(clazz, value, fields.keySet());
+    }
+
+    private @NotNull Map<Object, Node> extract(Map<Object, Node> visited) {
+        Map<Object, Node> map = new HashMap<>();
+        Class<?> clz = clazz;
+
+        while (clz != null) {
+            for (Field field : clz.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers())) continue;
+
+                field.setAccessible(true);
+                Object o = Utils.callSupplierWrapper(() -> field.get(value));
+
+                Node node = visited.get(o);
+                if (node != null) {
+                    map.put(field, node);
+                } else {
+                    Class<?> type = field.getType();
+                    if (field.getGenericType() == type) node = NodeUtils.createNode(type, o, visited);
+                    else node = NodeUtils.createNode(o, visited);
+                    map.put(field, node);
+                }
+            }
+            clz = clz.getSuperclass();
+        }
+        return map;
     }
 }

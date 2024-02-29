@@ -10,13 +10,33 @@ public interface Node extends Map<Object, Node> {
 
     Object getValue();
 
-    void extract();
-
     NodeType nodeType();
 
     int power();
 
     int diff(Node that);
+
+    void accept(NodeVisitor visitor);
+
+    @Override
+    default Node put(Object field, Node node) {
+        throw new UnsupportedOperationException("put");
+    }
+
+    @Override
+    default Node remove(Object o) {
+        throw new UnsupportedOperationException("remove");
+    }
+
+    @Override
+    default void putAll(@NotNull Map<?, ? extends Node> map) {
+        throw new UnsupportedOperationException("putAll");
+    }
+
+    @Override
+    default void clear() {
+        throw new UnsupportedOperationException("clear");
+    }
 
     enum NodeType {
         ARRAY, INNER, LEAF,

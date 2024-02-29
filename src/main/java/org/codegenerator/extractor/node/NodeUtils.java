@@ -23,7 +23,7 @@ public class NodeUtils {
             return Leaf.NULL_NODE;
         }
         if (ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class) {
-            return new Leaf(o.getClass(), o, visited);
+            return new Leaf(o.getClass(), o);
         }
         if (clazz.isArray()) {
             return new ArrayNode(o.getClass(), o, visited);
@@ -37,7 +37,7 @@ public class NodeUtils {
         }
         Class<?> clz = o.getClass();
         if (ClassUtils.isPrimitiveOrWrapper(clz) || clz == String.class) {
-            return new Leaf(clz, o, visited);
+            return new Leaf(clz, o);
         }
         if (clz.isArray()) {
             return new ArrayNode(clz, o, visited);
@@ -49,6 +49,7 @@ public class NodeUtils {
     static @NotNull Supplier<Integer> createPowerSupplier(Map<Object, Node> map) {
         return new Object() {
             Supplier<Integer> supplier;
+
             {
                 supplier = () -> {
                     int val = map.values().stream().mapToInt(Node::power).sum();

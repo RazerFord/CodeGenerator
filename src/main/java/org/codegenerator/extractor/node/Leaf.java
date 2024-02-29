@@ -1,18 +1,24 @@
 package org.codegenerator.extractor.node;
 
+import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.Supplier;
+
+import static org.codegenerator.Utils.throwUnless;
 
 public class Leaf implements Node {
-    public static final Node NULL_NODE = new Leaf(null, null, null);
+    protected static final Node NULL_NODE = new Leaf(null, null);
     private static final int POWER = 1;
     private final Class<?> clazz;
     private final Object value;
     private final Map<Object, Node> fields = Collections.emptyMap();
 
-    Leaf(Class<?> clazz, Object value, Map<Object, Node> ignoredVisited) {
+    Leaf(Class<?> clazz, Object value) {
+        Supplier<? extends RuntimeException> supplier = () -> new IllegalArgumentException("Leaf");
+        throwUnless(ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class || value == null, supplier);
+
         this.clazz = clazz;
         this.value = value;
     }
@@ -25,11 +31,6 @@ public class Leaf implements Node {
     @Override
     public Object getValue() {
         return value;
-    }
-
-    @Override
-    public void extract() {
-        // this code block must be empty
     }
 
     @Override
@@ -46,6 +47,11 @@ public class Leaf implements Node {
     public int diff(@NotNull Node that) {
         if (!(that instanceof Leaf)) return power();
         return Objects.equals(value, that.getValue()) ? 0 : power();
+    }
+
+    @Override
+    public void accept(@NotNull NodeVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override
@@ -71,27 +77,6 @@ public class Leaf implements Node {
     @Override
     public Node get(Object o) {
         return fields.get(o);
-    }
-
-    @Nullable
-    @Override
-    public Node put(Object field, Node node) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Node remove(Object o) {
-        return null;
-    }
-
-    @Override
-    public void putAll(@NotNull Map<?, ? extends Node> map) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void clear() {
-        // this code block must be empty
     }
 
     @NotNull
