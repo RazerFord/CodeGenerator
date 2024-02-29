@@ -17,7 +17,7 @@ class BuiltinTypesTest {
     @Test
     void integerTypeTest() throws IOException {
         final String generatedClassName = "GeneratedIntegerClass";
-        Generator generator = Generators.standart(PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.standard(PACKAGE_NAME, generatedClassName, METHOD_NAME);
         generator.registerFinder(Integer.class, new PrimitiveMethodSequenceFinder());
 
         Integer i = 12;
@@ -30,7 +30,7 @@ class BuiltinTypesTest {
     @Test
     void stringTypeTest() throws IOException {
         final String generatedClassName = "GeneratedStringClass";
-        Generator generator = Generators.standart(PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.standard(PACKAGE_NAME, generatedClassName, METHOD_NAME);
         generator.registerFinder(String.class, new PrimitiveMethodSequenceFinder());
 
         String str = "Hello, world!";
@@ -43,7 +43,7 @@ class BuiltinTypesTest {
     @Test
     void arrayTest() throws IOException {
         final String generatedClassName = "GeneratedArrayClass";
-        Generator generator = Generators.standart(PACKAGE_NAME, generatedClassName, METHOD_NAME);
+        Generator generator = Generators.standard(PACKAGE_NAME, generatedClassName, METHOD_NAME);
         generator.registerFinder(String[].class, new ArrayMethodSequenceFinder());
 
         String[] strings = {"Hello", ",", "world!"};

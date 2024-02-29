@@ -118,7 +118,7 @@ Main functionality:
             ); // AccumulatorHolder{a=Sum{a=3, b=10, sum=0}, b=Sum{a=293, b=59, sum=0}, c=null}
             accumulatorHolder.calc(); // AccumulatorHolder{a=null, b=null, c=Sum{a=0, b=0, sum=365}}
 
-            Generator generator = Generators.standart("generated.accumulator", "GeneratedClass", "create");
+            Generator generator = Generators.standard("generated.accumulator", "GeneratedClass", "create");
             generator.generateCode(accumulatorHolder, Paths.get("./examples"));
         }
     }

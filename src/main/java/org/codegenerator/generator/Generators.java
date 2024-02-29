@@ -12,13 +12,13 @@ public class Generators {
     private Generators() {
     }
 
-    public static @NotNull CommonGenerator standart(Class<?>... classes) {
+    public static @NotNull CommonGenerator standard(Class<?>... classes) {
         CommonGenerator commonGenerator = new CommonGeneratorImpl();
         commonGenerator.registerPipeline(createFunctionsForBuilder(classes));
         return commonGenerator;
     }
 
-    public static @NotNull CommonGenerator standart(String packageName, String className, String methodName, Class<?>... classes) {
+    public static @NotNull CommonGenerator standard(String packageName, String className, String methodName, Class<?>... classes) {
         CommonGenerator commonGenerator = new CommonGeneratorImpl(packageName, className, methodName);
         commonGenerator.registerPipeline(createFunctionsForBuilder(classes));
         return commonGenerator;
@@ -33,13 +33,13 @@ public class Generators {
     }
 
     public static @NotNull Generator forBuilder(Class<?> builder, Class<?>... classes) {
-        CommonGenerator commonGenerator = standart(classes);
+        CommonGenerator commonGenerator = standard(classes);
         commonGenerator.registerFinder(builder, new BuilderMethodSequenceFinder(builder, classes));
         return commonGenerator;
     }
 
     public static @NotNull Generator forBuilder(Class<?> builder, String packageName, String className, String methodName, Class<?>... classes) {
-        CommonGenerator commonGenerator = standart(packageName, className, methodName, classes);
+        CommonGenerator commonGenerator = standard(packageName, className, methodName, classes);
         commonGenerator.registerFinder(builder, new BuilderMethodSequenceFinder(builder, classes));
         return commonGenerator;
     }
