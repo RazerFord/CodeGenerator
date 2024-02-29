@@ -1,5 +1,6 @@
 package org.codegenerator.generator.graph.edges;
 
+import com.rits.cloning.Cloner;
 import org.codegenerator.Utils;
 import org.jacodb.api.JcField;
 import org.jacodb.api.JcLookup;
@@ -11,6 +12,7 @@ import java.lang.reflect.Constructor;
 import static org.codegenerator.Utils.callSupplierWrapper;
 
 public class EdgeConstructor implements Edge<Constructor<?>> {
+    private final Cloner cloner = new Cloner();
     private final Constructor<?> constructor;
     private final Object[] args;
 
@@ -26,7 +28,8 @@ public class EdgeConstructor implements Edge<Constructor<?>> {
 
     @Override
     public Object invoke() {
-        return callSupplierWrapper(() -> constructor.newInstance(args));
+        Object[] cloneArgs = cloner.deepClone(args);
+        return callSupplierWrapper(() -> constructor.newInstance(cloneArgs));
     }
 
     @Override

@@ -81,10 +81,14 @@ public class LazyGraph {
             }
             visited.add(curNode);
 
+            int lastDiff = finalNode.diff(triple.getSecond());
             List<Triple<Object, Node, PathNode>> lowerLevel = applyMethods(methods, triple, copyObject, termination);
             List<Integer> diffs = lowerLevel.stream().map(t -> finalNode.diff(t.getSecond())).collect(Collectors.toList());
 
             int minDif = diffs.stream().min(Integer::compareTo).orElse(Integer.MAX_VALUE);
+            if (minDif >= lastDiff) {
+                return triple;
+            }
             queue = queue.stream().filter(t -> finalNode.diff(t.getSecond()) == minDif).collect(Collectors.toCollection(ArrayDeque::new));
             for (int i = 0; i < diffs.size(); i++) {
                 Triple<Object, Node, PathNode> triple1 = lowerLevel.get(i);
