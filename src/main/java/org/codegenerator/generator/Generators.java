@@ -12,38 +12,101 @@ public class Generators {
     private Generators() {
     }
 
+    /**
+     * Creates a standard generator that first tries to apply a method finder
+     * for Builders, then for POJO.
+     *
+     * @param classes to use in JacoDB
+     * @return generator
+     */
     public static @NotNull CommonGenerator standard(Class<?>... classes) {
         CommonGenerator commonGenerator = new CommonGeneratorImpl();
         commonGenerator.registerPipeline(createFunctionsForBuilder(classes));
         return commonGenerator;
     }
 
+    /**
+     * Creates a standard generator.
+     * Generates a class in the {@param packageName} package named {@param className}.
+     * The generated class contains the {@param methodName} method, which can be used
+     * to recreate the requested object
+     *
+     * @param packageName package name
+     * @param className   class name
+     * @param methodName  method name
+     * @param classes     to use in JacoDB
+     * @return generator
+     * @see Generators#standard(Class[]) )
+     */
     public static @NotNull CommonGenerator standard(String packageName, String className, String methodName, Class<?>... classes) {
         CommonGenerator commonGenerator = new CommonGeneratorImpl(packageName, className, methodName);
         commonGenerator.registerPipeline(createFunctionsForBuilder(classes));
         return commonGenerator;
     }
 
+    /**
+     * Creates a custom generator.
+     * The list of finders for this generator is empty.
+     *
+     * @return generator
+     */
     public static @NotNull CommonGenerator custom() {
         return new CommonGeneratorImpl();
     }
 
+    /**
+     * Creates a custom generator.
+     * The list of finders for this generator is empty.
+     *
+     * @param packageName package name
+     * @param className   class name
+     * @param methodName  method name
+     * @return generator
+     * @see Generators#custom()
+     * @see Generators#standard(String, String, String, Class[])
+     */
     public static @NotNull CommonGenerator custom(String packageName, String className, String methodName) {
         return new CommonGeneratorImpl(packageName, className, methodName);
     }
 
-    public static @NotNull Generator forBuilder(Class<?> builder, Class<?>... classes) {
+    /**
+     * Creates a generator for builder.
+     *
+     * @param target  class for which you want to generate code
+     * @param classes to use in JacoDB
+     * @return generator
+     */
+    public static @NotNull Generator forBuilder(Class<?> target, Class<?>... classes) {
         CommonGenerator commonGenerator = standard(classes);
-        commonGenerator.registerFinder(builder, new BuilderMethodSequenceFinder(builder, classes));
+        commonGenerator.registerFinder(target, new BuilderMethodSequenceFinder(target, classes));
         return commonGenerator;
     }
 
-    public static @NotNull Generator forBuilder(Class<?> builder, String packageName, String className, String methodName, Class<?>... classes) {
+    /**
+     * Creates a generator for Pojo.
+     *
+     * @param target      class for which you want to generate code
+     * @param packageName package name
+     * @param className   class name
+     * @param methodName  method name
+     * @param classes     to use in JacoDB
+     * @return generator
+     * @see Generators#standard(String, String, String, Class[])
+     */
+    public static @NotNull Generator forBuilder(Class<?> target, String packageName, String className, String methodName, Class<?>... classes) {
         CommonGenerator commonGenerator = standard(packageName, className, methodName, classes);
-        commonGenerator.registerFinder(builder, new BuilderMethodSequenceFinder(builder, classes));
+        commonGenerator.registerFinder(target, new BuilderMethodSequenceFinder(target, classes));
         return commonGenerator;
     }
 
+    /**
+     * Creates a generator for Pojo.
+     *
+     * @param pojo    class for which you want to generate code
+     * @param classes to use in JacoDB
+     * @return generator
+     * @see Generators#standard(String, String, String, Class[])
+     */
     public static @NotNull Generator forPojo(Class<?> pojo, Class<?>... classes) {
         CommonGenerator commonGenerator = new CommonGeneratorImpl();
         commonGenerator.registerPipeline(createFunctionsForPojo(classes));
@@ -51,6 +114,16 @@ public class Generators {
         return commonGenerator;
     }
 
+    /**
+     * Creates a generator for Pojo.
+     *
+     * @param pojo        class for which you want to generate code
+     * @param packageName package name
+     * @param className   class name
+     * @param methodName  method name
+     * @param classes     to use in JacoDB
+     * @return generator
+     */
     public static @NotNull Generator forPojo(Class<?> pojo, String packageName, String className, String methodName, Class<?>... classes) {
         CommonGenerator commonGenerator = new CommonGeneratorImpl(packageName, className, methodName);
         commonGenerator.registerPipeline(createFunctionsForPojo(classes));
