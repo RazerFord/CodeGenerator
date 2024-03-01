@@ -18,17 +18,21 @@ public class NodeUtils {
         return l.diff(r);
     }
 
-    static @NotNull Node createNode(@NotNull Class<?> clazz, Object o, Map<Object, Node> visited) {
+    static @NotNull Node createNode(
+            @NotNull Class<?> clazz,
+            Object o,
+            Map<Object, Node> visited
+    ) {
         if (o == null) {
             return Leaf.NULL_NODE;
         }
         if (ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class) {
-            return new Leaf(o.getClass(), o);
+            return new Leaf(clazz, o);
         }
         if (clazz.isArray()) {
-            return new ArrayNode(o.getClass(), o, visited);
+            return new ArrayNode(clazz, o, visited);
         }
-        return new InnerNode(o.getClass(), o, visited);
+        return new InnerNode(clazz, o, visited);
     }
 
     static @NotNull Node createNode(Object o, Map<Object, Node> visited) {

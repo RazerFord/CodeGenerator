@@ -101,8 +101,10 @@ public class EdgeGenerator {
         List<List<Node>> levels = new ArrayList<>();
 
         for (Class<?> type : executable.getParameterTypes()) {
-            List<Node> level = new ArrayList<>();
+            type = ClassUtils.primitiveToWrapper(type);
             List<Object> values = typeToValues.computeIfAbsent(type, k -> computeValues(k, typeToValues));
+
+            List<Node> level = new ArrayList<>();
             for (int i = 0; i < values.size(); i++) {
                 level.add(new Node(type, i));
             }
@@ -130,21 +132,21 @@ public class EdgeGenerator {
      * There are all such values in `map` that `from` can be
      * cast to the type of these values
      *
-     * @param from         a type for which all values to which it can be cast are sought
+     * @param to           a type for which all values to which it can be cast are sought
      * @param typeToValues mapping a class to its values
      */
     public static @NotNull List<Object> computeValues(
-            Class<?> from,
+            Class<?> to,
             @NotNull Map<Class<?>, List<Object>> typeToValues
     ) {
-        List<Object> values = new ArrayList<>();
+        Set<Object> values = new HashSet<>();
         for (Map.Entry<Class<?>, List<Object>> entry : typeToValues.entrySet()) {
-            Class<?> to = entry.getKey();
+            Class<?> from = entry.getKey();
             if (ClassUtils.isAssignable(from, to)) {
                 values.addAll(entry.getValue());
             }
         }
-        return values;
+        return new ArrayList<>(values);
     }
 
     public static final class Node {

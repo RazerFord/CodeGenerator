@@ -144,10 +144,7 @@ public class InnerNode implements Node {
                 if (node != null) {
                     map.put(field, node);
                 } else {
-                    Class<?> type = field.getType();
-                    if (field.getGenericType() == type) node = NodeUtils.createNode(type, o, visited);
-                    else node = NodeUtils.createNode(o, visited);
-                    map.put(field, node);
+                    map.put(field, NodeUtils.createNode(o, visited));
                 }
             }
             clz = clz.getSuperclass();

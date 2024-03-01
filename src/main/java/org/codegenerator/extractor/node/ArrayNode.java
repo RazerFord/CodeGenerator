@@ -102,7 +102,6 @@ public class ArrayNode implements Node {
         return fields.values();
     }
 
-    @NotNull
     @Override
     public Set<Entry<Object, Node>> entrySet() {
         return fields.entrySet();
@@ -132,12 +131,7 @@ public class ArrayNode implements Node {
             if (node != null) {
                 map.put(i, node);
             } else {
-                Object value1 = Array.get(value, i);
-                Class<?> componentType = value1 != null ?
-                        value1.getClass() :
-                        clazz.getComponentType();
-                node = NodeUtils.createNode(componentType, value1, visited);
-                map.put(i, node);
+                map.put(i, NodeUtils.createNode(Array.get(value, i), visited));
             }
         }
         return map;

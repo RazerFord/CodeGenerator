@@ -1,15 +1,13 @@
 package org.codegenerator.generator;
 
 import org.apache.commons.lang3.ClassUtils;
+import org.codegenerator.extractor.node.Node;
+import org.codegenerator.extractor.node.ValueCollectorImpl;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Supplier;
-
-import static org.codegenerator.Utils.callSupplierWrapper;
 
 public class TargetObject {
     private final Object o;
@@ -39,15 +37,13 @@ public class TargetObject {
 
     private @NotNull Map<Class<?>, List<Object>> prepareTypeToValues(@NotNull Object o) {
         Map<Class<?>, List<Object>> typeToValues = new HashMap<>();
-        Class<?> clazz1 = clazz;
-        while (clazz1 != Object.class) {
-            for (Field field : clazz1.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
-                List<Object> list = typeToValues.computeIfAbsent(field.getType(), k -> new ArrayList<>());
-                field.setAccessible(true);
-                list.add(callSupplierWrapper(() -> field.get(o)));
+        ValueCollectorImpl visitor = new ValueCollectorImpl();
+        Node.createNode(o).accept(visitor);
+        for (Map.Entry<Class<?>, List<Object>> e : visitor.getTypeToValues().entrySet()) {
+            for (Object o1 : e.getValue()) {
+                List<Object> list = typeToValues.computeIfAbsent(e.getKey(), k -> new ArrayList<>());
+                list.add(o1);
             }
-            clazz1 = clazz1.getSuperclass();
         }
         mergeValuesOfSameTypes(typeToValues);
         return typeToValues;
