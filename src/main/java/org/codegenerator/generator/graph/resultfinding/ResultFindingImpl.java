@@ -18,7 +18,7 @@ public class ResultFindingImpl implements ResultFinding {
     }
 
     @Override
-    public Object getTargetObject() {
+    public Object getActualObject() {
         return targetObject;
     }
 

@@ -11,7 +11,7 @@ public class WrapperResultFinding implements ResultFinding {
         this.suspects = suspects;
     }
 
-    public Object getTargetObject() {
+    public Object getActualObject() {
         throw new UnsupportedOperationException("getActualObject");
     }
 

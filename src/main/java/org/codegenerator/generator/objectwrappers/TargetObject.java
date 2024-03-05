@@ -1,4 +1,4 @@
-package org.codegenerator.generator;
+package org.codegenerator.generator.objectwrappers;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.extractor.node.Node;

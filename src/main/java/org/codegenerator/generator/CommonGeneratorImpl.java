@@ -6,6 +6,7 @@ import org.codegenerator.generator.methodsequencefinders.IterablePipeline;
 import org.codegenerator.generator.methodsequencefinders.MethodSequencePipeline;
 import org.codegenerator.generator.methodsequencefinders.PipelineMethodSequencePipeline;
 import org.codegenerator.generator.methodsequencefinders.concrete.MethodSequenceFinder;
+import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
@@ -101,17 +102,17 @@ public class CommonGeneratorImpl implements CommonGenerator {
     }
 
     @Override
-    public Iterable<String> generateIterable(@NotNull Object object) throws IOException {
+    public Iterable<String> generateIterable(@NotNull Object object) {
         return generateIterable(object, packageName, className, methodName);
     }
 
     @Override
-    public Iterable<String> generateIterable(@NotNull Object object, String className, String methodName) throws IOException {
+    public Iterable<String> generateIterable(@NotNull Object object, String className, String methodName) {
         return generateIterable(object, packageName, className, methodName);
     }
 
     @Override
-    public Iterable<String> generateIterable(@NotNull Object object, String packageName, String className, String methodName) throws IOException {
+    public Iterable<String> generateIterable(@NotNull Object object, String packageName, String className, String methodName) {
         return new IterableImpl(this, object, packageName, className, methodName);
     }
 

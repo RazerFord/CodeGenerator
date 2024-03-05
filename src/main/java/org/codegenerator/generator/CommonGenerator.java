@@ -2,6 +2,7 @@ package org.codegenerator.generator;
 
 import org.codegenerator.generator.methodsequencefinders.MethodSequencePipeline;
 import org.codegenerator.generator.methodsequencefinders.concrete.MethodSequenceFinder;
+import org.codegenerator.generator.objectwrappers.TargetObject;
 
 import java.util.Collection;
 import java.util.function.Function;

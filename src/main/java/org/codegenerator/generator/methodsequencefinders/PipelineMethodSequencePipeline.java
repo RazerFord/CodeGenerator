@@ -2,7 +2,7 @@ package org.codegenerator.generator.methodsequencefinders;
 
 import org.codegenerator.CustomLogger;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
-import org.codegenerator.generator.TargetObject;
+import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.concrete.MethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.concrete.NullMethodSequenceFinder;

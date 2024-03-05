@@ -1,6 +1,8 @@
 package org.codegenerator.generator.methodsequencefinders.concrete;
 
-import org.codegenerator.generator.TargetObject;
+import org.codegenerator.generator.objectwrappers.*;
+import org.codegenerator.generator.graph.resultfinding.RangeResultFinding;
+import org.codegenerator.generator.graph.resultfinding.RangeWrapperResultFinding;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.WrapperResultFinding;
 import org.codegenerator.history.History;
@@ -15,6 +17,21 @@ public class NullMethodSequenceFinder implements MethodSequenceFinder {
     @Override
     public boolean canTry(@NotNull TargetObject targetObject) {
         return targetObject.getObject() == null;
+    }
+
+    @Override
+    public boolean canTry(@NotNull Range range) {
+        return canTry(range.getFrom()) && canTry(range.getTo());
+    }
+
+    @Override
+    public RangeResultFinding findRanges(Range range) {
+        return new RangeWrapperResultFinding(new RangeResult(range), Collections.emptyList(), NullMethodSequenceFinder.class);
+    }
+
+    @Override
+    public RangeResultFinding findRanges(TargetObject targetObject) {
+        return findRanges(new FakeRange(targetObject));
     }
 
     @Override

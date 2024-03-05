@@ -1,7 +1,7 @@
 package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import org.codegenerator.Utils;
-import org.codegenerator.generator.TargetObject;
+import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.ResultFindingImpl;
 import org.codegenerator.history.History;

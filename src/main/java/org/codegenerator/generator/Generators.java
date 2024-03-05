@@ -1,6 +1,7 @@
 package org.codegenerator.generator;
 
 import org.codegenerator.generator.methodsequencefinders.concrete.*;
+import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
