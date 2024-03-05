@@ -36,6 +36,9 @@ public class EdgeGenerator {
         typeToValues = new HashMap<>(typeToValues);
         List<EdgeMethod> edgeMethods = new ArrayList<>();
         for (Method method : methods) {
+            if (method.getDeclaringClass() == Object.class) {
+                continue;
+            }
             if (method.getParameterCount() == 0) {
                 edgeMethods.add(new EdgeMethod(method));
             } else {

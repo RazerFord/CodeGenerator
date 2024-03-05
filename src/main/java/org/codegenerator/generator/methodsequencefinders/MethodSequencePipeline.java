@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -48,6 +49,13 @@ public interface MethodSequencePipeline {
      * Resets memorized finders for specific classes.
      */
     void resetFindersForClasses();
+
+    /**
+     * Returns registered finders.
+     *
+     * @return registered finders
+     */
+    List<Function<TargetObject, ? extends MethodSequenceFinder>> finders();
 
     /**
      * Register finders.

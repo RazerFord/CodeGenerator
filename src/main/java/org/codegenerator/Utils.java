@@ -3,6 +3,7 @@ package org.codegenerator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codegenerator.exceptions.CallWrapperException;
+import org.codegenerator.history.HistoryCall;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcClasspath;
 import org.jacodb.api.JcDatabase;
@@ -197,6 +198,23 @@ public class Utils {
             a = a.getSuperclass();
         }
         return a;
+    }
+
+    public static Object buildObject(@NotNull List<HistoryCall<Executable>> calls) {
+        Executable constructor = calls.get(0).getMethod();
+        Object builder;
+        if (constructor instanceof Constructor<?>) {
+            builder = Utils.callSupplierWrapper(() -> ((Constructor<?>) constructor).newInstance());
+        } else {
+            builder = Utils.callSupplierWrapper(() -> (((Method) constructor).invoke(null)));
+        }
+        for (int i = 1; i < calls.size() - 1; i++) {
+            HistoryCall<Executable> call = calls.get(i);
+            Executable method = call.getMethod();
+            Object[] args = call.getArgs();
+            Utils.callRunnableWrapper(() -> ((Method) method).invoke(builder, args));
+        }
+        return builder;
     }
 
     private static final @NotNull @UnmodifiableView Map<Class<?>, String> PRIMITIVES_TO_DESCRIPTOR = getPrimitiveToDescriptor();

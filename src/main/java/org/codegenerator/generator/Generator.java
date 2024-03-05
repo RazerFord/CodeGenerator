@@ -106,6 +106,50 @@ public interface Generator {
     ) throws IOException;
 
     /**
+     * Creates an iterable instance.
+     * Each iteration object represents code that can be used to create
+     * the object that comes in as input.
+     *
+     * @param object object for which you need to generateCode a sequence of methods
+     * @throws IOException if an I/O error occurs
+     */
+    Iterable<String> generateIterable(@NotNull Object object) throws IOException;
+
+    /**
+     * Creates an iterable instance.
+     * Each iteration object represents code that can be used to create
+     * the object that comes in as input.
+     *
+     * @param object     object for which you need to generateCode a sequence of methods
+     * @param className  the name of the class into which the generated code is placed
+     * @param methodName name of the method that creates the object
+     * @throws IOException if an I/O error occurs
+     */
+    Iterable<String> generateIterable(
+            @NotNull Object object,
+            String className,
+            String methodName
+    ) throws IOException;
+
+    /**
+     * Creates an iterable instance.
+     * Each iteration object represents code that can be used to create
+     * the object that comes in as input.
+     *
+     * @param object      object for which you need to generateCode a sequence of methods
+     * @param packageName the name of the package in which the generated code is placed
+     * @param className   the name of the class into which the generated code is placed
+     * @param methodName  name of the method that creates the object
+     * @throws IOException if an I/O error occurs
+     */
+    Iterable<String> generateIterable(
+            @NotNull Object object,
+            String packageName,
+            String className,
+            String methodName
+    ) throws IOException;
+
+    /**
      * Finds methods that were called during the lifetime of objects.
      * Each method is represented by {@link Executable}.
      *

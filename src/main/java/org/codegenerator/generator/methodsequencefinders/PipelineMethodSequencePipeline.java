@@ -14,10 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Executable;
-import java.util.Collection;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -56,6 +53,11 @@ public class PipelineMethodSequencePipeline implements MethodSequencePipeline {
     @Override
     public void resetFindersForClasses() {
         cachedFinders.clear();
+    }
+
+    @Override
+    public List<Function<TargetObject, ? extends MethodSequenceFinder>> finders() {
+        return Collections.unmodifiableList(methodSequenceFinderFunctions);
     }
 
     @Override
@@ -117,7 +119,7 @@ public class PipelineMethodSequencePipeline implements MethodSequencePipeline {
         List<Object> suspects = resultFinding.getSuspects();
         suspects.forEach(it -> findReflectionCallsRecursive(new TargetObject(it), history));
         if (!resultFinding.isSuccess()) {
-            useReflection(targetObject, new TargetObject(resultFinding.getTargetObject()), history)
+            useReflection(targetObject, new TargetObject(resultFinding.getActualObject()), history)
                     .getSuspects().forEach(it -> findReflectionCallsRecursive(new TargetObject(it), history));
         }
     }
@@ -131,7 +133,7 @@ public class PipelineMethodSequencePipeline implements MethodSequencePipeline {
         List<Object> suspects = resultFinding.getSuspects();
         suspects.forEach(it -> findJacoDBCallsRecursive(new TargetObject(it), history));
         if (!resultFinding.isSuccess()) {
-            useReflection(targetObject, new TargetObject(resultFinding.getTargetObject()), history)
+            useReflection(targetObject, new TargetObject(resultFinding.getActualObject()), history)
                     .getSuspects().forEach(it -> findJacoDBCallsRecursive(new TargetObject(it), history));
         }
     }

@@ -44,7 +44,7 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
         HistoryNode<Executable> node = context.getStack().getFirst().getFirst();
         MethodSpec.Builder methodBuilder = context.getStack().getFirst().getSecond();
         GenericResolver resolver = context.getGenericResolver();
-        Object builder = buildBuilder(node.getHistoryCalls());
+        Object builder = Utils.buildObject(node.getHistoryCalls());
 
         updateGenericResolver(builder, context.getGenericResolver(), context.getHistory(), node);
         addGenericVariable(resolver, node, methodBuilder);
@@ -213,23 +213,6 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
     ) {
         updateHistory(history, node.getHistoryCalls(), builder);
         resolver.resolve(builder);
-    }
-
-    private Object buildBuilder(@NotNull List<HistoryCall<Executable>> calls) {
-        Executable constructor = calls.get(0).getMethod();
-        Object builder;
-        if (constructor instanceof Constructor<?>) {
-            builder = Utils.callSupplierWrapper(() -> ((Constructor<?>) constructor).newInstance());
-        } else {
-            builder = Utils.callSupplierWrapper(() -> (((Method) constructor).invoke(null)));
-        }
-        for (int i = 1; i < calls.size() - 1; i++) {
-            HistoryCall<Executable> call = calls.get(i);
-            Executable method = call.getMethod();
-            Object[] args = call.getArgs();
-            Utils.callRunnableWrapper(() -> ((Method) method).invoke(builder, args));
-        }
-        return builder;
     }
 
     private void updateHistory(
