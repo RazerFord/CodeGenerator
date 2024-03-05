@@ -3,6 +3,7 @@ package org.codegenerator.generator.graph;
 import com.rits.cloning.Cloner;
 import kotlin.Triple;
 import org.codegenerator.ClonerUtilities;
+import org.codegenerator.CustomLogger;
 import org.codegenerator.Utils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
@@ -15,9 +16,12 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class LazyGraph {
+    private static final Logger LOGGER = CustomLogger.getLogger();
+
     private final EdgeGenerator edgeGenerator = new EdgeGenerator();
     private final Cloner cloner = ClonerUtilities.standard();
 
@@ -115,6 +119,7 @@ public class LazyGraph {
             try {
                 edgeMethod.invoke(instance);
             } catch (Exception ignored) {
+                logging(edgeMethod);
                 continue;
             }
             Object instanceBuilt = Utils.callSupplierWrapper(() -> termination.apply(instance));
@@ -146,5 +151,12 @@ public class LazyGraph {
             this.edgeMethod = edgeMethod;
             this.depth = depth;
         }
+    }
+
+    private static void logging(@NotNull EdgeMethod edgeMethod) {
+        String funcName = edgeMethod.getMethod().getName();
+        String argNames = Arrays.toString(edgeMethod.getArgs());
+        String msg = String.format("Error calling the function \"%s\" with arguments %s", funcName, argNames);
+        LOGGER.warning(msg);
     }
 }

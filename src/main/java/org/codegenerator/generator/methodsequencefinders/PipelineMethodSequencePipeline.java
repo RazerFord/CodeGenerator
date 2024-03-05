@@ -1,15 +1,17 @@
 package org.codegenerator.generator.methodsequencefinders;
 
+import org.codegenerator.CustomLogger;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.TargetObject;
+import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.methodsequencefinders.concrete.MethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.concrete.NullMethodSequenceFinder;
 import org.codegenerator.generator.methodsequencefinders.concrete.ReflectionMethodSequenceFinder;
-import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.history.History;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Executable;
 import java.util.Collection;
@@ -18,8 +20,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.logging.Logger;
 
 public class PipelineMethodSequencePipeline implements MethodSequencePipeline {
+    private static final Logger LOGGER = CustomLogger.getLogger();
+
     private final ReflectionMethodSequenceFinder reflectionMethodSequenceFinder = new ReflectionMethodSequenceFinder();
     private final NullMethodSequenceFinder nullMethodSequenceFinder = new NullMethodSequenceFinder();
     private final Map<Class<?>, MethodSequenceFinder> cachedFinders = new IdentityHashMap<>();
@@ -96,7 +101,7 @@ public class PipelineMethodSequencePipeline implements MethodSequencePipeline {
                     return;
                 }
             } catch (Exception ignored) {
-                // this code block is empty
+                logging(methodSequenceFinder);
             }
         }
         throw new MethodSequenceNotFoundException();
@@ -138,5 +143,13 @@ public class PipelineMethodSequencePipeline implements MethodSequencePipeline {
             @NotNull History<T> history
     ) {
         return reflectionMethodSequenceFinder.findSetter(expected, actual, history);
+    }
+
+    private static void logging(@Nullable MethodSequenceFinder finder) {
+        if (finder != null) {
+            String className = finder.getClass().getName();
+            String msg = String.format("%s failed", className);
+            LOGGER.warning(msg);
+        }
     }
 }
