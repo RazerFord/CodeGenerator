@@ -1,16 +1,14 @@
 package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import kotlin.Pair;
-import kotlin.sequences.Sequence;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
 import org.codegenerator.generator.TargetObject;
-import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.LazyGraph;
+import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.ResultFindingImpl;
@@ -18,38 +16,36 @@ import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.*;
-import org.jacodb.impl.features.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
+import static org.codegenerator.Utils.loadOrCreateDataBase;
 import static org.codegenerator.Utils.throwIf;
 
 public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
-    private static final String BUILDER_CONSTRUCTOR_FOUND = "Builder constructor not found";
     private static final String BUILDER_NOT_FOUND = "Builder not found";
 
     private final String dbname = BuilderMethodSequenceFinder.class.getCanonicalName();
-    private final Class<?> clazz;
     private final Class<?>[] classes;
     private final LazyMethodFinder methodFinder;
 
     public BuilderMethodSequenceFinder(@NotNull Class<?> clazz, Class<?>... classes) {
-        this.clazz = clazz;
         this.classes = classes;
 
-        @NotNull List<BuilderInfo> builderInfoList = createBuilderInfoList();
+        @NotNull List<BuilderInfo> builderInfoList = new JacoDBProxy(classes).findBuilderInfoList(clazz);
 
         checkInvariants(builderInfoList);
 
@@ -71,17 +67,17 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         List<HistoryCall<Executable>> calls = new ArrayList<>();
         List<Object> suspect = new ArrayList<>();
 
-        calls.add(new HistoryCall<>(history, builderInfo.builderConstructor));
+        calls.add(new HistoryCall<>(history, builderInfo.constructor()));
         for (EdgeMethod method : methods) {
             calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
             suspect.addAll(Arrays.asList(method.getArgs()));
         }
-        calls.add(new HistoryCall<>(history, builderInfo.builderBuildMethod));
+        calls.add(new HistoryCall<>(history, builderInfo.method()));
 
         Object object = targetObject.getObject();
         history.put(object, new HistoryObject<>(object, calls, BuilderMethodSequenceFinder.class));
 
-        Object built = Utils.callSupplierWrapper(() -> builderInfo.builderBuildMethod.invoke(path.getActualObject()));
+        Object built = Utils.callSupplierWrapper(() -> builderInfo.method().invoke(path.getActualObject()));
         return new ResultFindingImpl(built, path.getDeviation(), suspect);
     }
 
@@ -93,23 +89,23 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
             Path path = found.getSecond();
             List<EdgeMethod> methods = path.getMethods();
 
-            Class<?> builderClazz = builderInfo.builderClazz;
+            Class<?> builderClazz = builderInfo.builder();
             JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
 
             List<HistoryCall<JcMethod>> calls = new ArrayList<>();
             List<Object> suspect = new ArrayList<>();
 
-            Executable constructor = builderInfo.builderConstructor;
+            Executable constructor = builderInfo.constructor();
             Class<?> builder = constructor.getDeclaringClass();
 
             addMethod(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, constructor, calls);
             addMethods(Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName())), history, methods, calls, suspect);
-            addMethod(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, builderInfo.builderBuildMethod, calls);
+            addMethod(Objects.requireNonNull(classpath.findClassOrNull(builder.getTypeName())), history, builderInfo.method(), calls);
 
             Object object = targetObject.getObject();
             history.put(object, new HistoryObject<>(object, calls, BuilderMethodSequenceFinder.class));
 
-            Object built = Utils.callSupplierWrapper(() -> builderInfo.builderBuildMethod.invoke(path.getActualObject()));
+            Object built = Utils.callSupplierWrapper(() -> builderInfo.method().invoke(path.getActualObject()));
             return new ResultFindingImpl(built, path.getDeviation(), suspect);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -147,119 +143,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         }
     }
 
-    private @NotNull List<BuilderInfo> createBuilderInfoList() {
-        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
-            List<BuilderInfo> builderInfoList1 = new ArrayList<>();
-            List<Class<?>> builderClasses = findBuilders(db);
-
-            for (Class<?> builderClass : builderClasses) {
-                Method buildMethod = findBuildMethod(builderClass);
-                if (buildMethod == null) continue;
-
-                Executable builderConstructor = findBuilderConstructor(db, builderClass);
-
-                builderInfoList1.add(new BuilderInfo(builderClass, builderConstructor, buildMethod));
-            }
-            return builderInfoList1;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new JacoDBException(e);
-        } catch (IOException | ExecutionException e) {
-            throw new JacoDBException(e);
-        }
-    }
-
-    private Method findBuildMethod(@NotNull Class<?> cls) {
-        return Arrays.stream(cls.getMethods())
-                .filter(m -> m.getParameterCount() == 0)
-                .filter(m -> ClassUtils.isAssignable(clazz, m.getReturnType()))
-                .findFirst().orElse(null);
-    }
-
-    private @Nullable Executable findBuilderConstructor(JcDatabase db, @NotNull Class<?> builderClazz) throws ExecutionException, InterruptedException {
-        for (Constructor<?> constructor : builderClazz.getConstructors()) {
-            if (constructor.getParameterCount() == 0) return constructor;
-        }
-        try {
-            JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
-            JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
-
-            SyncUsagesExtension haystack = new SyncUsagesExtension(JcHierarchies.asyncHierarchy(classpath).get(), classpath);
-            List<JcMethod> needles = jcClassOrInterface.getDeclaredMethods().stream()
-                    .filter(it -> it.isConstructor() && !it.isSynthetic()).collect(Collectors.toList());
-
-            JcMethod jcMethod = findMethodCreatingBuilder(haystack, needles);
-            ClassLoader classLoader = clazz.getClassLoader();
-            Class<?> loadedClass = classLoader.loadClass(jcMethod.getEnclosingClass().getName());
-
-            int[] index = new int[]{0};
-            Class<?>[] classes1 = new Class[jcMethod.getParameters().size()];
-            jcMethod.getParameters()
-                    .forEach(it -> classes1[index[0]++] = Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getType().getTypeName())));
-
-            return loadedClass.getMethod(jcMethod.getName(), classes1);
-        } catch (
-                ClassNotFoundException |
-                NoSuchMethodException e
-        ) {
-            throw new JacoDBException(e);
-        }
-    }
-
-    private JcMethod findMethodCreatingBuilder(SyncUsagesExtension haystack, @NotNull List<JcMethod> needles) {
-        List<JcMethod> usages = new ArrayList<>();
-        for (JcMethod needle : needles) {
-            Sequence<JcMethod> jcMethodSequence = haystack.findUsages(needle);
-            Iterator<JcMethod> it = jcMethodSequence.iterator();
-
-            while (it.hasNext()) {
-                usages.add(it.next());
-            }
-        }
-        throwIf(usages.isEmpty(), new IllegalStateException(BUILDER_CONSTRUCTOR_FOUND));
-        @NotNull List<JcMethod> finalNeedles = usages.stream().filter(JcMethod::isConstructor).collect(Collectors.toList());
-        return usages.stream().filter(JcAccessible::isPublic).findFirst().orElseGet(() -> findMethodCreatingBuilder(haystack, finalNeedles));
-    }
-
     private void checkInvariants(@NotNull List<BuilderInfo> builderInfoList) {
         throwIf(builderInfoList.isEmpty(), new InvariantCheckingException(BUILDER_NOT_FOUND));
-    }
-
-    private List<Class<?>> findBuilders(@NotNull JcDatabase db) throws ExecutionException, InterruptedException {
-        JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, clazz));
-
-        JcClassOrInterface needle = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
-        BuildersExtension haystack = new BuildersExtension(classpath, JcHierarchies.asyncHierarchy(classpath).get());
-
-        Sequence<JcMethod> jcMethodSequence = haystack.findBuildMethods(needle, true);
-        Iterator<JcMethod> iterator = jcMethodSequence.iterator();
-
-        List<JcMethod> methods = new ArrayList<>();
-        iterator.forEachRemaining(methods::add);
-        ClassLoader classLoader = clazz.getClassLoader();
-        return methods.stream()
-                .map(it -> Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getEnclosingClass().getName())))
-                .collect(Collectors.toList());
-    }
-
-    private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
-        return Utils.loadOrCreateDataBase(dbname, Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE);
-    }
-
-    private static class BuilderInfo {
-        private final Class<?> builderClazz;
-        private final Executable builderConstructor;
-        private final Method builderBuildMethod;
-
-        private BuilderInfo(
-                Class<?> builderClazz,
-                Executable builderConstructor,
-                Method builderBuildMethod
-        ) {
-            this.builderClazz = builderClazz;
-            this.builderConstructor = builderConstructor;
-            this.builderBuildMethod = builderBuildMethod;
-        }
     }
 
     private static class LazyMethodFinder {
@@ -278,8 +163,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
                 @NotNull LazyGraph lazyGraph,
                 TargetObject targetObject
         ) {
-            Method builderBuildMethod = builderInfo.builderBuildMethod;
-            Executable builderConstructor = builderInfo.builderConstructor;
+            Method builderBuildMethod = builderInfo.method();
+            Executable builderConstructor = builderInfo.constructor();
 
             return lazyGraph.findPath(
                     targetObject,

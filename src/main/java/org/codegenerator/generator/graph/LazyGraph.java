@@ -31,6 +31,14 @@ public class LazyGraph {
             @NotNull UnaryOperator<Object> termination
     ) {
         Object beginObject = constructor.get();
+        return findPath(targetObject, beginObject, termination);
+    }
+
+    public @NotNull Path findPath(
+            @NotNull TargetObject targetObject,
+            @NotNull Object beginObject,
+            @NotNull UnaryOperator<Object> termination
+    ) {
         Class<?> clazz = beginObject.getClass();
         UnaryOperator<Object> copyObject = copyObject();
         Object finalObject = targetObject.getObject();
