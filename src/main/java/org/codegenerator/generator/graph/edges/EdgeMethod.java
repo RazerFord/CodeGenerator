@@ -1,7 +1,7 @@
 package org.codegenerator.generator.graph.edges;
 
 import com.rits.cloning.Cloner;
-import org.codegenerator.SubCloner;
+import org.codegenerator.ClonerUtilities;
 import org.codegenerator.Utils;
 import org.jacodb.api.JcField;
 import org.jacodb.api.JcLookup;
@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 import static org.codegenerator.Utils.callSupplierWrapper;
 
 public final class EdgeMethod implements Edge<Method> {
-    private final Cloner cloner = SubCloner.standard();
+    private final Cloner cloner = ClonerUtilities.standard();
     private final Method method;
     private final Object[] args;
 

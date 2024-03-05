@@ -8,12 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class SubCloner extends Cloner {
-    @Override
-    protected void registerFastCloners() {
-        super.registerFastCloners();
-        unregisterFastCloner(ArrayList.class);
-        registerFastCloner(ArrayList.class, new FastClonerArrayList());
+public class ClonerUtilities {
+    private ClonerUtilities() {
     }
 
     public static class FastClonerArrayList implements IFastCloner {
@@ -29,6 +25,9 @@ public class SubCloner extends Cloner {
     }
 
     public static @NotNull Cloner standard() {
-        return new SubCloner();
+        Cloner cloner = new Cloner();
+        cloner.unregisterFastCloner(ArrayList.class);
+        cloner.registerFastCloner(ArrayList.class, new FastClonerArrayList());
+        return cloner;
     }
 }

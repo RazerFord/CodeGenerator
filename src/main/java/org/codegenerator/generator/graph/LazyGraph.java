@@ -2,7 +2,7 @@ package org.codegenerator.generator.graph;
 
 import com.rits.cloning.Cloner;
 import kotlin.Triple;
-import org.codegenerator.SubCloner;
+import org.codegenerator.ClonerUtilities;
 import org.codegenerator.Utils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class LazyGraph {
     private final EdgeGenerator edgeGenerator = new EdgeGenerator();
-    private final Cloner cloner = SubCloner.standard();
+    private final Cloner cloner = ClonerUtilities.standard();
 
     public @NotNull Path findPath(
             @NotNull TargetObject targetObject,
