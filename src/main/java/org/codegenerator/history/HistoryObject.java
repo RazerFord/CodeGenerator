@@ -6,8 +6,9 @@ import java.util.List;
 public class HistoryObject<T> implements HistoryNode<T> {
     private final Object object;
     private final List<HistoryCall<T>> historyCalls;
-    private final List<SetterUsingReflection<T>> setterUsingReflections;
+    private List<SetterUsingReflection<T>> setterUsingReflections;
     private final Class<?> creator;
+    private final HistoryNode<T> next;
 
     public HistoryObject(
             Object object,
@@ -23,10 +24,35 @@ public class HistoryObject<T> implements HistoryNode<T> {
             List<SetterUsingReflection<T>> setterUsingReflections,
             Class<?> creator
     ) {
+        this(object, historyCalls, setterUsingReflections, creator, null);
+    }
+
+    public HistoryObject(
+            Object object,
+            List<HistoryCall<T>> historyCalls,
+            Class<?> creator,
+            HistoryNode<T> next
+    ) {
+        this(object, historyCalls, Collections.emptyList(), creator, next);
+    }
+
+    public HistoryObject(
+            Object object,
+            List<HistoryCall<T>> historyCalls,
+            List<SetterUsingReflection<T>> setterUsingReflections,
+            Class<?> creator,
+            HistoryNode<T> next
+    ) {
         this.object = object;
         this.historyCalls = historyCalls;
         this.setterUsingReflections = setterUsingReflections;
         this.creator = creator;
+        this.next = next;
+    }
+
+    @Override
+    public HistoryNode<T> nextNode() {
+        return next;
     }
 
     @Override
@@ -42,6 +68,10 @@ public class HistoryObject<T> implements HistoryNode<T> {
     @Override
     public List<SetterUsingReflection<T>> getSetterUsingReflections() {
         return setterUsingReflections;
+    }
+
+    public void setSetterUsingReflections(List<SetterUsingReflection<T>> setterUsingReflections) {
+        this.setterUsingReflections = setterUsingReflections;
     }
 
     @Override

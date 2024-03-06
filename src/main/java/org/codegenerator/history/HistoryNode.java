@@ -14,6 +14,13 @@ public interface HistoryNode<T> {
      *
      * @return object
      */
+    HistoryNode<T> nextNode();
+
+    /**
+     * Returns an object.
+     *
+     * @return object
+     */
     Object getObject();
 
     /**

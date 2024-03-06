@@ -4,19 +4,19 @@ import com.rits.cloning.Cloner;
 import org.codegenerator.ClonerUtilities;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
-import org.codegenerator.generator.objectwrappers.Range;
-import org.codegenerator.generator.objectwrappers.RangeObject;
-import org.codegenerator.generator.objectwrappers.RangeResult;
-import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.generator.graph.LazyConstructorGraph;
-import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.LazyMethodGraph;
+import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.edges.Edge;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.codegenerator.generator.graph.resultfinding.RangeResultFinding;
 import org.codegenerator.generator.graph.resultfinding.RangeResultFindingImpl;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.ResultFindingImpl;
+import org.codegenerator.generator.objectwrappers.Range;
+import org.codegenerator.generator.objectwrappers.RangeObject;
+import org.codegenerator.generator.objectwrappers.RangeResult;
+import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryObject;
@@ -66,7 +66,8 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
             Object to = methods.get(i).invoke(cloner.deepClone(from));
             RangeObject range = new RangeObject(new TargetObject(from), new TargetObject(to));
             from = to;
-            ranges.add(new RangeResult(range, methods.subList(0, i)));
+            List<Edge<? extends Executable>> allMethods = new ArrayList<>(methods.subList(0, i));
+            ranges.add(new RangeResult(range, allMethods));
         }
 
         return new RangeResultFindingImpl(

@@ -10,16 +10,23 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 
 public class EdgeExecutable implements Edge<Executable> {
+    private final boolean isConstructor;
     private final Edge<? extends Executable> executable;
 
     public EdgeExecutable(Executable executable, Object... args) {
         if (executable instanceof Constructor<?>) {
+            isConstructor = true;
             this.executable = new EdgeConstructor((Constructor<?>) executable, args);
         } else if (executable instanceof Method) {
+            isConstructor = false;
             this.executable = new EdgeMethod((Method) executable, args);
         } else {
             throw new IllegalArgumentException();
         }
+    }
+
+    public boolean isConstructor() {
+        return isConstructor;
     }
 
     @Override

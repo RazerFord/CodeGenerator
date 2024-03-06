@@ -1,5 +1,7 @@
 package org.codegenerator.history;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,5 +33,24 @@ public class History<T> {
      */
     public HistoryNode<T> put(Object object, HistoryNode<T> historyObject) {
         return historiesNode.put(object, historyObject);
+    }
+
+    /**
+     * Returns <tt>true</tt> if an object contains in history else <tt>false</tt>.
+     *
+     * @param object for merging
+     * @return <tt>true</tt> if an object contains in history else <tt>false</tt>
+     */
+    public boolean contains(@NotNull Object object) {
+        return historiesNode.containsKey(object);
+    }
+
+    /**
+     * Merges history that is passed as arguments.
+     *
+     * @param history for merging
+     */
+    public void merge(@NotNull History<T> history) {
+        historiesNode.putAll(history.historiesNode);
     }
 }

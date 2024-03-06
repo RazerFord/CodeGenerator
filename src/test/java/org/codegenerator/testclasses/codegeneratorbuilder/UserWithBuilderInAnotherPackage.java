@@ -9,6 +9,38 @@ public class UserWithBuilderInAnotherPackage {
     private long created;
     private long[] coins;
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public long getCreated() {
+        return created;
+    }
+
+    public void setCreated(long created) {
+        this.created = created;
+    }
+
+    public long[] getCoins() {
+        return coins;
+    }
+
+    public void setCoins(long[] coins) {
+        this.coins = coins;
+    }
+
     public UserWithBuilderInAnotherPackage(String name, int age, long created, long[] coins) {
         this.name = name;
         this.age = age;

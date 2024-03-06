@@ -175,7 +175,7 @@ public class CommonGeneratorImpl implements CommonGenerator {
                     .methodSequencePipeline
                     .finders();
 
-            pipeline = new IterablePipeline(finders, new TargetObject(object));
+            pipeline = new IterablePipeline(new ArrayList<>(finders), new TargetObject(object));
 
             this.commonGenerator = commonGenerator;
             this.object = object;
@@ -202,7 +202,7 @@ public class CommonGeneratorImpl implements CommonGenerator {
 
         @Override
         public boolean hasNext() {
-            return false;
+            return iterator.hasNext();
         }
 
         @Contract(pure = true)

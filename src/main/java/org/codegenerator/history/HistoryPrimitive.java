@@ -19,6 +19,11 @@ public class HistoryPrimitive<T> implements HistoryNode<T> {
     }
 
     @Override
+    public HistoryNode<T> nextNode() {
+        throw new UnsupportedOperationException("nextNode");
+    }
+
+    @Override
     public Object getObject() {
         return object;
     }
