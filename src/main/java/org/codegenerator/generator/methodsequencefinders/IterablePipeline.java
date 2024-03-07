@@ -85,10 +85,15 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                     RangeObject rangeObject = new RangeObject(last.value.getTo(), targetObject);
                     IndexedWrapper<RangeResultFinding> indexed = findInternal(rangeObject, last.index + 1);
 
-                    if (indexed == null) return !stack.isEmpty();
+                    if (indexed == null) {
+                        return !stack.isEmpty();
+                    }
+
                     indexed.value.getRanges().forEach(it -> allRanges.addLast(new IndexedWrapper<>(indexed.index, it)));
 
-                    if (indexed.value.getRanges().isEmpty()) return !stack.isEmpty();
+                    if (allRanges.isEmpty() || indexed.value.getRanges().isEmpty()) {
+                        return !stack.isEmpty();
+                    }
                     last = allRanges.pollLast();
 
                     stack.addLast(last);
@@ -121,6 +126,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         }
 
         private boolean nextFinder(int nextIndex) {
+            stack.clear();
             IndexedWrapper<RangeResultFinding> indexed = findInternal(targetObject, nextIndex);
 
             if (indexed != null) {
@@ -132,7 +138,6 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                         .map(iterable.pipeline::findReflectionCalls)
                         .forEach(history::merge);
                 indexed.value.getRanges().forEach(it -> allRanges.addLast(new IndexedWrapper<>(indexed.index, it)));
-                stack.clear();
             } else {
                 lastIndex = iterable.finderCreators.size();
             }
