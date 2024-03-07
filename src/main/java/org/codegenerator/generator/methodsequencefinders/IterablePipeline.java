@@ -85,10 +85,9 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 }
 
                 IndexedWrapperResult result = found.getLast();
-                Iterator<RangeResult> iterator = result.iterator;
 
-                if (iterator.hasNext()) {
-                    if (!nextRange(result)) {
+                if (result.hasNext()) {
+                    if (nextRange(result)) {
                         break;
                     }
                 } else {
@@ -138,18 +137,22 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         }
 
         private boolean nextRange(@NotNull IndexedWrapperResult result) {
-            RangeResult rangeResult = result.iterator.next();
+            boolean isFirst = result.isFirst();
+            RangeResult rangeResult = result.next();
             stack.addLast(new IndexedWrapper<>(result.index, rangeResult));
-            RangeObject rangeObject = new RangeObject(rangeResult.getTo(), targetObject);
 
+            if (isFirst) {
+                return true;
+            }
+
+            RangeObject rangeObject = new RangeObject(rangeResult.getTo(), targetObject);
             IndexedWrapper<RangeResultFinding> indexed = findInternal(rangeObject, result.index + 1);
 
             if (indexed != null) {
                 found.addLast(new IndexedWrapperResult(indexed));
-            } else {
-                return false;
             }
-            return true;
+
+            return indexed == null;
         }
 
         private @NotNull List<HistoryCall<Executable>> toHistoryCalls(History<Executable> history, @NotNull RangeResult rangeResult) {
@@ -158,10 +161,6 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
             }
             return calls;
-        }
-
-        private void findInternal(Range range) {
-            findInternal(range, 0);
         }
 
         private @Nullable IndexedWrapper<RangeResultFinding> findInternal(Range range, int start) {
@@ -197,10 +196,6 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         ) {
             RangeResultFinding res = indexedFinder.value.findRanges(range);
             return new IndexedWrapper<>(indexedFinder.index, res);
-        }
-
-        private @Nullable IndexedWrapper<RangeResultFinding> findInternal(TargetObject target) {
-            return findInternal(target, 0);
         }
 
         private @Nullable IndexedWrapper<RangeResultFinding> findInternal(TargetObject target, int start) {
@@ -277,7 +272,8 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         }
     }
 
-    private static class IndexedWrapperResult {
+    private static class IndexedWrapperResult implements Iterator<RangeResult> {
+        private boolean isFirst = true;
         private final int index;
         private final RangeResultFinding result;
         private final Iterator<RangeResult> iterator;
@@ -286,6 +282,21 @@ public class IterablePipeline implements Iterable<History<Executable>> {
             this.index = result.index;
             this.result = result.value;
             iterator = result.value.getRanges().iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Override
+        public RangeResult next() {
+            isFirst = false;
+            return iterator.next();
+        }
+
+        public boolean isFirst() {
+            return isFirst;
         }
     }
 

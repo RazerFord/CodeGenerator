@@ -208,13 +208,14 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         EdgeExecutable build = new EdgeExecutable(info.method());
 
         Object from = cloner.deepClone(begin);
+        Object to = from;
         Object built = build.invoke(cloner.deepClone(from));
         ranges.add(new RangeResult(new RangeObject(new TargetObject(from), new TargetObject(built)), Arrays.asList(constructor, build)));
         for (int i = 0; i < methods.size(); i++) {
-            Object to = methods.get(i).invoke(cloner.deepClone(from));
+            to = cloner.deepClone(to);
+            methods.get(i).invoke(to);
             built = build.invoke(cloner.deepClone(to));
             RangeObject range1 = new RangeObject(new TargetObject(from), new TargetObject(built));
-            from = to;
 
             List<Edge<? extends Executable>> allMethods = new ArrayList<>();
 

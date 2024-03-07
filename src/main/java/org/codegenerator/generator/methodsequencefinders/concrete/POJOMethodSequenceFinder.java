@@ -62,11 +62,12 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
 
         Cloner cloner = ClonerUtilities.standard();
         Object from = cloner.deepClone(rangeObject.getFrom().getObject());
+        Object to = from;
         for (int i = 0; i < methods.size(); i++) {
-            Object to = methods.get(i).invoke(cloner.deepClone(from));
+            to = cloner.deepClone(to);
+            methods.get(i).invoke(to);
             RangeObject range = new RangeObject(new TargetObject(from), new TargetObject(to));
-            from = to;
-            List<Edge<? extends Executable>> allMethods = new ArrayList<>(methods.subList(0, i));
+            List<Edge<? extends Executable>> allMethods = new ArrayList<>(methods.subList(0, i + 1));
             ranges.add(new RangeResult(range, allMethods));
         }
 
