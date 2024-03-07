@@ -8,18 +8,22 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
+import java.util.function.Function;
 
 public class EdgeExecutable implements Edge<Executable> {
     private final boolean isConstructor;
     private final Edge<? extends Executable> executable;
+    private final Function<Object, Object> invoker;
 
     public EdgeExecutable(Executable executable, Object... args) {
         if (executable instanceof Constructor<?>) {
             isConstructor = true;
             this.executable = new EdgeConstructor((Constructor<?>) executable, args);
+            invoker = o -> this.executable.invoke();
         } else if (executable instanceof Method) {
             isConstructor = false;
             this.executable = new EdgeMethod((Method) executable, args);
+            invoker = this.executable::invoke;
         } else {
             throw new IllegalArgumentException();
         }
@@ -31,12 +35,12 @@ public class EdgeExecutable implements Edge<Executable> {
 
     @Override
     public Object invoke(Object object) {
-        return executable.invoke(object);
+        return invoker.apply(object);
     }
 
     @Override
     public Object invoke() {
-        return executable.invoke();
+        return invoker.apply(null);
     }
 
     @Override

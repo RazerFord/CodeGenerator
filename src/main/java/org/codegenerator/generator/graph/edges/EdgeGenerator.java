@@ -149,6 +149,9 @@ public class EdgeGenerator {
                 values.addAll(entry.getValue());
             }
         }
+        if (values.isEmpty() && !ClassUtils.isPrimitiveOrWrapper(to)) {
+            values.add(null);
+        }
         return new ArrayList<>(values);
     }
 

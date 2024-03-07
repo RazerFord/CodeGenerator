@@ -179,13 +179,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         List<Object> suspect = createSuspects(methods);
         List<RangeResult> ranges = createRanges(range.getFrom().getObject(), builderInfo, methods);
 
-        return new RangeResultFindingImpl(
-                range.getTo(),
-                path.getDeviation(),
-                BuilderMethodSequenceFinder.class,
-                suspect,
-                ranges
-        );
+        return new RangeResultFindingImpl(range.getTo(), path.getDeviation(), BuilderMethodSequenceFinder.class, suspect, ranges);
     }
 
     private @NotNull List<Object> createSuspects(@NotNull List<EdgeMethod> methods) {
@@ -225,7 +219,6 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
 
             ranges.add(new RangeResult(range1, allMethods));
         }
-        Collections.reverse(ranges);
 
         return ranges;
     }
