@@ -78,35 +78,27 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 while (!stack.isEmpty() && ranges.getLast().index <= stack.getLast().index) {
                     stack.pollLast();
                 }
-                IndexedWrapper<RangeResult> last = ranges.getLast();
-                if (last.indexOfLastFound >= iterable.finderCreators.size() ||
-                        compare(last.value.getTo().getObject()) == 0) {
-                    ranges.pollLast();
-                }
+                IndexedWrapper<RangeResult> last = tryPollLastFromRanges();
                 stack.addLast(last);
+
                 while (compare(last.value.getTo().getObject()) != 0) {
                     RangeObject rangeObject = new RangeObject(last.value.getTo(), targetObject);
                     IndexedWrapper<RangeResultFinding> indexed = findInternal(rangeObject, last.indexOfLastFound + 1);
 
                     if (indexed == null) {
                         ranges.pollLast();
-                        last.indexOfLastFound = iterable.finderCreators.size();
                         return !stack.isEmpty();
                     }
                     last.indexOfLastFound = indexed.index;
+                    indexed.value
+                            .getRanges()
+                            .forEach(it -> ranges.addLast(new IndexedWrapper<>(indexed.index, it)));
 
-                    indexed.value.getRanges().forEach(it -> ranges.addLast(new IndexedWrapper<>(indexed.index, it)));
-
-                    if (ranges.isEmpty() ||
-                            indexed.value.getRanges().isEmpty()) {
+                    if (ranges.isEmpty() || indexed.value.getRanges().isEmpty()) {
                         return !stack.isEmpty();
                     }
-                    last = ranges.getLast();
-                    if (last.indexOfLastFound >= iterable.finderCreators.size() ||
-                            compare(last.value.getTo().getObject()) == 0) {
-                        ranges.pollLast();
-                    }
 
+                    last = tryPollLastFromRanges();
                     stack.addLast(last);
                 }
             }
@@ -156,6 +148,58 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
             }
             return calls;
+        }
+
+        private int compare(Object object) {
+            return targetNode.diff(ClassFieldExtractor.extract(object));
+        }
+
+        private @NotNull IndexedWrapper<RangeResult> tryPollLastFromRanges() {
+            IndexedWrapper<RangeResult> last = ranges.getLast();
+
+            if (last.indexOfLastFound >= iterable.finderCreators.size() ||
+                    compare(last.value.getTo().getObject()) == 0) {
+                ranges.pollLast();
+            }
+
+            return last;
+        }
+
+        private HistoryObject<Executable> createHistoryObject() {
+            Iterator<IndexedWrapper<RangeResult>> iterator = stack.descendingIterator();
+
+            HistoryObject<Executable> node = null;
+            while (iterator.hasNext()) {
+                IndexedWrapper<RangeResult> indexed = iterator.next();
+                Object target = indexed.value.getTo().getObject();
+
+                node = new HistoryObject<>(target,
+                        toHistoryCalls(history, indexed.value),
+                        indexToCreator.get(indexed.index),
+                        node
+                );
+            }
+            return node;
+        }
+
+        private void useReflection(
+                TargetObject expected,
+                TargetObject actual,
+                @NotNull History<Executable> history
+        ) {
+            iterable.reflectionFinder.findSetter(expected, actual, history)
+                    .getSuspects()
+                    .stream()
+                    .filter(s -> !history.contains(s))
+                    .map(TargetObject::new)
+                    .map(iterable.pipeline::findReflectionCalls)
+                    .forEach(history::merge);
+        }
+
+        private void cache(Class<?> clazz, IndexedWrapper<MethodSequenceFinder> finder) {
+            if (!doNotCache.contains(clazz)) {
+                iterable.cachedFinders.put(clazz, finder);
+            }
         }
 
         private @Nullable IndexedWrapper<RangeResultFinding> findInternal(Range range, int start) {
@@ -226,47 +270,6 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         ) {
             RangeResultFinding res = indexedFinder.value.findRanges(target);
             return new IndexedWrapper<>(indexedFinder.index, res);
-        }
-
-        private int compare(Object object) {
-            return targetNode.diff(ClassFieldExtractor.extract(object));
-        }
-
-        private HistoryObject<Executable> createHistoryObject() {
-            Iterator<IndexedWrapper<RangeResult>> iterator = stack.descendingIterator();
-
-            HistoryObject<Executable> node = null;
-            while (iterator.hasNext()) {
-                IndexedWrapper<RangeResult> indexed = iterator.next();
-                Object target = indexed.value.getTo().getObject();
-
-                node = new HistoryObject<>(target,
-                        toHistoryCalls(history, indexed.value),
-                        indexToCreator.get(indexed.index),
-                        node
-                );
-            }
-            return node;
-        }
-
-        private void useReflection(
-                TargetObject expected,
-                TargetObject actual,
-                @NotNull History<Executable> history
-        ) {
-            iterable.reflectionFinder.findSetter(expected, actual, history)
-                    .getSuspects()
-                    .stream()
-                    .filter(s -> !history.contains(s))
-                    .map(TargetObject::new)
-                    .map(iterable.pipeline::findReflectionCalls)
-                    .forEach(history::merge);
-        }
-
-        private void cache(Class<?> clazz, IndexedWrapper<MethodSequenceFinder> finder) {
-            if (!doNotCache.contains(clazz)) {
-                iterable.cachedFinders.put(clazz, finder);
-            }
         }
     }
 
