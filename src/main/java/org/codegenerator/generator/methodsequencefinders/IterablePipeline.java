@@ -56,13 +56,13 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         private final Deque<IndexedWrapper<RangeResult>> ranges = new ArrayDeque<>();
         private final History<Executable> history = new History<>();
         private int lastIndex = -1;
-        private final TargetObject targetObject;
         private final IterablePipeline iterable;
+        private final TargetObject targetObject;
         private final Node targetNode;
 
         private CodeIterator(@NotNull TargetObject targetObject, @NotNull IterablePipeline iterable) {
-            this.targetObject = targetObject;
             this.iterable = iterable;
+            this.targetObject = targetObject;
 
             targetNode = ClassFieldExtractor.extract(targetObject.getObject());
 
@@ -75,32 +75,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 return false;
             }
             if (!ranges.isEmpty() || nextFinder(lastIndex + 1)) {
-                while (!stack.isEmpty() && ranges.getLast().index <= stack.getLast().index) {
-                    stack.pollLast();
-                }
-                IndexedWrapper<RangeResult> last = tryPollLastFromRanges();
-                stack.addLast(last);
-
-                while (compare(last.value.getTo().getObject()) != 0) {
-                    RangeObject rangeObject = new RangeObject(last.value.getTo(), targetObject);
-                    IndexedWrapper<RangeResultFinding> indexed = findInternal(rangeObject, last.indexOfLastFound + 1);
-
-                    if (indexed == null) {
-                        ranges.pollLast();
-                        return !stack.isEmpty();
-                    }
-                    last.indexOfLastFound = indexed.index;
-                    indexed.value
-                            .getRanges()
-                            .forEach(it -> ranges.addLast(new IndexedWrapper<>(indexed.index, it)));
-
-                    if (ranges.isEmpty() || indexed.value.getRanges().isEmpty()) {
-                        return !stack.isEmpty();
-                    }
-
-                    last = tryPollLastFromRanges();
-                    stack.addLast(last);
-                }
+                doNext();
             }
             return !stack.isEmpty();
         }
@@ -116,6 +91,34 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 useReflection(targetObject, to, history);
             }
             return history;
+        }
+
+        private void doNext() {
+            while (!stack.isEmpty() && ranges.getLast().index <= stack.getLast().index) {
+                stack.pollLast();
+            }
+            IndexedWrapper<RangeResult> last = tryPollLastFromRanges();
+            stack.addLast(last);
+
+            while (compare(last.value.getTo().getObject()) != 0) {
+                RangeObject rangeObject = new RangeObject(last.value.getTo(), targetObject);
+                IndexedWrapper<RangeResultFinding> indexed = findInternal(rangeObject, last.indexOfLastFound + 1);
+
+                if (indexed == null) {
+                    ranges.pollLast();
+                    return;
+                }
+                last.indexOfLastFound = indexed.index;
+                indexed.value.getRanges()
+                        .forEach(it -> ranges.addLast(new IndexedWrapper<>(indexed.index, it)));
+
+                if (ranges.isEmpty() || indexed.value.getRanges().isEmpty()) {
+                    return;
+                }
+
+                last = tryPollLastFromRanges();
+                stack.addLast(last);
+            }
         }
 
         private boolean nextFinder(int nextIndex) {
@@ -142,7 +145,10 @@ public class IterablePipeline implements Iterable<History<Executable>> {
             return indexed != null;
         }
 
-        private @NotNull List<HistoryCall<Executable>> toHistoryCalls(History<Executable> history, @NotNull RangeResult rangeResult) {
+        private @NotNull List<HistoryCall<Executable>> toHistoryCalls(
+                History<Executable> history,
+                @NotNull RangeResult rangeResult
+        ) {
             List<HistoryCall<Executable>> calls = new ArrayList<>();
             for (Edge<? extends Executable> method : rangeResult.getMethods()) {
                 calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
@@ -202,58 +208,65 @@ public class IterablePipeline implements Iterable<History<Executable>> {
             }
         }
 
-        private @Nullable IndexedWrapper<RangeResultFinding> findInternal(Range range, int start) {
-            if (iterable.nullFinder.canTry(range)) {
-                RangeResultFinding res = iterable.nullFinder.findRanges(range);
-                return new IndexedWrapper<>(-1, res);
-            }
+        private @Nullable IndexedWrapper<RangeResultFinding> findInternal(@NotNull Range range, int start) {
+            Func func = (o) -> doFind(range, o);
             Class<?> clazz = range.getTo().getClazz();
-            IndexedWrapper<MethodSequenceFinder> finder = iterable.cachedFinders.get(clazz);
-            if (finder != null) {
-                return doFind(range, finder);
-            }
-            for (int i = start; i < iterable.finderCreators.size(); i++) {
-                try {
-                    Function<TargetObject, ? extends MethodSequenceFinder> creator = iterable.finderCreators.get(i);
-                    finder = new IndexedWrapper<>(i, creator.apply(range.getTo()));
-                    indexToCreator.put(i, finder.value.getClass());
-                    if (finder.value.canTry(range)) {
-                        @NotNull IndexedWrapper<RangeResultFinding> res = doFind(range, finder);
-                        cache(clazz, finder);
-                        return res;
-                    }
-                } catch (Exception ignored) {
-                    logging(finder);
-                }
-            }
-            return null;
+            return findInternal(clazz, func, range.getTo(), start);
+        }
+
+        private @Nullable IndexedWrapper<RangeResultFinding> findInternal(@NotNull TargetObject target, int start) {
+            Func func = (o) -> doFind(target, o);
+            Class<?> clazz = target.getClazz();
+            return findInternal(clazz, func, target, start);
         }
 
         private @NotNull IndexedWrapper<RangeResultFinding> doFind(
                 Range range,
                 @NotNull IndexedWrapper<MethodSequenceFinder> indexedFinder
         ) {
-            RangeResultFinding res = indexedFinder.value.findRanges(range);
-            return new IndexedWrapper<>(indexedFinder.index, res);
+            RangeResultFinding result = indexedFinder.value.findRanges(range);
+            return new IndexedWrapper<>(indexedFinder.index, result);
         }
 
-        private @Nullable IndexedWrapper<RangeResultFinding> findInternal(TargetObject target, int start) {
+        private @NotNull IndexedWrapper<RangeResultFinding> doFind(
+                TargetObject target,
+                @NotNull IndexedWrapper<MethodSequenceFinder> indexedFinder
+        ) {
+            RangeResultFinding result = indexedFinder.value.findRanges(target);
+            return new IndexedWrapper<>(indexedFinder.index, result);
+        }
+
+        private @Nullable IndexedWrapper<RangeResultFinding> findInternal(
+                Class<?> clazz,
+                Func doFind,
+                TargetObject target,
+                int start
+        ) {
             if (iterable.nullFinder.canTry(target)) {
                 RangeResultFinding res = iterable.nullFinder.findRanges(target);
                 return new IndexedWrapper<>(-1, res);
             }
-            Class<?> clazz = target.getClazz();
             IndexedWrapper<MethodSequenceFinder> finder = iterable.cachedFinders.get(clazz);
             if (finder != null) {
-                return doFind(target, finder);
+                return doFind.apply(finder);
             }
+            return tryFinders(clazz, doFind, target, start);
+        }
+
+        public @Nullable IndexedWrapper<RangeResultFinding> tryFinders(
+                Class<?> clazz,
+                Func doFind,
+                TargetObject target,
+                int start
+        ) {
+            IndexedWrapper<MethodSequenceFinder> finder = null;
             for (int i = start; i < iterable.finderCreators.size(); i++) {
                 try {
                     Function<TargetObject, ? extends MethodSequenceFinder> creator = iterable.finderCreators.get(i);
                     finder = new IndexedWrapper<>(i, creator.apply(target));
                     indexToCreator.put(i, finder.value.getClass());
                     if (finder.value.canTry(target)) {
-                        @NotNull IndexedWrapper<RangeResultFinding> res = doFind(target, finder);
+                        IndexedWrapper<RangeResultFinding> res = doFind.apply(finder);
                         cache(clazz, finder);
                         return res;
                     }
@@ -264,12 +277,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
             return null;
         }
 
-        private @NotNull IndexedWrapper<RangeResultFinding> doFind(
-                TargetObject target,
-                @NotNull IndexedWrapper<MethodSequenceFinder> indexedFinder
-        ) {
-            RangeResultFinding res = indexedFinder.value.findRanges(target);
-            return new IndexedWrapper<>(indexedFinder.index, res);
+        interface Func extends Function<IndexedWrapper<MethodSequenceFinder>, IndexedWrapper<RangeResultFinding>> {
         }
     }
 
