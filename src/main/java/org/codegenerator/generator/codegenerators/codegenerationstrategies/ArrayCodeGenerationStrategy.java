@@ -2,11 +2,10 @@ package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
-import kotlin.Pair;
 import org.apache.commons.lang3.StringUtils;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
+import org.codegenerator.generator.codegenerators.MethodContext;
 import org.codegenerator.history.History;
-import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
@@ -34,13 +33,13 @@ public class ArrayCodeGenerationStrategy implements CodeGenerationStrategy {
 
     private @NotNull CodeGenerationStrategy generate(
             @NotNull List<MethodSpec.Builder> methods,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
+            @NotNull Deque<MethodContext<Executable>> stack,
             History<Executable> history
     ) {
-        Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
+        MethodContext<Executable> p = stack.pop();
 
-        Object object = p.getFirst().getObject();
-        MethodSpec.Builder methodBuilder = p.getSecond();
+        Object object = p.getNode().getObject();
+        MethodSpec.Builder methodBuilder = p.getMethod();
 
         addStatements(object, history, methods, methodBuilder, stack);
 
@@ -54,7 +53,7 @@ public class ArrayCodeGenerationStrategy implements CodeGenerationStrategy {
             @NotNull History<Executable> history,
             @NotNull List<MethodSpec.Builder> methods,
             MethodSpec.@NotNull Builder methodBuilder,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            @NotNull Deque<MethodContext<Executable>> stack
     ) {
         methodBuilder.addStatement(initArray(object));
         for (int i = 0, length = Array.getLength(object); i < length; i++) {

@@ -6,6 +6,7 @@ import com.squareup.javapoet.TypeSpec;
 import kotlin.Pair;
 import org.codegenerator.Utils;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
+import org.codegenerator.generator.codegenerators.MethodContext;
 import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
 import org.codegenerator.generator.methodsequencefinders.concrete.POJOMethodSequenceFinder;
 import org.codegenerator.history.History;
@@ -41,8 +42,9 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
 
     @Override
     public CodeGenerationStrategy generate(@NotNull ContextGenerator context) {
-        HistoryNode<Executable> node = context.getStack().getFirst().getFirst();
-        MethodSpec.Builder methodBuilder = context.getStack().getFirst().getSecond();
+        MethodContext<Executable> methodContext = context.getStack().getFirst();
+        HistoryNode<Executable> node = methodContext.getNode();
+        MethodSpec.Builder methodBuilder = methodContext.getMethod();
         GenericResolver resolver = context.getGenericResolver();
         Object builder = Utils.buildObject(node.getHistoryCalls());
 
@@ -57,11 +59,11 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
             GenericResolver resolver,
             TypeSpec.@NotNull Builder typeBuilder,
             @NotNull List<MethodSpec.Builder> methods,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            @NotNull Deque<MethodContext<Executable>> stack
     ) {
-        Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
-        HistoryNode<Executable> historyNode = p.getFirst();
-        MethodSpec.Builder methodBuilder = p.getSecond();
+        MethodContext<Executable> p = stack.pop();
+        HistoryNode<Executable> historyNode = p.getNode();
+        MethodSpec.Builder methodBuilder = p.getMethod();
 
         List<Pair<? extends Statement, List<HistoryCall<Executable>>>> pairs = splitListIntoZones(
                 historyNode.getObject(), builder, resolver, historyNode.getHistoryCalls(), new CallCreator(methods, stack)

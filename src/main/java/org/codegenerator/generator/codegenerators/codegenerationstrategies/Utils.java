@@ -1,7 +1,7 @@
 package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
 import com.squareup.javapoet.*;
-import kotlin.Pair;
+import org.codegenerator.generator.codegenerators.MethodContext;
 import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
 import org.codegenerator.generator.converters.PrimitiveConverter;
 import org.codegenerator.history.HistoryCall;
@@ -24,7 +24,7 @@ public class Utils {
 
     public static @NotNull CodeBlock createCall(
             UniqueMethodNameGenerator nameGenerator,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
+            @NotNull Deque<MethodContext<Executable>> stack,
             @NotNull HistoryCall<Executable> call
     ) {
         Map<String, String> argsMap = new HashMap<>();
@@ -44,7 +44,7 @@ public class Utils {
     public static String toRepresentation(
             UniqueMethodNameGenerator nameGenerator,
             @NotNull HistoryNode<Executable> node,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            @NotNull Deque<MethodContext<Executable>> stack
     ) {
         Object arg = node.getObject();
         if (arg == null) {
@@ -58,7 +58,7 @@ public class Utils {
                     .addModifiers(PUBLIC, STATIC)
                     .returns(typeArg);
 
-            stack.add(new Pair<>(node, methodBuilder));
+            stack.add(new MethodContext<>(methodBuilder, node));
             return callMethod(methodName);
         }
     }

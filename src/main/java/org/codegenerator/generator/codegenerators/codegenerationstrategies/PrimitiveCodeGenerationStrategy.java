@@ -1,10 +1,9 @@
 package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
 import com.squareup.javapoet.MethodSpec;
-import kotlin.Pair;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
+import org.codegenerator.generator.codegenerators.MethodContext;
 import org.codegenerator.generator.converters.PrimitiveConverter;
-import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
@@ -19,11 +18,11 @@ public class PrimitiveCodeGenerationStrategy implements CodeGenerationStrategy {
 
     private @NotNull CodeGenerationStrategy generate(
             @NotNull List<MethodSpec.Builder> methods,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            @NotNull Deque<MethodContext<Executable>> stack
     ) {
-        Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
-        Object object = p.getFirst().getObject();
-        MethodSpec.Builder methodBuilder = p.getSecond();
+        MethodContext<Executable> p = stack.pop();
+        Object object = p.getNode().getObject();
+        MethodSpec.Builder methodBuilder = p.getMethod();
 
         methodBuilder.addStatement("return $L", PrimitiveConverter.convert(object));
         methods.add(methodBuilder);

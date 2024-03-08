@@ -5,6 +5,7 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import kotlin.Pair;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
+import org.codegenerator.generator.codegenerators.MethodContext;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
@@ -42,11 +43,11 @@ public class BuilderCodeGenerationStrategy implements CodeGenerationStrategy {
     private @NotNull CodeGenerationStrategy generate(
             TypeSpec.@NotNull Builder typeBuilder,
             @NotNull List<MethodSpec.Builder> methods,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            @NotNull Deque<MethodContext<Executable>> stack
     ) {
-        Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
-        HistoryNode<Executable> historyNode = p.getFirst();
-        MethodSpec.Builder methodBuilder = p.getSecond();
+        MethodContext<Executable> p = stack.pop();
+        HistoryNode<Executable> historyNode = p.getNode();
+        MethodSpec.Builder methodBuilder = p.getMethod();
 
         List<Pair<? extends Statement, List<HistoryCall<Executable>>>> pairs = splitListIntoZones(historyNode.getHistoryCalls(), new CallCreator(methods, stack));
 
@@ -54,8 +55,13 @@ public class BuilderCodeGenerationStrategy implements CodeGenerationStrategy {
             process(pair, methodBuilder);
         }
         reflectionCodeGeneration.generate(variableName, typeBuilder, methods, p, stack);
-        methodBuilder.addStatement("return $L", variableName);
-        methods.add(methodBuilder);
+
+        if (historyNode.nextNode() == null) {
+            methodBuilder.addStatement("return $L", variableName);
+            methods.add(methodBuilder);
+        } else {
+            stack.add(new MethodContext<>(methodBuilder, historyNode.nextNode(), variableName, p));
+        }
 
         return new BeginCodeGenerationStrategy();
     }

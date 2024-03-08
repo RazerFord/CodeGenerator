@@ -3,8 +3,8 @@ package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import kotlin.Pair;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
+import org.codegenerator.generator.codegenerators.MethodContext;
 import org.codegenerator.history.HistoryCall;
 import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
@@ -36,11 +36,11 @@ public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
     private @NotNull CodeGenerationStrategy generate(
             TypeSpec.@NotNull Builder typeBuilder,
             @NotNull List<MethodSpec.Builder> methods,
-            @NotNull Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            @NotNull Deque<MethodContext<Executable>> stack
     ) {
-        Pair<HistoryNode<Executable>, MethodSpec.Builder> p = stack.pop();
-        HistoryNode<Executable> historyNode = p.getFirst();
-        MethodSpec.Builder methodBuilder = p.getSecond();
+        MethodContext<Executable> p = stack.pop();
+        HistoryNode<Executable> historyNode = p.getNode();
+        MethodSpec.Builder methodBuilder = p.getMethod();
 
         Statement statement = new Init(new CallCreator(methods, stack));
 
@@ -50,9 +50,13 @@ public class POJOCodeGenerationStrategy implements CodeGenerationStrategy {
             methodBuilder.addStatement(codeBlockBuilder.build());
         }
         reflectionCodeGeneration.generate(variableName, typeBuilder, methods, p, stack);
-        methodBuilder.addStatement("return $L", variableName);
 
-        methods.add(methodBuilder);
+        if (historyNode.nextNode() == null) {
+            methodBuilder.addStatement("return $L", variableName);
+            methods.add(methodBuilder);
+        } else {
+            stack.add(new MethodContext<>(methodBuilder, historyNode.nextNode(), variableName, p));
+        }
 
         return new BeginCodeGenerationStrategy();
     }

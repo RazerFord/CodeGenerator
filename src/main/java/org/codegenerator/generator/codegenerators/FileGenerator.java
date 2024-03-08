@@ -1,12 +1,12 @@
 package org.codegenerator.generator.codegenerators;
 
-import com.squareup.javapoet.*;
-import kotlin.Pair;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
 import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
 import org.codegenerator.generator.codegenerators.codegenerationstrategies.BeginCodeGenerationStrategy;
 import org.codegenerator.generator.codegenerators.codegenerationstrategies.CodeGenerationStrategy;
 import org.codegenerator.history.History;
-import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
@@ -43,7 +43,7 @@ public class FileGenerator {
     ) {
         TypeSpec.Builder typeBuilder = getTypeBuilder(className);
         @NotNull ContextGenerator context = buildContext(typeBuilder, source, methodName, history);
-        Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack = context.getStack();
+        Deque<MethodContext<Executable>> stack = context.getStack();
 
         while (!stack.isEmpty()) {
             codeGenerationStrategy = codeGenerationStrategy.generate(context);
@@ -60,7 +60,7 @@ public class FileGenerator {
             @NotNull History<Executable> history
     ) {
         MethodSpec.Builder methodBuilder = getMethodBuilder(source, methodName);
-        Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack = new ArrayDeque<>(Collections.singleton(new Pair<>(history.get(source), methodBuilder)));
+        Deque<MethodContext<Executable>> stack = new ArrayDeque<>(Collections.singleton(new MethodContext<>(methodBuilder, history.get(source))));
 
         return ContextGenerator.builder()
                 .setTypeBuilder(typeBuilder)

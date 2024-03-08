@@ -2,10 +2,8 @@ package org.codegenerator.generator.codegenerators;
 
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
-import kotlin.Pair;
 import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
 import org.codegenerator.history.History;
-import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,14 +15,14 @@ public class ContextGenerator {
     private final TypeSpec.Builder typeBuilder;
     private final List<MethodSpec.Builder> methods;
     private final GenericResolver genericResolver;
-    private final Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack;
+    private final Deque<MethodContext<Executable>> stack;
     private final History<Executable> history;
 
     public ContextGenerator(
             TypeSpec.Builder typeBuilder,
             List<MethodSpec.Builder> methods,
             GenericResolver genericResolver,
-            Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack,
+            Deque<MethodContext<Executable>> stack,
             History<Executable> history
     ) {
         this.typeBuilder = typeBuilder;
@@ -46,7 +44,7 @@ public class ContextGenerator {
         return genericResolver;
     }
 
-    public Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> getStack() {
+    public Deque<MethodContext<Executable>> getStack() {
         return stack;
     }
 
@@ -66,7 +64,7 @@ public class ContextGenerator {
         private TypeSpec.Builder typeBuilder;
         private List<MethodSpec.Builder> methods;
         private GenericResolver genericResolver;
-        private Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack;
+        private Deque<MethodContext<Executable>> stack;
         private History<Executable> history;
 
         public TypeSpec.Builder getTypeBuilder() {
@@ -96,11 +94,11 @@ public class ContextGenerator {
             return this;
         }
 
-        public Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> getStack() {
+        public Deque<MethodContext<Executable>> getStack() {
             return stack;
         }
 
-        public Builder setStack(Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack) {
+        public Builder setStack(Deque<MethodContext<Executable>> stack) {
             this.stack = stack;
             return this;
         }

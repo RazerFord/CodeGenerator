@@ -1,9 +1,7 @@
 package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
-import com.squareup.javapoet.MethodSpec;
-import kotlin.Pair;
 import org.apache.commons.lang3.StringUtils;
-import org.codegenerator.history.HistoryNode;
+import org.codegenerator.generator.codegenerators.MethodContext;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
@@ -12,11 +10,11 @@ import java.util.List;
 
 public class UniqueMethodNameGenerator {
     private final List<?> methods;
-    private final Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack;
+    private final Deque<MethodContext<Executable>> stack;
 
     public UniqueMethodNameGenerator(
             List<?> methods,
-            Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            Deque<MethodContext<Executable>> stack
     ) {
         this.methods = methods;
         this.stack = stack;

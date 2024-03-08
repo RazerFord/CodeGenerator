@@ -1,7 +1,7 @@
 package org.codegenerator.generator.codegenerators.codegenerationstrategies;
 
 import com.squareup.javapoet.*;
-import kotlin.Pair;
+import org.codegenerator.generator.codegenerators.MethodContext;
 import org.codegenerator.history.HistoryNode;
 import org.codegenerator.history.SetterUsingReflection;
 import org.jetbrains.annotations.Contract;
@@ -34,11 +34,11 @@ public class ReflectionCodeGeneration {
             String variableName,
             TypeSpec.Builder typeBuilder,
             List<MethodSpec.Builder> methods,
-            @NotNull Pair<HistoryNode<Executable>, MethodSpec.Builder> historyNodeBuilderPair,
-            Deque<Pair<HistoryNode<Executable>, MethodSpec.Builder>> stack
+            @NotNull MethodContext<Executable> methodContext,
+            Deque<MethodContext<Executable>> stack
     ) {
-        HistoryNode<Executable> historyNode = historyNodeBuilderPair.getFirst();
-        MethodSpec.Builder methodBuilder = historyNodeBuilderPair.getSecond();
+        HistoryNode<Executable> historyNode = methodContext.getNode();
+        MethodSpec.Builder methodBuilder = methodContext.getMethod();
 
         if (historyNode.getSetterUsingReflections().isEmpty()) return;
 
