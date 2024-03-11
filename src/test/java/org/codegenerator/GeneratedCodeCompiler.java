@@ -36,14 +36,14 @@ public class GeneratedCodeCompiler {
     }
 
     @SuppressWarnings("unchecked")
-    public <R> R createObject(String generatedClassName) {
+    public <R> R createObject(String generatedClassName, String... nestedClasses) {
         try {
             String absolutePathToClass = Paths.get(outputDirectory, classPathPrefix, generatedClassName + ".java").toAbsolutePath().normalize().toString();
             String className = classNamePrefix + generatedClassName;
 
             assertTrue(compile(outputDirectory, absolutePathToClass));
 
-            Class<?> clazz = loadClass(outputDirectory, className);
+            Class<?> clazz = loadClass(outputDirectory, className, nestedClasses);
             Object o = clazz.getConstructors()[0].newInstance();
             return (R) clazz.getMethod(methodName).invoke(o);
         } catch (Exception e) {
@@ -69,8 +69,15 @@ public class GeneratedCodeCompiler {
         }
     }
 
-    public Class<?> loadClass(String classPath, String className) throws IOException, ClassNotFoundException {
+    public Class<?> loadClass(
+            String classPath,
+            String className,
+            String @NotNull ... nestedClasses
+    ) throws IOException, ClassNotFoundException {
         try (URLClassLoader loader = new URLClassLoader(new URL[]{getUrl(classPath)})) {
+            for (String nestedClass : nestedClasses) {
+                loader.loadClass(className + "$" + nestedClass);
+            }
             return loader.loadClass(className);
         }
     }
