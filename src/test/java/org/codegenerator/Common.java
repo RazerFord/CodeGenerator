@@ -1,6 +1,7 @@
 package org.codegenerator;
 
 public class Common {
+    public final static String NESTED_CLASS = "ReflexiveFieldSetter";
     public static final String OUTPUT_DIRECTORY = "./";
     public static final String PACKAGE_NAME = "generatedclass";
     public static final String METHOD_NAME = "generate";

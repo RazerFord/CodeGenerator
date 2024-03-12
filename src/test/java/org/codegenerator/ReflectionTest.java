@@ -17,8 +17,6 @@ import static org.codegenerator.Common.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ReflectionTest {
-    private final static String NESTED_CLASS = "ReflexiveFieldSetter";
-
     @Test
     void withoutSetterForOneFieldTest() throws IOException {
         final String generatedClassName = "WithoutSetterForOneFieldClass";

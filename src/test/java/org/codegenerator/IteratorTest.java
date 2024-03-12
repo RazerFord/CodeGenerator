@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.codegenerator.Common.*;
@@ -136,22 +137,34 @@ class IteratorTest {
         checkIterator(generator, classWithManyFieldsComplex, generatedClassName);
     }
 
+    private final static String FULL_NAME_NESTED_CLASS = "public static class " + NESTED_CLASS;
+
     @SuppressWarnings("UnusedReturnValue")
     private static <T> int checkIterator(@NotNull Generator generator, T object, String generatedClassName) throws IOException {
         int iteration = 0;
+        String[] nestedClasses;
+        String[] nestedClass = new String[]{NESTED_CLASS};
+        String[] empty = new String[]{};
         for (String code : generator.generateIterableCode(object)) {
-            T that = createObject(code, generatedClassName);
+            if (code.contains(FULL_NAME_NESTED_CLASS)) nestedClasses = nestedClass;
+            else nestedClasses = empty;
+
+            T that = createObject(code, generatedClassName, nestedClasses);
             assertEquals(object, that);
+
+            iteration++;
         }
         return iteration;
     }
 
-    private static <R> R createObject(String code, String className) throws IOException {
-        saveCodeToFile(code);
-        return Common.createObject(className);
+    private static <R> R createObject(String code, String className, String... nestedClasses) throws IOException {
+        saveCodeToFile(code, className);
+        return Common.createObject(className, nestedClasses);
     }
 
-    private static void saveCodeToFile(@NotNull String code) throws IOException {
-        Files.write(Paths.get(OUTPUT_DIRECTORY), code.getBytes(StandardCharsets.UTF_8));
+    private static void saveCodeToFile(@NotNull String code, String className) throws IOException {
+        Path directory = Paths.get(OUTPUT_DIRECTORY).resolve(PACKAGE_NAME);
+        Files.createDirectories(directory);
+        Files.write(directory.resolve(className + ".java"), code.getBytes(StandardCharsets.UTF_8));
     }
 }
