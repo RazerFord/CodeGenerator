@@ -29,6 +29,7 @@ class IteratorTest {
         Generator generator = Generators.standard(PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         checkIterator(generator, (Boolean) null, generatedClassName);
+        checkIterator(generator, (Boolean) null, generatedClassName);
     }
 
     @Test
