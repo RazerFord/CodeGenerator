@@ -1,9 +1,16 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
+
 plugins {
     id("java")
 }
 
 group = "org.src"
 version = "0.2"
+
 
 repositories {
     mavenCentral()
@@ -37,6 +44,61 @@ java {
     }
 }
 
+data class DurationOfTest(val name: String, val duration: Duration, val result: TestResult)
+
+val top = mutableListOf<DurationOfTest>()
+
 tasks.test {
     useJUnitPlatform()
+
+    val events = arrayOf(
+        TestLogEvent.FAILED,
+        TestLogEvent.PASSED,
+        TestLogEvent.SKIPPED,
+        TestLogEvent.STARTED,
+    )
+
+    testLogging {
+        events(*events)
+
+        exceptionFormat = TestExceptionFormat.FULL
+        showExceptions = true
+        showStackTraces = true
+        showCauses = true
+
+        debug {
+            events(*events, TestLogEvent.STANDARD_ERROR, TestLogEvent.STANDARD_OUT)
+            exceptionFormat = TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        addTestListener(object : TestListener {
+            override fun beforeSuite(suite: TestDescriptor) {}
+            override fun afterSuite(suite: TestDescriptor, result: TestResult) {}
+            override fun beforeTest(testDescriptor: TestDescriptor) {}
+            override fun afterTest(desc: TestDescriptor, res: TestResult) {
+                val duration = (res.endTime - res.startTime)
+                    .toDuration(DurationUnit.MILLISECONDS)
+
+                top.add(DurationOfTest(desc.name, duration, res))
+
+                project.logger.lifecycle("Duration: $duration")
+            }
+        })
+
+        doLast {
+            top.sortedWith { l, r -> r.duration.compareTo(l.duration) }
+                .take(3)
+                .forEach { project.logger.lifecycle("${it.name} : ${it.duration}") }
+
+            val count = top.size
+            val failed = top.count { it.result.resultType == TestResult.ResultType.FAILURE }
+            val skipped = top.count { it.result.resultType == TestResult.ResultType.SKIPPED }
+            val success = top.count { it.result.resultType == TestResult.ResultType.SUCCESS }
+
+            val message = "Tests: $count   Success: $success   Skipped: $skipped   Failed: $failed"
+            project.logger.lifecycle(message)
+        }
+    }
 }
