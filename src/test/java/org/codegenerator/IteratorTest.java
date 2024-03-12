@@ -5,6 +5,7 @@ import org.codegenerator.generator.Generators;
 import org.codegenerator.testclasses.codegeneratorbuilder.SendingMoneyTransferWithPojo;
 import org.codegenerator.testclasses.codegeneratorbuilder.User;
 import org.codegenerator.testclasses.codegeneratorbuilder.UserPojo;
+import org.codegenerator.testclasses.codegeneratoriterator.CombinationPojoBuilder;
 import org.codegenerator.testclasses.codegeneratorpojo.ClassWithManyFieldsComplex;
 import org.codegenerator.testclasses.codegeneratorpojo.MultidimensionalPointArray;
 import org.codegenerator.testclasses.codegeneratorpojo.Point;
@@ -101,6 +102,23 @@ class IteratorTest {
         SendingMoneyTransferWithPojo sendingMoneyTransfer = SendingMoneyTransferWithPojo.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
 
         checkIterator(generator, sendingMoneyTransfer, generatedClassName);
+    }
+
+    @Test
+    void combinationPojoWithBuilder() throws IOException {
+        final String generatedClassName = "GeneratedPojoSetterBuilderClass";
+        Generator generator = Generators.forBuilder(CombinationPojoBuilder.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        CombinationPojoBuilder o = CombinationPojoBuilder.builder()
+                .setaBoolean(true)
+                .setaFloat(0.3F)
+                .setaInt(42)
+                .setaByte((byte) 127)
+                .setaChar('z')
+                .setaDouble(57.0D)
+                .build();
+
+        checkIterator(generator, o, generatedClassName);
     }
 
     @Test

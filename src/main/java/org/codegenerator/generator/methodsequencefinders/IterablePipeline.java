@@ -112,11 +112,19 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                     return;
                 }
                 last.indexOfLastFound = indexed.index;
+
                 indexed.value.getRanges()
                         .forEach(it -> ranges.addLast(new IndexedWrapper<>(indexed.index, it)));
 
+                indexed.value.getSuspects()
+                        .stream()
+                        .filter(s -> !history.contains(s))
+                        .map(TargetObject::new)
+                        .map(iterable.pipeline::findReflectionCalls)
+                        .forEach(history::merge);
+
                 if (ranges.isEmpty() || indexed.value.getRanges().isEmpty()) {
-                    return;
+                    continue;
                 }
 
                 last = tryPollLastFromRanges();
@@ -182,7 +190,8 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 IndexedWrapper<RangeResult> indexed = iterator.next();
                 TargetObject target = indexed.value.getTo();
 
-                node = indexToCreator.get(indexed.index).createNode(target,
+                node = indexToCreator.get(indexed.index).createNode(
+                        target,
                         toHistoryCalls(history, indexed.value),
                         node
                 );
