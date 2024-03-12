@@ -102,17 +102,17 @@ public class CommonGeneratorImpl implements CommonGenerator {
     }
 
     @Override
-    public Iterable<String> generateIterable(@NotNull Object object) {
-        return generateIterable(object, packageName, className, methodName);
+    public Iterable<String> generateIterableCode(@NotNull Object object) {
+        return generateIterableCode(object, packageName, className, methodName);
     }
 
     @Override
-    public Iterable<String> generateIterable(@NotNull Object object, String className, String methodName) {
-        return generateIterable(object, packageName, className, methodName);
+    public Iterable<String> generateIterableCode(@NotNull Object object, String className, String methodName) {
+        return generateIterableCode(object, packageName, className, methodName);
     }
 
     @Override
-    public Iterable<String> generateIterable(@NotNull Object object, String packageName, String className, String methodName) {
+    public Iterable<String> generateIterableCode(@NotNull Object object, String packageName, String className, String methodName) {
         return new IterableImpl(this, object, packageName, className, methodName);
     }
 

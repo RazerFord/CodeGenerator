@@ -17,6 +17,8 @@ import static org.codegenerator.Common.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ReflectionTest {
+    private final static String NESTED_CLASS = "ReflexiveFieldSetter";
+
     @Test
     void withoutSetterForOneFieldTest() throws IOException {
         final String generatedClassName = "WithoutSetterForOneFieldClass";
@@ -29,7 +31,7 @@ class ReflectionTest {
         accumulator.setB(10);
         generator.generateCode(accumulator, Paths.get(OUTPUT_DIRECTORY));
 
-        Accumulator other = createObject(generatedClassName);
+        Accumulator other = createObject(generatedClassName, NESTED_CLASS);
         assertEquals(accumulator, other);
     }
 
@@ -51,7 +53,7 @@ class ReflectionTest {
 
         generator.generateCode(accumulatorHolder, Paths.get(OUTPUT_DIRECTORY));
 
-        AccumulatorHolder other = createObject(generatedClassName);
+        AccumulatorHolder other = createObject(generatedClassName, NESTED_CLASS);
         assertEquals(accumulatorHolder, other);
     }
 
@@ -68,7 +70,7 @@ class ReflectionTest {
 
         generator.generateCode(sum, Paths.get(OUTPUT_DIRECTORY));
 
-        Sum other = createObject(generatedClassName);
+        Sum other = createObject(generatedClassName, NESTED_CLASS);
         assertEquals(sum, other);
     }
 
@@ -84,7 +86,7 @@ class ReflectionTest {
 
         generator.generateCode(child, Paths.get(OUTPUT_DIRECTORY));
 
-        ChildWithParentWithPrivateField other = createObject(generatedClassName);
+        ChildWithParentWithPrivateField other = createObject(generatedClassName, NESTED_CLASS);
         assertEquals(child, other);
     }
 }

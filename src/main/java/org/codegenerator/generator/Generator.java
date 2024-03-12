@@ -111,9 +111,8 @@ public interface Generator {
      * the object that comes in as input.
      *
      * @param object object for which you need to generateCode a sequence of methods
-     * @throws IOException if an I/O error occurs
      */
-    Iterable<String> generateIterable(@NotNull Object object) throws IOException;
+    Iterable<String> generateIterableCode(@NotNull Object object);
 
     /**
      * Creates an iterable instance.
@@ -123,13 +122,12 @@ public interface Generator {
      * @param object     object for which you need to generateCode a sequence of methods
      * @param className  the name of the class into which the generated code is placed
      * @param methodName name of the method that creates the object
-     * @throws IOException if an I/O error occurs
      */
-    Iterable<String> generateIterable(
+    Iterable<String> generateIterableCode(
             @NotNull Object object,
             String className,
             String methodName
-    ) throws IOException;
+    );
 
     /**
      * Creates an iterable instance.
@@ -140,14 +138,13 @@ public interface Generator {
      * @param packageName the name of the package in which the generated code is placed
      * @param className   the name of the class into which the generated code is placed
      * @param methodName  name of the method that creates the object
-     * @throws IOException if an I/O error occurs
      */
-    Iterable<String> generateIterable(
+    Iterable<String> generateIterableCode(
             @NotNull Object object,
             String packageName,
             String className,
             String methodName
-    ) throws IOException;
+    );
 
     /**
      * Finds methods that were called during the lifetime of objects.

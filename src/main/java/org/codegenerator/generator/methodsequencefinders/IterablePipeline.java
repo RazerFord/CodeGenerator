@@ -279,6 +279,12 @@ public class IterablePipeline implements Iterable<History<Executable>> {
 
         interface Func extends Function<IndexedWrapper<MethodSequenceFinder>, IndexedWrapper<RangeResultFinding>> {
         }
+
+        private static void logging(@Nullable IndexedWrapper<MethodSequenceFinder> indexedFinder) {
+            if (indexedFinder != null) {
+                IterablePipeline.logging(indexedFinder.value);
+            }
+        }
     }
 
     private static void logging(@Nullable MethodSequenceFinder finder) {
@@ -286,12 +292,6 @@ public class IterablePipeline implements Iterable<History<Executable>> {
             String className = finder.getClass().getName();
             String msg = String.format("%s failed", className);
             LOGGER.warning(msg);
-        }
-    }
-
-    private static void logging(@Nullable IndexedWrapper<MethodSequenceFinder> indexedFinder) {
-        if (indexedFinder != null) {
-            logging(indexedFinder.value);
         }
     }
 
