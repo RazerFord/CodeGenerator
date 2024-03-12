@@ -7,7 +7,7 @@ import org.codegenerator.CustomLogger;
 import org.codegenerator.Utils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
-import org.codegenerator.generator.TargetObject;
+import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.generator.graph.edges.EdgeGenerator;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.jetbrains.annotations.Contract;

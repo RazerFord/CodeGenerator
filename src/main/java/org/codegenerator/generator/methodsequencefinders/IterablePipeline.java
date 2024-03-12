@@ -113,15 +113,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 }
                 last.indexOfLastFound = indexed.index;
 
-                indexed.value.getRanges()
-                        .forEach(it -> ranges.addLast(new IndexedWrapper<>(indexed.index, it)));
-
-                indexed.value.getSuspects()
-                        .stream()
-                        .filter(s -> !history.contains(s))
-                        .map(TargetObject::new)
-                        .map(iterable.pipeline::findReflectionCalls)
-                        .forEach(history::merge);
+                postProcessing(indexed);
 
                 if (ranges.isEmpty() || indexed.value.getRanges().isEmpty()) {
                     continue;
@@ -139,21 +131,23 @@ public class IterablePipeline implements Iterable<History<Executable>> {
             if (indexed != null) {
                 lastIndex = indexed.index;
 
-                indexed.value
-                        .getSuspects()
-                        .stream()
-                        .filter(s -> !history.contains(s))
-                        .map(TargetObject::new)
-                        .map(iterable.pipeline::findReflectionCalls)
-                        .forEach(history::merge);
-
-                indexed.value
-                        .getRanges()
-                        .forEach(it -> ranges.addLast(new IndexedWrapper<>(indexed.index, it)));
+                postProcessing(indexed);
             } else {
                 lastIndex = iterable.finderCreators.size();
             }
             return indexed != null;
+        }
+
+        private void postProcessing(@NotNull IndexedWrapper<RangeResultFinding> indexed) {
+            indexed.value.getRanges()
+                    .forEach(it -> ranges.addLast(new IndexedWrapper<>(indexed.index, it)));
+
+            indexed.value.getSuspects()
+                    .stream()
+                    .filter(s -> !history.contains(s))
+                    .map(TargetObject::new)
+                    .map(iterable.pipeline::findReflectionCalls)
+                    .forEach(history::merge);
         }
 
         private @NotNull List<HistoryCall<Executable>> toHistoryCalls(

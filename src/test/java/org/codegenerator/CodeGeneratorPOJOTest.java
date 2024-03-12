@@ -463,7 +463,7 @@ class CodeGeneratorPOJOTest {
     }
 
     @NotNull
-    private static MultidimensionalPointArray getMultidimensionalPointArray() {
+    public static MultidimensionalPointArray getMultidimensionalPointArray() {
         MultidimensionalPointArray multidimensionalPointArray = new MultidimensionalPointArray();
 
         Point p = new Point();
