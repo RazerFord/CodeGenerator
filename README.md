@@ -1,4 +1,4 @@
-# CodeGenerator ![testing](https://github.com/RazerFord/CodeGenerator/actions/workflows/test.yml/badge.svg)
+# CodeGenerator ![testing workflow](https://github.com/RazerFord/CodeGenerator/actions/workflows/test.yml/badge.svg)
 
 ## Overview
 
