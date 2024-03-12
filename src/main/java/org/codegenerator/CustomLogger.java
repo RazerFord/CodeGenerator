@@ -1,6 +1,6 @@
 package org.codegenerator;
 
-import javafx.util.Pair;
+import kotlin.Pair;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,8 +21,8 @@ public class CustomLogger {
     }
 
     private static @NotNull Logger init() {
-        if (System.getProperty(FORMAT.getKey()) == null) {
-            System.setProperty(FORMAT.getKey(), FORMAT.getValue());
+        if (System.getProperty(FORMAT.getFirst()) == null) {
+            System.setProperty(FORMAT.getFirst(), FORMAT.getSecond());
         }
         Logger logger = Logger.getLogger("MainLogger");
         logger.setLevel(LEVEL);
