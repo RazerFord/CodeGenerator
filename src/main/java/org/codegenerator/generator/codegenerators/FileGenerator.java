@@ -8,6 +8,7 @@ import org.codegenerator.generator.codegenerators.codegenerationstrategies.Begin
 import org.codegenerator.generator.codegenerators.codegenerationstrategies.CodeGenerationStrategy;
 import org.codegenerator.history.History;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Executable;
 import java.util.ArrayDeque;
@@ -71,11 +72,11 @@ public class FileGenerator {
                 .build();
     }
 
-    private @NotNull MethodSpec.Builder getMethodBuilder(@NotNull Object source, String methodName) {
+    private @NotNull MethodSpec.Builder getMethodBuilder(@Nullable Object source, String methodName) {
         return MethodSpec
                 .methodBuilder(methodName)
                 .addModifiers(PUBLIC, STATIC)
-                .returns(source.getClass());
+                .returns(source != null ? source.getClass() : Object.class);
     }
 
     private @NotNull TypeSpec.Builder getTypeBuilder(String className) {

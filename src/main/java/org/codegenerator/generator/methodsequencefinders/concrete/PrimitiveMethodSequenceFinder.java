@@ -9,15 +9,24 @@ import org.codegenerator.generator.graph.resultfinding.RangeResultFinding;
 import org.codegenerator.generator.graph.resultfinding.RangeWrapperResultFinding;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.WrapperResultFinding;
-import org.codegenerator.history.History;
-import org.codegenerator.history.HistoryPrimitive;
+import org.codegenerator.history.*;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
 import java.util.Collections;
+import java.util.List;
 
 public class PrimitiveMethodSequenceFinder implements MethodSequenceFinder {
+    @Override
+    public HistoryNode<Executable> createNode(
+            @NotNull TargetObject targetObject,
+            List<HistoryCall<Executable>> calls,
+            HistoryNode<Executable> next
+    ) {
+        return new HistoryPrimitive<>(targetObject.getObject(), Collections.emptyList(), PrimitiveMethodSequenceFinder.class);
+    }
+
     @Override
     public boolean canTry(@NotNull TargetObject targetObject) {
         Class<?> clazz = targetObject.getClazz();

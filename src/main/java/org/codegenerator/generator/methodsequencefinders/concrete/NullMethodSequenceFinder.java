@@ -6,14 +6,27 @@ import org.codegenerator.generator.graph.resultfinding.RangeWrapperResultFinding
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.WrapperResultFinding;
 import org.codegenerator.history.History;
+import org.codegenerator.history.HistoryCall;
+import org.codegenerator.history.HistoryNode;
 import org.codegenerator.history.HistoryPrimitive;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Executable;
 import java.util.Collections;
+import java.util.List;
 
 public class NullMethodSequenceFinder implements MethodSequenceFinder {
+
+    @Override
+    public HistoryNode<Executable> createNode(
+            @NotNull TargetObject targetObject,
+            List<HistoryCall<Executable>> calls,
+            HistoryNode<Executable> next
+    ) {
+        return new HistoryPrimitive<>(targetObject.getObject(), Collections.emptyList(), NullMethodSequenceFinder.class);
+    }
+
     @Override
     public boolean canTry(@NotNull TargetObject targetObject) {
         return targetObject.getObject() == null;

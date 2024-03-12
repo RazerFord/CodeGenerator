@@ -20,7 +20,7 @@ public class HistoryPrimitive<T> implements HistoryNode<T> {
 
     @Override
     public HistoryNode<T> nextNode() {
-        throw new UnsupportedOperationException("nextNode");
+        return null;
     }
 
     @Override

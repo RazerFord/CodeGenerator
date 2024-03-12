@@ -2,9 +2,11 @@ package org.codegenerator.generator.converters;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class PrimitiveConverter {
@@ -18,9 +20,9 @@ public class PrimitiveConverter {
         return ClassUtils.isPrimitiveOrWrapper(clazz) || clazz == String.class;
     }
 
-    public static String convert(@NotNull Object o) {
-        Class<?> clazz = o.getClass();
-        return OBJECT_TO_STRING.getOrDefault(clazz, Object::toString).apply(o);
+    public static String convert(@Nullable Object o) {
+        Class<?> clazz = o != null ? o.getClass() : null;
+        return OBJECT_TO_STRING.getOrDefault(clazz, Objects::toString).apply(o);
     }
 
     private static @NotNull Map<Class<?>, Function<Object, String>> createObjectToString() {

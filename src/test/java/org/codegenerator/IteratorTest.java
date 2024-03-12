@@ -18,9 +18,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.codegenerator.Common.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class IteratorTest {
+    @Test
+    void nullTest() throws IOException {
+        final String generatedClassName = "GeneratedNullClass";
+        Generator generator = Generators.standard(PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        checkIterator(generator, (Boolean) null, generatedClassName);
+    }
+
     @Test
     void integerTest() throws IOException {
         final String generatedClassName = "GeneratedIntClass";
@@ -151,6 +160,24 @@ class IteratorTest {
 
             T that = createObject(code, generatedClassName, nestedClasses);
             assertEquals(object, that);
+
+            iteration++;
+        }
+        return iteration;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    private static <T> int checkIterator(@NotNull Generator generator, T[] object, String generatedClassName) throws IOException {
+        int iteration = 0;
+        String[] nestedClasses;
+        String[] nestedClass = new String[]{NESTED_CLASS};
+        String[] empty = new String[]{};
+        for (String code : generator.generateIterableCode(object)) {
+            if (code.contains(FULL_NAME_NESTED_CLASS)) nestedClasses = nestedClass;
+            else nestedClasses = empty;
+
+            T[] that = createObject(code, generatedClassName, nestedClasses);
+            assertArrayEquals(object, that);
 
             iteration++;
         }

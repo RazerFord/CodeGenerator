@@ -20,6 +20,7 @@ import org.codegenerator.generator.graph.resultfinding.ResultFindingImpl;
 import org.codegenerator.generator.objectwrappers.*;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
+import org.codegenerator.history.HistoryNode;
 import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.*;
 import org.jetbrains.annotations.Contract;
@@ -53,6 +54,20 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         checkInvariants(builderInfoList);
 
         methodFinder = new LazyMethodFinder(builderInfoList, new LazyMethodGraph());
+    }
+
+    @Override
+    public HistoryNode<Executable> createNode(
+            @NotNull TargetObject targetObject,
+            List<HistoryCall<Executable>> calls,
+            HistoryNode<Executable> next
+    ) {
+        return new HistoryObject<>(
+                targetObject.getObject(),
+                calls,
+                BuilderMethodSequenceFinder.class,
+                next
+        );
     }
 
     @Override

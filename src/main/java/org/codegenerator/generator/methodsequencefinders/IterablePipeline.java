@@ -14,7 +14,7 @@ import org.codegenerator.generator.objectwrappers.RangeResult;
 import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
-import org.codegenerator.history.HistoryObject;
+import org.codegenerator.history.HistoryNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,7 +50,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
     }
 
     private static class CodeIterator implements Iterator<History<Executable>> {
-        private final Map<Integer, Class<?>> indexToCreator = new HashMap<>();
+        private final Map<Integer, MethodSequenceFinder> indexToCreator = new HashMap<>();
         private final Set<Class<?>> doNotCache = new HashSet<>();
         private final Deque<IndexedWrapper<RangeResult>> stack = new ArrayDeque<>();
         private final Deque<IndexedWrapper<RangeResult>> ranges = new ArrayDeque<>();
@@ -59,14 +59,17 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         private final IterablePipeline iterable;
         private final TargetObject targetObject;
         private final Node targetNode;
+        private final int nullIndex;
 
         private CodeIterator(@NotNull TargetObject targetObject, @NotNull IterablePipeline iterable) {
             this.iterable = iterable;
             this.targetObject = targetObject;
+            nullIndex = iterable.finderCreators.size() + 1;
 
             targetNode = ClassFieldExtractor.extract(targetObject.getObject());
 
             doNotCache.add(targetObject.getClazz());
+            indexToCreator.put(nullIndex, iterable.nullFinder);
         }
 
         @Override
@@ -82,7 +85,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
 
         @Override
         public @Nullable History<Executable> next() {
-            HistoryObject<Executable> node = createHistoryObject();
+            HistoryNode<Executable> node = createHistoryObject();
 
             history.put(targetObject.getObject(), node);
 
@@ -100,7 +103,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
             IndexedWrapper<RangeResult> last = tryPollLastFromRanges();
             stack.addLast(last);
 
-            while (compare(last.value.getTo().getObject()) != 0) {
+            while (compare(last.value.getTo()) != 0) {
                 RangeObject rangeObject = new RangeObject(last.value.getTo(), targetObject);
                 IndexedWrapper<RangeResultFinding> indexed = findInternal(rangeObject, last.indexOfLastFound + 1);
 
@@ -156,32 +159,31 @@ public class IterablePipeline implements Iterable<History<Executable>> {
             return calls;
         }
 
-        private int compare(Object object) {
-            return targetNode.diff(ClassFieldExtractor.extract(object));
+        private int compare(@NotNull TargetObject targetObject) {
+            return targetNode.diff(ClassFieldExtractor.extract(targetObject.getObject()));
         }
 
         private @NotNull IndexedWrapper<RangeResult> tryPollLastFromRanges() {
             IndexedWrapper<RangeResult> last = ranges.getLast();
 
             if (last.indexOfLastFound >= iterable.finderCreators.size() ||
-                    compare(last.value.getTo().getObject()) == 0) {
+                    compare(last.value.getTo()) == 0) {
                 ranges.pollLast();
             }
 
             return last;
         }
 
-        private HistoryObject<Executable> createHistoryObject() {
+        private HistoryNode<Executable> createHistoryObject() {
             Iterator<IndexedWrapper<RangeResult>> iterator = stack.descendingIterator();
 
-            HistoryObject<Executable> node = null;
+            HistoryNode<Executable> node = null;
             while (iterator.hasNext()) {
                 IndexedWrapper<RangeResult> indexed = iterator.next();
-                Object target = indexed.value.getTo().getObject();
+                TargetObject target = indexed.value.getTo();
 
-                node = new HistoryObject<>(target,
+                node = indexToCreator.get(indexed.index).createNode(target,
                         toHistoryCalls(history, indexed.value),
-                        indexToCreator.get(indexed.index),
                         node
                 );
             }
@@ -244,7 +246,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         ) {
             if (iterable.nullFinder.canTry(target)) {
                 RangeResultFinding res = iterable.nullFinder.findRanges(target);
-                return new IndexedWrapper<>(-1, res);
+                return new IndexedWrapper<>(nullIndex, res);
             }
             IndexedWrapper<MethodSequenceFinder> finder = iterable.cachedFinders.get(clazz);
             if (finder != null) {
@@ -264,7 +266,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                 try {
                     Function<TargetObject, ? extends MethodSequenceFinder> creator = iterable.finderCreators.get(i);
                     finder = new IndexedWrapper<>(i, creator.apply(target));
-                    indexToCreator.put(i, finder.value.getClass());
+                    indexToCreator.put(i, finder.value);
                     if (finder.value.canTry(target)) {
                         IndexedWrapper<RangeResultFinding> res = doFind.apply(finder);
                         cache(clazz, finder);

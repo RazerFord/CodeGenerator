@@ -5,8 +5,7 @@ import org.codegenerator.generator.graph.resultfinding.RangeResultFinding;
 import org.codegenerator.generator.graph.resultfinding.RangeWrapperResultFinding;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.WrapperResultFinding;
-import org.codegenerator.history.History;
-import org.codegenerator.history.HistoryArray;
+import org.codegenerator.history.*;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,6 +16,16 @@ import java.util.Collections;
 import java.util.List;
 
 public class ArrayMethodSequenceFinder implements MethodSequenceFinder {
+
+    @Override
+    public HistoryNode<Executable> createNode(
+            @NotNull TargetObject targetObject,
+            List<HistoryCall<Executable>> calls,
+            HistoryNode<Executable> next
+    ) {
+        return new HistoryArray<>(targetObject.getObject(), Collections.emptyList(), ArrayMethodSequenceFinder.class);
+    }
+
     @Override
     public boolean canTry(@NotNull TargetObject targetObject) {
         return targetObject.getClazz().isArray();
@@ -67,10 +76,9 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinder {
         }
     }
 
-    private static void arrayTraversal(Object object, List<Object> suspects) {
-        if (object == null || !object.getClass().isArray()) {
-            suspects.add(object);
-        } else {
+    private static void arrayTraversal(Object object, @NotNull List<Object> suspects) {
+        suspects.add(object);
+        if (object != null && object.getClass().isArray()) {
             int length = Array.getLength(object);
             for (int i = 0; i < length; i++) {
                 arrayTraversal(Array.get(object, i), suspects);

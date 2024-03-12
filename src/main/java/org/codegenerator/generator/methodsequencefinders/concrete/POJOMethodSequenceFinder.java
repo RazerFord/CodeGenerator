@@ -19,6 +19,7 @@ import org.codegenerator.generator.objectwrappers.RangeResult;
 import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
+import org.codegenerator.history.HistoryNode;
 import org.codegenerator.history.HistoryObject;
 import org.jacodb.api.*;
 import org.jacodb.impl.features.InMemoryHierarchy;
@@ -38,6 +39,20 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
     private final LazyMethodGraph lazyMethodGraph = new LazyMethodGraph();
     private final LazyConstructorGraph lazyConstructorGraph = new LazyConstructorGraph();
+
+    @Override
+    public HistoryNode<Executable> createNode(
+            @NotNull TargetObject targetObject,
+            List<HistoryCall<Executable>> calls,
+            HistoryNode<Executable> next
+    ) {
+        return new HistoryObject<>(
+                targetObject.getObject(),
+                calls,
+                POJOMethodSequenceFinder.class,
+                next
+        );
+    }
 
     @Override
     public boolean canTry(TargetObject targetObject) {
