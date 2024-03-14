@@ -93,7 +93,7 @@ tasks.test {
 
         doLast {
             project.logger.lifecycle(delimiter)
-            project.logger.lifecycle(delimiter)
+            project.logger.lifecycle("$delimiter\n")
 
             project.logger.lifecycle("Three longest tests: \n")
             top.sortedWith { l, r -> r.duration.compareTo(l.duration) }
