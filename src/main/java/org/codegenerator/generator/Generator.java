@@ -112,7 +112,7 @@ public interface Generator {
      *
      * @param object object for which you need to generateCode a sequence of methods
      */
-    Iterable<String> generateIterableCode(@NotNull Object object);
+    Iterable<String> iterableCode(@NotNull Object object);
 
     /**
      * Creates an iterable instance.
@@ -123,7 +123,7 @@ public interface Generator {
      * @param className  the name of the class into which the generated code is placed
      * @param methodName name of the method that creates the object
      */
-    Iterable<String> generateIterableCode(
+    Iterable<String> iterableCode(
             @NotNull Object object,
             String className,
             String methodName
@@ -139,12 +139,30 @@ public interface Generator {
      * @param className   the name of the class into which the generated code is placed
      * @param methodName  name of the method that creates the object
      */
-    Iterable<String> generateIterableCode(
+    Iterable<String> iterableCode(
             @NotNull Object object,
             String packageName,
             String className,
             String methodName
     );
+
+    /**
+     * Creates an iterable instance.
+     * Each iteration object represents the {@link History<Executable>} of
+     * the object received as input.
+     *
+     * @param object object for which you need to generate {@link History<Executable>}
+     */
+    Iterable<History<Executable>> iterableReflectionCalls(@NotNull Object object);
+
+    /**
+     * Creates an iterable instance.
+     * Each iteration object represents the {@link History<JcMethod>} of
+     * the object received as input.
+     *
+     * @param object object for which you need to generate {@link History<JcMethod>}
+     */
+    Iterable<History<JcMethod>> iterableJacoDBCalls(@NotNull Object object);
 
     /**
      * Finds methods that were called during the lifetime of objects.

@@ -102,18 +102,35 @@ public class CommonGeneratorImpl implements CommonGenerator {
     }
 
     @Override
-    public Iterable<String> generateIterableCode(@NotNull Object object) {
-        return generateIterableCode(object, packageName, className, methodName);
+    public Iterable<String> iterableCode(@NotNull Object object) {
+        return iterableCode(object, packageName, className, methodName);
     }
 
     @Override
-    public Iterable<String> generateIterableCode(@NotNull Object object, String className, String methodName) {
-        return generateIterableCode(object, packageName, className, methodName);
+    public Iterable<String> iterableCode(@NotNull Object object, String className, String methodName) {
+        return iterableCode(object, packageName, className, methodName);
     }
 
     @Override
-    public Iterable<String> generateIterableCode(@NotNull Object object, String packageName, String className, String methodName) {
-        return new IterableImpl(this, object, packageName, className, methodName);
+    public Iterable<String> iterableCode(@NotNull Object object, String packageName, String className, String methodName) {
+        return new IterableCodeImpl(
+                iterableReflectionCalls(object),
+                this,
+                object,
+                packageName,
+                className,
+                methodName
+        );
+    }
+
+    @Override
+    public Iterable<History<Executable>> iterableReflectionCalls(@NotNull Object object) {
+        return new IterableReflectionCallsImpl(this, object);
+    }
+
+    @Override
+    public Iterable<History<JcMethod>> iterableJacoDBCalls(@NotNull Object object) {
+        return new IterableJacoDBCallsImpl(iterableReflectionCalls(object));
     }
 
     @Override
@@ -156,27 +173,97 @@ public class CommonGeneratorImpl implements CommonGenerator {
         return fileGenerator.generate(history, object, packageName, className, methodName);
     }
 
-    private static class IterableImpl implements Iterable<String> {
+    private static class IterableReflectionCallsImpl implements Iterable<History<Executable>> {
         private final IterablePipeline pipeline;
-        private final CommonGeneratorImpl commonGenerator;
-        private final @NotNull Object object;
-        private final String packageName;
-        private final String className;
-        private final String methodName;
 
-        private IterableImpl(
+        private IterableReflectionCallsImpl(
                 @NotNull CommonGeneratorImpl commonGenerator,
-                @NotNull Object object,
-                String packageName,
-                String className,
-                String methodName
+                @NotNull Object object
         ) {
             List<Function<TargetObject, ? extends MethodSequenceFinder>> finders = commonGenerator
                     .methodSequencePipeline
                     .finders();
 
             pipeline = new IterablePipeline(new ArrayList<>(finders), new TargetObject(object));
+        }
 
+        @NotNull
+        @Override
+        public Iterator<History<Executable>> iterator() {
+            return new IteratorReflectionCallsImpl(this);
+        }
+    }
+
+    private static class IteratorReflectionCallsImpl implements Iterator<History<Executable>> {
+        private final Iterator<History<Executable>> iterator;
+
+        private IteratorReflectionCallsImpl(@NotNull IterableReflectionCallsImpl iterable) {
+            this.iterator = iterable.pipeline.iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Contract(pure = true)
+        @Override
+        public History<Executable> next() {
+            return iterator.next();
+        }
+    }
+
+    private static class IterableJacoDBCallsImpl implements Iterable<History<JcMethod>> {
+        private final Iterable<History<Executable>> calls;
+
+        private IterableJacoDBCallsImpl(Iterable<History<Executable>> calls) {
+            this.calls = calls;
+        }
+
+        @NotNull
+        @Override
+        public Iterator<History<JcMethod>> iterator() {
+            return new IteratorJacoDBCallsImpl(calls);
+        }
+    }
+
+    private static class IteratorJacoDBCallsImpl implements Iterator<History<JcMethod>> {
+        private final Iterator<History<Executable>> iterator;
+
+        private IteratorJacoDBCallsImpl(@NotNull Iterable<History<Executable>> iterable) {
+            this.iterator = iterable.iterator();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return iterator.hasNext();
+        }
+
+        @Contract(pure = true)
+        @Override
+        public @Nullable History<JcMethod> next() {
+//            return iterator.next();
+            return null;
+        }
+    }
+
+    private static class IterableCodeImpl implements Iterable<String> {
+        private final Iterable<History<Executable>> iterable;
+        private final CommonGeneratorImpl commonGenerator;
+        private final Object object;
+        private final String packageName;
+        private final String className;
+        private final String methodName;
+
+        private IterableCodeImpl(
+                Iterable<History<Executable>> iterable,
+                @NotNull CommonGeneratorImpl commonGenerator,
+                Object object,
+                String packageName,
+                String className,
+                String methodName
+        ) {
+            this.iterable = iterable;
             this.commonGenerator = commonGenerator;
             this.object = object;
             this.packageName = packageName;
@@ -187,17 +274,17 @@ public class CommonGeneratorImpl implements CommonGenerator {
         @NotNull
         @Override
         public Iterator<String> iterator() {
-            return new IteratorImpl(this);
+            return new IteratorCodeImpl(this);
         }
     }
 
-    private static class IteratorImpl implements Iterator<String> {
+    private static class IteratorCodeImpl implements Iterator<String> {
+        private final IterableCodeImpl iterable;
         private final Iterator<History<Executable>> iterator;
-        private final IterableImpl iterable;
 
-        private IteratorImpl(@NotNull IterableImpl iterable) {
-            this.iterator = iterable.pipeline.iterator();
+        private IteratorCodeImpl(@NotNull IterableCodeImpl iterable) {
             this.iterable = iterable;
+            iterator = iterable.iterable.iterator();
         }
 
         @Override
@@ -208,12 +295,11 @@ public class CommonGeneratorImpl implements CommonGenerator {
         @Contract(pure = true)
         @Override
         public @Nullable String next() {
-            History<Executable> executableHistory = iterator.next();
             return iterable
                     .commonGenerator
                     .fileGenerator
                     .generate(
-                            executableHistory,
+                            iterator.next(),
                             iterable.object,
                             iterable.packageName,
                             iterable.className,
