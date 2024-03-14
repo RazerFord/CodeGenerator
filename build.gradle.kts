@@ -88,6 +88,9 @@ tasks.test {
         })
 
         doLast {
+            project.logger.lifecycle("============================================================\n")
+
+            project.logger.lifecycle("Three longest tests: \n")
             top.sortedWith { l, r -> r.duration.compareTo(l.duration) }
                 .take(3)
                 .forEach { project.logger.lifecycle("${it.name} : ${it.duration}") }
@@ -97,7 +100,8 @@ tasks.test {
             val skipped = top.count { it.result.resultType == TestResult.ResultType.SKIPPED }
             val success = top.count { it.result.resultType == TestResult.ResultType.SUCCESS }
 
-            val message = "Tests: $count   Success: $success   Skipped: $skipped   Failed: $failed"
+            val message = "\nTests: $count   Success: $success   Skipped: $skipped   Failed: $failed"
+
             project.logger.lifecycle(message)
         }
     }
