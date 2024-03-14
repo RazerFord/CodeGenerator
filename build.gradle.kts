@@ -48,6 +48,8 @@ data class DurationOfTest(val name: String, val duration: Duration, val result: 
 
 val top = mutableListOf<DurationOfTest>()
 
+val delimiter = "=".repeat(80)
+
 tasks.test {
     useJUnitPlatform()
 
@@ -76,7 +78,9 @@ tasks.test {
         addTestListener(object : TestListener {
             override fun beforeSuite(suite: TestDescriptor) {}
             override fun afterSuite(suite: TestDescriptor, result: TestResult) {}
-            override fun beforeTest(testDescriptor: TestDescriptor) {}
+            override fun beforeTest(testDescriptor: TestDescriptor) {
+                project.logger.lifecycle(delimiter)
+            }
             override fun afterTest(desc: TestDescriptor, res: TestResult) {
                 val duration = (res.endTime - res.startTime)
                     .toDuration(DurationUnit.MILLISECONDS)
@@ -88,7 +92,8 @@ tasks.test {
         })
 
         doLast {
-            project.logger.lifecycle("============================================================\n")
+            project.logger.lifecycle(delimiter)
+            project.logger.lifecycle(delimiter)
 
             project.logger.lifecycle("Three longest tests: \n")
             top.sortedWith { l, r -> r.duration.compareTo(l.duration) }
@@ -103,6 +108,7 @@ tasks.test {
             val message = "\nTests: $count   Success: $success   Skipped: $skipped   Failed: $failed"
 
             project.logger.lifecycle(message)
+            project.logger.lifecycle(delimiter)
         }
     }
 }

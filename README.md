@@ -16,7 +16,7 @@ Main functionality:
     class Pojo {
         void example() throws IOException {
 
-            Point point1 = new Point(); // Point{x=10, y=42, z=17}]
+            Point point1 = new Point(); // Point{x=10, y=42, z=17}
             point1.setX(10);
             point1.setY(42);
             point1.setZ(17);
