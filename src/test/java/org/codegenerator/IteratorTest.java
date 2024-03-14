@@ -172,7 +172,7 @@ class IteratorTest {
         String[] nestedClasses;
         String[] nestedClass = new String[]{NESTED_CLASS};
         String[] empty = new String[]{};
-        for (String code : generator.generateIterableCode(object)) {
+        for (String code : generator.iterableCode(object)) {
             if (code.contains(FULL_NAME_NESTED_CLASS)) nestedClasses = nestedClass;
             else nestedClasses = empty;
 
@@ -190,7 +190,7 @@ class IteratorTest {
         String[] nestedClasses;
         String[] nestedClass = new String[]{NESTED_CLASS};
         String[] empty = new String[]{};
-        for (String code : generator.generateIterableCode(object)) {
+        for (String code : generator.iterableCode(object)) {
             if (code.contains(FULL_NAME_NESTED_CLASS)) nestedClasses = nestedClass;
             else nestedClasses = empty;
 
