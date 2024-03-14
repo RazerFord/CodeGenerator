@@ -101,7 +101,6 @@ Main functionality:
 3. Generate code for the object. By default, method search for `Builders` will be applied first, then for `POJO`.
     ```java
     class SomethingObject  {
-    @Test
         void example() throws IOException {
             Accumulator accumulatorA = new Accumulator();
             accumulatorA.setA(3);
@@ -126,6 +125,12 @@ Main functionality:
    After the listing is executed, the code above will be generated.
     ```java
     public final class GeneratedClass {
+        /**
+        * Gets all fields of a class and its superclasses using reflection.
+        *
+        * @param clazz the class for which you want to get the fields
+        * @return mapping from classes to their fields
+        */
         public static Map<Class<?>, Map<String, Field>> getFields(Class<?> clazz) {
             Map<Class<?>, Map<String, Field>> classMapMap = new HashMap<>();
             for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
@@ -138,27 +143,46 @@ Main functionality:
             }
             return classMapMap;
         }
-        
+
         public static AccumulatorHolder create() {
             AccumulatorHolder object = new AccumulatorHolder();
-            Map<Class<?>, Map<String, Field>> map = getFields(object.getClass());
-            try {
-                map.get(AccumulatorHolder.class).get("c").set(object, createAccumulator0());
-            } catch (IllegalAccessException e)  {
-                throw new RuntimeException(e);
-            }
+            ReflexiveFieldSetter reflectionCodeGeneration = new ReflexiveFieldSetter(object.getClass());
+            reflectionCodeGeneration.set(AccumulatorHolder.class, object, "c", createAccumulator0());
             return object;
         }
-        
+
         public static Accumulator createAccumulator0() {
             Accumulator object = new Accumulator();
-            Map<Class<?>, Map<String, Field>> map = getFields(object.getClass());
-            try {
-                map.get(Accumulator.class).get("sum").set(object, 365);
-            } catch (IllegalAccessException e)  {
-                throw new RuntimeException(e);
-            }
+            ReflexiveFieldSetter reflectionCodeGeneration = new ReflexiveFieldSetter(object.getClass());
+            reflectionCodeGeneration.set(Accumulator.class, object, "sum", 365);
             return object;
+        }
+
+        /**
+        * Class for setting object field values using reflection.
+        */
+        public static class ReflexiveFieldSetter {
+            private final Map<Class<?>, Map<String, Field>> fields;
+
+            ReflexiveFieldSetter(Class<?> clazz) {
+                fields = getFields(clazz);
+            }
+
+            /**
+            * Sets the field value using reflection.
+            *
+            * @param clazz the class containing the field
+            * @param object the object whose field needs to be set
+            * @param name The name of the field to set
+            * @param value The value to set the field to
+            */
+            void set(Class<?> clazz, Object object, String name, Object value) {
+                try {
+                    fields.get(clazz).get(name).set(object, value);
+                } catch (IllegalAccessException e)  {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
     ```
