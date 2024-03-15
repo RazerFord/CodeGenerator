@@ -188,3 +188,53 @@ Main functionality:
     ```
    To find a sequence of methods, finders for the `Builder` and `POJO` will be called one by one.
    If both `finders` fail, reflection will be used
+
+## Iterator and stream
+
+You can iterate through sequences of methods that can be used to obtain an object
+
+```java
+public class IteratorAndStream {
+    void iteratorAndStreamExample() {
+        Coord coord = Coord.builder()
+                .setX(100)
+                .setY(42)
+                .build();
+
+        Generator generator = Generators.standard();
+
+        // iterator usage
+        generator.iterableCode(coord).forEach(System.out::println);
+
+        // stream usage
+        generator.streamCode(coord).forEach(System.out::println);
+    }
+}
+```
+
+As a result, the following object receiving codes can be obtained sequentially:
+
+```java
+public final class GeneratedClass {
+    public static Coord create() {
+        Coord.Builder builder = new Coord.Builder();
+        builder.setY(42);
+        builder.setX(100);
+        Coord object = builder.build();
+        return object;
+    }
+}
+
+// or
+public final class GeneratedClass {
+    public static Coord create() {
+        Coord.Builder builder = new Coord.Builder();
+        builder.setY(42);
+        Coord object = builder.build();
+        object.setX(100);
+        return object;
+    }
+}
+// etc ...
+```
+
