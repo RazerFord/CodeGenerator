@@ -19,6 +19,8 @@ import java.lang.reflect.Executable;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class CommonGeneratorImpl implements CommonGenerator {
     private static final String PACKAGE_NAME = "generatedclass";
@@ -132,6 +134,31 @@ public class CommonGeneratorImpl implements CommonGenerator {
     @Override
     public Iterable<History<JcMethod>> iterableJacoDBCalls(@NotNull Object object) {
         return new IterableJacoDBCallsImpl(iterableReflectionCalls(object));
+    }
+
+    @Override
+    public Stream<String> streamCode(@NotNull Object object) {
+        return StreamSupport.stream(iterableCode(object).spliterator(), false);
+    }
+
+    @Override
+    public Stream<String> streamCode(@NotNull Object object, String className, String methodName) {
+        return StreamSupport.stream(iterableCode(object, className, methodName).spliterator(), false);
+    }
+
+    @Override
+    public Stream<String> streamCode(@NotNull Object object, String packageName, String className, String methodName) {
+        return StreamSupport.stream(iterableCode(object, packageName, className, methodName).spliterator(), false);
+    }
+
+    @Override
+    public Stream<History<Executable>> streamReflectionCalls(@NotNull Object object) {
+        return StreamSupport.stream(iterableReflectionCalls(object).spliterator(), false);
+    }
+
+    @Override
+    public Stream<History<JcMethod>> streamJacoDBCalls(@NotNull Object object) {
+        return StreamSupport.stream(iterableJacoDBCalls(object).spliterator(), false);
     }
 
     @Override

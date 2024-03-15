@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.lang.reflect.Executable;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 
 /**
  * An interface for generating code that can be used to retrieve the requested object.
@@ -111,6 +112,7 @@ public interface Generator {
      * the object that comes in as input.
      *
      * @param object object for which you need to generateCode a sequence of methods
+     * @return the iterable instance
      */
     Iterable<String> iterableCode(@NotNull Object object);
 
@@ -122,6 +124,7 @@ public interface Generator {
      * @param object     object for which you need to generateCode a sequence of methods
      * @param className  the name of the class into which the generated code is placed
      * @param methodName name of the method that creates the object
+     * @return the iterable instance
      */
     Iterable<String> iterableCode(
             @NotNull Object object,
@@ -138,6 +141,7 @@ public interface Generator {
      * @param packageName the name of the package in which the generated code is placed
      * @param className   the name of the class into which the generated code is placed
      * @param methodName  name of the method that creates the object
+     * @return the iterable instance
      */
     Iterable<String> iterableCode(
             @NotNull Object object,
@@ -152,6 +156,7 @@ public interface Generator {
      * the object received as input.
      *
      * @param object object for which you need to generate {@link History<Executable>}
+     * @return the iterable instance
      */
     Iterable<History<Executable>> iterableReflectionCalls(@NotNull Object object);
 
@@ -161,8 +166,73 @@ public interface Generator {
      * the object received as input.
      *
      * @param object object for which you need to generate {@link History<JcMethod>}
+     * @return the iterable instance
      */
     Iterable<History<JcMethod>> iterableJacoDBCalls(@NotNull Object object);
+
+    /**
+     * Creates a stream.
+     * Each stream object represents code that can be used to create the object
+     * passed as input.
+     *
+     * @param object object for which you need to generateCode a sequence of methods
+     * @return the stream instance
+     */
+    Stream<String> streamCode(@NotNull Object object);
+
+    /**
+     * Creates a stream.
+     * Each stream object represents code that can be used to create the object
+     * passed as input.
+     *
+     * @param object     object for which you need to generateCode a sequence of methods
+     * @param className  the name of the class into which the generated code is placed
+     * @param methodName name of the method that creates the object
+     * @return the stream instance
+     */
+    Stream<String> streamCode(
+            @NotNull Object object,
+            String className,
+            String methodName
+    );
+
+    /**
+     * Creates a stream.
+     * Each stream object represents code that can be used to create the object
+     * passed as input.
+     *
+     * @param object      object for which you need to generateCode a sequence of methods
+     * @param packageName the name of the package in which the generated code is placed
+     * @param className   the name of the class into which the generated code is placed
+     * @param methodName  name of the method that creates the object
+     * @return the stream instance
+     */
+    Stream<String> streamCode(
+            @NotNull Object object,
+            String packageName,
+            String className,
+            String methodName
+    );
+
+    /**
+     * Creates a stream.
+     * Each stream object represents the {@link History<Executable>} for
+     * the object received as input
+     *
+     * @param object object for which you need to generate {@link History<Executable>}
+     * @return the stream instance
+     */
+    Stream<History<Executable>> streamReflectionCalls(@NotNull Object object);
+
+    /**
+     * Creates a stream.
+     * Each stream object represents the {@link History<JcMethod>} for
+     * the object received as input
+     *
+     * @param object object for which you need to generate {@link History<JcMethod>}
+     * @return the stream instance
+     */
+    Stream<History<JcMethod>> streamJacoDBCalls(@NotNull Object object);
 
     /**
      * Finds methods that were called during the lifetime of objects.

@@ -22,13 +22,14 @@ import static org.codegenerator.Common.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class IteratorTest {
+class IteratorAndStreamTest {
     @Test
     void nullTest() throws IOException {
         final String generatedClassName = "GeneratedNullClass";
         Generator generator = Generators.standard(PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         checkIterator(generator, (Boolean) null, generatedClassName);
+        checkStream(generator, (Boolean) null, generatedClassName);
     }
 
     @Test
@@ -38,6 +39,7 @@ class IteratorTest {
         int i = 42;
 
         checkIterator(generator, i, generatedClassName);
+        checkStream(generator, i, generatedClassName);
     }
 
     @Test
@@ -47,6 +49,7 @@ class IteratorTest {
         String string = "Hello, world!";
 
         checkIterator(generator, string, generatedClassName);
+        checkStream(generator, string, generatedClassName);
     }
 
     @Test
@@ -63,6 +66,7 @@ class IteratorTest {
         };
 
         checkIterator(generator, array, generatedClassName);
+        checkStream(generator, array, generatedClassName);
     }
 
     @Test
@@ -72,6 +76,7 @@ class IteratorTest {
         Point[][][] arrayOfPojo = CodeGeneratorPOJOTest.getMultidimensionalPointArray().getPoints();
 
         checkIterator(generator, arrayOfPojo, generatedClassName);
+        checkStream(generator, arrayOfPojo, generatedClassName);
     }
 
     @Test
@@ -81,6 +86,7 @@ class IteratorTest {
         MultidimensionalPointArray multidimensionalPointArray = CodeGeneratorPOJOTest.getMultidimensionalPointArray();
 
         checkIterator(generator, multidimensionalPointArray, generatedClassName);
+        checkStream(generator, multidimensionalPointArray, generatedClassName);
     }
 
     @Test
@@ -90,6 +96,7 @@ class IteratorTest {
         User userFrom = User.builder().created(32874).age(17).name("John Doe").coins(new long[]{5, 5, 5, 5, 5}).build();
 
         checkIterator(generator, userFrom, generatedClassName);
+        checkStream(generator, userFrom, generatedClassName);
     }
 
     @Test
@@ -102,6 +109,7 @@ class IteratorTest {
         SendingMoneyTransferWithPojo sendingMoneyTransfer = SendingMoneyTransferWithPojo.builder().setFrom(userFrom).setTo(userTo).setAmount(100).build();
 
         checkIterator(generator, sendingMoneyTransfer, generatedClassName);
+        checkStream(generator, sendingMoneyTransfer, generatedClassName);
     }
 
     @Test
@@ -119,6 +127,7 @@ class IteratorTest {
                 .build();
 
         checkIterator(generator, o, generatedClassName);
+        checkStream(generator, o, generatedClassName);
     }
 
     @Test
@@ -162,12 +171,17 @@ class IteratorTest {
         classWithManyFieldsComplex.setField33("field33");
 
         checkIterator(generator, classWithManyFieldsComplex, generatedClassName);
+        checkStream(generator, classWithManyFieldsComplex, generatedClassName);
     }
 
     private final static String FULL_NAME_NESTED_CLASS = "public static class " + NESTED_CLASS;
 
     @SuppressWarnings("UnusedReturnValue")
-    private static <T> int checkIterator(@NotNull Generator generator, T object, String generatedClassName) throws IOException {
+    private static <T> int checkIterator(
+            @NotNull Generator generator,
+            T object,
+            String generatedClassName
+    ) throws IOException {
         int iteration = 0;
         String[] nestedClasses;
         String[] nestedClass = new String[]{NESTED_CLASS};
@@ -185,7 +199,11 @@ class IteratorTest {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private static <T> int checkIterator(@NotNull Generator generator, T[] object, String generatedClassName) throws IOException {
+    private static <T> int checkIterator(
+            @NotNull Generator generator,
+            T[] object,
+            String generatedClassName
+    ) throws IOException {
         int iteration = 0;
         String[] nestedClasses;
         String[] nestedClass = new String[]{NESTED_CLASS};
@@ -200,6 +218,51 @@ class IteratorTest {
             iteration++;
         }
         return iteration;
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    private static <T> int checkStream(
+            @NotNull Generator generator,
+            T object,
+            String generatedClassName
+    ) {
+        int[] iteration = new int[]{0};
+        generator.streamCode(object).forEach(code -> {
+            String[] nestedClasses;
+            String[] nestedClass = new String[]{NESTED_CLASS};
+            String[] empty = new String[]{};
+            if (code.contains(FULL_NAME_NESTED_CLASS)) nestedClasses = nestedClass;
+            else nestedClasses = empty;
+
+            T that = Utils.callSupplierWrapper(() -> createObject(code, generatedClassName, nestedClasses));
+            assertEquals(object, that);
+
+            iteration[0]++;
+        });
+        return iteration[0];
+    }
+
+    @SuppressWarnings("UnusedReturnValue")
+    private static <T> int checkStream(
+            @NotNull Generator generator,
+            T[] object,
+            String generatedClassName
+    ) {
+        int[] iteration = new int[]{0};
+        generator.streamCode(object).forEach(code -> {
+            String[] nestedClasses;
+            String[] nestedClass = new String[]{NESTED_CLASS};
+            String[] empty = new String[]{};
+
+            if (code.contains(FULL_NAME_NESTED_CLASS)) nestedClasses = nestedClass;
+            else nestedClasses = empty;
+
+            T[] that = Utils.callSupplierWrapper(() -> createObject(code, generatedClassName, nestedClasses));
+            assertArrayEquals(object, that);
+
+            iteration[0]++;
+        });
+        return iteration[0];
     }
 
     private static <R> R createObject(String code, String className, String... nestedClasses) throws IOException {
