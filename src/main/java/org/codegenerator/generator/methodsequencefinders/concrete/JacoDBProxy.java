@@ -5,9 +5,13 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.Utils;
 import org.codegenerator.exceptions.JacoDBException;
+import org.codegenerator.generator.graph.edges.EdgeExecutable;
+import org.codegenerator.history.*;
 import org.jacodb.api.*;
 import org.jacodb.impl.features.*;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -15,6 +19,7 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.codegenerator.Utils.throwIf;
@@ -27,7 +32,22 @@ public class JacoDBProxy {
 
     public JacoDBProxy(@NotNull Class<?>... classes) {
         this.classes = classes;
+    }
 
+    public History<JcMethod> historyToJcHistory(@NotNull History<Executable> history) {
+        History<JcMethod> jcMethodHistory = new History<>();
+        try (JcDatabase db = loadOrCreateDataBase(dbname)) {
+            for (Map.Entry<Object, HistoryNode<Executable>> e : history.entrySet()) {
+                HistoryNode<JcMethod> node = toJacoDBNode(e, e.getValue(), db, jcMethodHistory);
+                jcMethodHistory.put(e.getKey(), node);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JacoDBException(e);
+        } catch (IOException | ExecutionException e) {
+            throw new JacoDBException(e);
+        }
+        return jcMethodHistory;
     }
 
     public List<BuilderInfo> findBuilderInfoList(Class<?> clazz) {
@@ -139,5 +159,104 @@ public class JacoDBProxy {
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
         return Utils.loadOrCreateDataBase(dbname, Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE);
+    }
+
+    @Nullable
+    private HistoryNode<JcMethod> toJacoDBNode(
+            Map.@NotNull Entry<Object, HistoryNode<Executable>> e,
+            HistoryNode<Executable> old, JcDatabase db, History<JcMethod> jcMethodHistory
+    ) throws ExecutionException, InterruptedException {
+        HistoryNode<JcMethod> node = null;
+        switch (e.getValue().getType()) {
+            case ARRAY:
+                node = new HistoryArray<>(old.getObject(), old.getCreatorType());
+                break;
+            case OBJECT:
+                node = toJacoDBNode(db, jcMethodHistory, old);
+                break;
+            case PRIMITIVE:
+                node = new HistoryPrimitive<>(old.getObject(), old.getCreatorType());
+                break;
+        }
+        return node;
+    }
+
+    @Contract("_, _, _ -> new")
+    private @NotNull HistoryNode<JcMethod> toJacoDBNode(
+            JcDatabase db,
+            History<JcMethod> history,
+            @NotNull HistoryNode<Executable> node
+    ) throws ExecutionException, InterruptedException {
+        List<Class<?>> classes1 = extractClasses(node);
+
+        JcClasspath cp = Utils.toJcClasspath(db, classes1.toArray(new Class[]{}));
+
+        Map<String, JcLookup<JcField, JcMethod>> toLookup = extractLookup(classes1, cp);
+
+        List<HistoryCall<JcMethod>> calls = toJacoDBHistoryCalls(history, node, toLookup);
+
+        List<SetterUsingReflection<JcMethod>> setters = toJacoDBsettersUsingReflection(history, node);
+
+        HistoryNode<JcMethod> next = getNext(db, history, node);
+
+        return new HistoryObject<>(node.getObject(), calls, setters, node.getCreatorType(), next);
+    }
+
+    @Nullable
+    private HistoryNode<JcMethod> getNext(JcDatabase db, History<JcMethod> history, @NotNull HistoryNode<Executable> node) throws ExecutionException, InterruptedException {
+        HistoryNode<Executable> nxt = node.nextNode();
+        if (nxt != null) {
+            return toJacoDBNode(db, history, nxt);
+        }
+        return null;
+    }
+
+    @NotNull
+    private static List<SetterUsingReflection<JcMethod>> toJacoDBsettersUsingReflection(History<JcMethod> history, @NotNull HistoryNode<Executable> node) {
+        return node.getSetterUsingReflections()
+                .stream()
+                .map(s -> new SetterUsingReflection<>(history, s.getField(), s.getSetObject()))
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static List<HistoryCall<JcMethod>> toJacoDBHistoryCalls(
+            History<JcMethod> history,
+            @NotNull HistoryNode<Executable> node,
+            Map<String, JcLookup<JcField, JcMethod>> toLookup
+    ) {
+        return node.getHistoryCalls()
+                .stream()
+                .map(call -> new EdgeExecutable(call.getMethod(), call.getArgs()))
+                .map(e -> {
+                    JcMethod jc = e.toJcMethod(toLookup.get(e.getMethod().getDeclaringClass().getName()));
+                    return new HistoryCall<>(history, jc, e.getArgs());
+                })
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static Map<String, JcLookup<JcField, JcMethod>> extractLookup(@NotNull List<Class<?>> classes1, JcClasspath cp) {
+        return classes1.stream()
+                .map(c -> cp.findClassOrNull(c.getName()))
+                .filter(Objects::nonNull)
+                .filter(new Predicate<JcClassOrInterface>() {
+                    final Set<String> contains = new HashSet<>();
+
+                    @Override
+                    public boolean test(JcClassOrInterface jcClassOrInterface) {
+                        return contains.add(jcClassOrInterface.getName());
+                    }
+                })
+                .collect(Collectors.toMap(JcClassOrInterface::getName, JcClassOrInterface::getLookup));
+    }
+
+    @NotNull
+    private static List<Class<?>> extractClasses(@NotNull HistoryNode<Executable> node) {
+        return node.getHistoryCalls()
+                .stream()
+                .map(HistoryCall::getMethod)
+                .map(Executable::getDeclaringClass)
+                .collect(Collectors.toList());
     }
 }

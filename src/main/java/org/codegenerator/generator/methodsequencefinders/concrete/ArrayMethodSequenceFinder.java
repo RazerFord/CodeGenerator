@@ -1,18 +1,23 @@
 package org.codegenerator.generator.methodsequencefinders.concrete;
 
-import org.codegenerator.generator.objectwrappers.*;
 import org.codegenerator.generator.graph.resultfinding.RangeResultFinding;
 import org.codegenerator.generator.graph.resultfinding.RangeWrapperResultFinding;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.WrapperResultFinding;
-import org.codegenerator.history.*;
+import org.codegenerator.generator.objectwrappers.FakeRange;
+import org.codegenerator.generator.objectwrappers.Range;
+import org.codegenerator.generator.objectwrappers.RangeResult;
+import org.codegenerator.generator.objectwrappers.TargetObject;
+import org.codegenerator.history.History;
+import org.codegenerator.history.HistoryArray;
+import org.codegenerator.history.HistoryCall;
+import org.codegenerator.history.HistoryNode;
 import org.jacodb.api.JcMethod;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ArrayMethodSequenceFinder implements MethodSequenceFinder {
@@ -23,7 +28,7 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinder {
             List<HistoryCall<Executable>> calls,
             HistoryNode<Executable> next
     ) {
-        return new HistoryArray<>(targetObject.getObject(), Collections.emptyList(), ArrayMethodSequenceFinder.class);
+        return new HistoryArray<>(targetObject.getObject(), ArrayMethodSequenceFinder.class);
     }
 
     @Override
@@ -68,7 +73,7 @@ public class ArrayMethodSequenceFinder implements MethodSequenceFinder {
         if (object == null || !object.getClass().isArray()) {
             suspects.add(object);
         } else {
-            history.put(object, new HistoryArray<>(object, Collections.emptyList(), ArrayMethodSequenceFinder.class));
+            history.put(object, new HistoryArray<>(object, ArrayMethodSequenceFinder.class));
             int length = Array.getLength(object);
             for (int i = 0; i < length; i++) {
                 arrayTraversal(Array.get(object, i), suspects, history);

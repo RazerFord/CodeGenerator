@@ -24,7 +24,7 @@ public class NullMethodSequenceFinder implements MethodSequenceFinder {
             List<HistoryCall<Executable>> calls,
             HistoryNode<Executable> next
     ) {
-        return new HistoryPrimitive<>(targetObject.getObject(), Collections.emptyList(), NullMethodSequenceFinder.class);
+        return new HistoryPrimitive<>(targetObject.getObject(), NullMethodSequenceFinder.class);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class NullMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private <T> @NotNull WrapperResultFinding findCallsInternal(Object object, @NotNull History<T> history) {
-        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList(), NullMethodSequenceFinder.class));
+        history.put(object, new HistoryPrimitive<>(object, NullMethodSequenceFinder.class));
         return WrapperResultFinding.withEmptySuspects();
     }
 }

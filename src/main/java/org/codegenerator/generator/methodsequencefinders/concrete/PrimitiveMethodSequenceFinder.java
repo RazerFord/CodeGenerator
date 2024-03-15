@@ -24,7 +24,7 @@ public class PrimitiveMethodSequenceFinder implements MethodSequenceFinder {
             List<HistoryCall<Executable>> calls,
             HistoryNode<Executable> next
     ) {
-        return new HistoryPrimitive<>(targetObject.getObject(), Collections.emptyList(), PrimitiveMethodSequenceFinder.class);
+        return new HistoryPrimitive<>(targetObject.getObject(), PrimitiveMethodSequenceFinder.class);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class PrimitiveMethodSequenceFinder implements MethodSequenceFinder {
 
     private <T> ResultFinding findCallsInternal(@NotNull TargetObject targetObject, @NotNull History<T> history) {
         Object object = targetObject.getObject();
-        history.put(object, new HistoryPrimitive<>(object, Collections.emptyList(), PrimitiveMethodSequenceFinder.class));
+        history.put(object, new HistoryPrimitive<>(object, PrimitiveMethodSequenceFinder.class));
         return WrapperResultFinding.withEmptySuspects();
     }
 }

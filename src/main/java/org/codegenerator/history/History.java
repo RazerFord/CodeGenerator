@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The History class stores information about the methods
@@ -52,5 +53,15 @@ public class History<T> {
      */
     public void merge(@NotNull History<T> history) {
         historiesNode.putAll(history.historiesNode);
+    }
+
+    /**
+     * Returns a set view of the mappings contained in this map.
+     * Each element in the returned set is a Map.Entry.
+     *
+     * @return a set view of the mappings contained in this {@link History<T>}
+     */
+    public Set<Map.Entry<Object, HistoryNode<T>>> entrySet() {
+        return historiesNode.entrySet();
     }
 }

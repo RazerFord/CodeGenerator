@@ -5,6 +5,7 @@ import org.codegenerator.generator.codegenerators.FileGenerator;
 import org.codegenerator.generator.methodsequencefinders.IterablePipeline;
 import org.codegenerator.generator.methodsequencefinders.MethodSequencePipeline;
 import org.codegenerator.generator.methodsequencefinders.PipelineMethodSequencePipeline;
+import org.codegenerator.generator.methodsequencefinders.concrete.JacoDBProxy;
 import org.codegenerator.generator.methodsequencefinders.concrete.MethodSequenceFinder;
 import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.history.History;
@@ -229,9 +230,11 @@ public class CommonGeneratorImpl implements CommonGenerator {
 
     private static class IteratorJacoDBCallsImpl implements Iterator<History<JcMethod>> {
         private final Iterator<History<Executable>> iterator;
+        private final JacoDBProxy proxy;
 
         private IteratorJacoDBCallsImpl(@NotNull Iterable<History<Executable>> iterable) {
             this.iterator = iterable.iterator();
+            proxy = new JacoDBProxy();
         }
 
         @Override
@@ -242,8 +245,8 @@ public class CommonGeneratorImpl implements CommonGenerator {
         @Contract(pure = true)
         @Override
         public @Nullable History<JcMethod> next() {
-//            return iterator.next();
-            return null;
+            History<Executable> history = iterator.next();
+            return proxy.historyToJcHistory(history);
         }
     }
 
