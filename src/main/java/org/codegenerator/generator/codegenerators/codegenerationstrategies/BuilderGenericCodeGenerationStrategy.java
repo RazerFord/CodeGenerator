@@ -4,7 +4,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import kotlin.Pair;
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.codegenerator.generator.codegenerators.ContextGenerator;
 import org.codegenerator.generator.codegenerators.MethodContext;
 import org.codegenerator.generator.codegenerators.codegenerationelements.GenericResolver;
@@ -46,7 +46,7 @@ public class BuilderGenericCodeGenerationStrategy implements CodeGenerationStrat
         HistoryNode<Executable> node = methodContext.getNode();
         MethodSpec.Builder methodBuilder = methodContext.getMethod();
         GenericResolver resolver = context.getGenericResolver();
-        Object builder = Utils.buildObject(node.getHistoryCalls());
+        Object builder = CommonUtils.buildObject(node.getHistoryCalls());
 
         updateGenericResolver(builder, context.getGenericResolver(), context.getHistory(), node);
         addGenericVariable(resolver, node, methodBuilder);

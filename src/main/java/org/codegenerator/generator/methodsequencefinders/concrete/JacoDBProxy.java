@@ -3,7 +3,7 @@ package org.codegenerator.generator.methodsequencefinders.concrete;
 import kotlin.sequences.Sequence;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ClassUtils;
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.graph.edges.EdgeExecutable;
 import org.codegenerator.history.*;
@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.codegenerator.Utils.throwIf;
+import static org.codegenerator.CommonUtils.throwIf;
 
 public class JacoDBProxy {
     private static final String BUILDER_CONSTRUCTOR_FOUND = "Builder constructor not found";
@@ -89,7 +89,7 @@ public class JacoDBProxy {
             if (constructor.getParameterCount() == 0) return constructor;
         }
         try {
-            JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
+            JcClasspath classpath = CommonUtils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
             JcClassOrInterface jcClassOrInterface = Objects.requireNonNull(classpath.findClassOrNull(builderClazz.getTypeName()));
 
             SyncUsagesExtension haystack = new SyncUsagesExtension(JcHierarchies.asyncHierarchy(classpath).get(), classpath);
@@ -122,7 +122,7 @@ public class JacoDBProxy {
     }
 
     private static Class<?> loadClass(JcParameter parameter, ClassLoader classLoader) {
-        return Utils.callSupplierWrapper(() -> classLoader.loadClass(parameter.getType().getTypeName()));
+        return CommonUtils.callSupplierWrapper(() -> classLoader.loadClass(parameter.getType().getTypeName()));
     }
 
     private JcMethod findMethodCreatingBuilder(SyncUsagesExtension haystack, @NotNull List<JcMethod> needles) {
@@ -141,7 +141,7 @@ public class JacoDBProxy {
     }
 
     private List<Class<?>> findBuilders(@NotNull JcDatabase db, Class<?> clazz) throws ExecutionException, InterruptedException {
-        JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, clazz));
+        JcClasspath classpath = CommonUtils.toJcClasspath(db, ArrayUtils.add(classes, clazz));
 
         JcClassOrInterface needle = Objects.requireNonNull(classpath.findClassOrNull(clazz.getTypeName()));
         BuildersExtension haystack = new BuildersExtension(classpath, JcHierarchies.asyncHierarchy(classpath).get());
@@ -153,12 +153,12 @@ public class JacoDBProxy {
         iterator.forEachRemaining(methods::add);
         ClassLoader classLoader = clazz.getClassLoader();
         return methods.stream()
-                .map(it -> Utils.callSupplierWrapper(() -> classLoader.loadClass(it.getEnclosingClass().getName())))
+                .map(it -> CommonUtils.callSupplierWrapper(() -> classLoader.loadClass(it.getEnclosingClass().getName())))
                 .collect(Collectors.toList());
     }
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
-        return Utils.loadOrCreateDataBase(dbname, Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE);
+        return CommonUtils.loadOrCreateDataBase(dbname, Builders.INSTANCE, Usages.INSTANCE, InMemoryHierarchy.INSTANCE);
     }
 
     @Nullable
@@ -189,7 +189,7 @@ public class JacoDBProxy {
     ) throws ExecutionException, InterruptedException {
         List<Class<?>> classes1 = extractClasses(node);
 
-        JcClasspath cp = Utils.toJcClasspath(db, classes1.toArray(new Class[]{}));
+        JcClasspath cp = CommonUtils.toJcClasspath(db, classes1.toArray(new Class[]{}));
 
         Map<String, JcLookup<JcField, JcMethod>> toLookup = extractLookup(classes1, cp);
 

@@ -2,7 +2,7 @@ package org.codegenerator.generator.graph.edges;
 
 import com.rits.cloning.Cloner;
 import org.codegenerator.ClonerUtilities;
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.jacodb.api.JcField;
 import org.jacodb.api.JcLookup;
 import org.jacodb.api.JcMethod;
@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
 
-import static org.codegenerator.Utils.callSupplierWrapper;
+import static org.codegenerator.CommonUtils.callSupplierWrapper;
 
 public class EdgeConstructor implements Edge<Constructor<?>> {
     private final Cloner cloner = ClonerUtilities.standard();
@@ -45,6 +45,6 @@ public class EdgeConstructor implements Edge<Constructor<?>> {
 
     @Override
     public JcMethod toJcMethod(@NotNull JcLookup<JcField, JcMethod> lookup) {
-        return lookup.method("<init>", Utils.buildDescriptor(constructor));
+        return lookup.method("<init>", CommonUtils.buildDescriptor(constructor));
     }
 }

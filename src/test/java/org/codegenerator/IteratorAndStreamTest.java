@@ -234,7 +234,7 @@ class IteratorAndStreamTest {
             if (code.contains(FULL_NAME_NESTED_CLASS)) nestedClasses = nestedClass;
             else nestedClasses = empty;
 
-            T that = Utils.callSupplierWrapper(() -> createObject(code, generatedClassName, nestedClasses));
+            T that = CommonUtils.callSupplierWrapper(() -> createObject(code, generatedClassName, nestedClasses));
             assertEquals(object, that);
 
             iteration[0]++;
@@ -257,7 +257,7 @@ class IteratorAndStreamTest {
             if (code.contains(FULL_NAME_NESTED_CLASS)) nestedClasses = nestedClass;
             else nestedClasses = empty;
 
-            T[] that = Utils.callSupplierWrapper(() -> createObject(code, generatedClassName, nestedClasses));
+            T[] that = CommonUtils.callSupplierWrapper(() -> createObject(code, generatedClassName, nestedClasses));
             assertArrayEquals(object, that);
 
             iteration[0]++;

@@ -4,7 +4,7 @@ import com.rits.cloning.Cloner;
 import kotlin.Triple;
 import org.codegenerator.ClonerUtilities;
 import org.codegenerator.CustomLogger;
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
 import org.codegenerator.generator.objectwrappers.TargetObject;
@@ -130,7 +130,7 @@ public class LazyGraph {
                 logging(edgeMethod);
                 continue;
             }
-            Object instanceBuilt = Utils.callSupplierWrapper(() -> termination.apply(instance));
+            Object instanceBuilt = CommonUtils.callSupplierWrapper(() -> termination.apply(instance));
             lowerLevel.add(new Triple<>(instance, ClassFieldExtractor.extract(instanceBuilt), new PathNode(prevPath, edgeMethod)));
         }
         return lowerLevel;

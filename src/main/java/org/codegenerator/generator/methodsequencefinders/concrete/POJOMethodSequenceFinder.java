@@ -2,7 +2,7 @@ package org.codegenerator.generator.methodsequencefinders.concrete;
 
 import com.rits.cloning.Cloner;
 import org.codegenerator.ClonerUtilities;
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.graph.LazyConstructorGraph;
 import org.codegenerator.generator.graph.LazyMethodGraph;
@@ -129,7 +129,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     public ResultFinding findJacoDBCallsInternal(@NotNull TargetObject targetObject, History<JcMethod> history) {
         try (JcDatabase db = loadOrCreateDataBase(dbname)) {
             Class<?> clazz = targetObject.getClazz();
-            JcClassOrInterface jcClassOrInterface = Utils.toJcClassOrInterface(clazz, db);
+            JcClassOrInterface jcClassOrInterface = CommonUtils.toJcClassOrInterface(clazz, db);
             JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
 
             return findCallsInternal(targetObject, history, o -> o.toJcMethod(lookup));
@@ -142,7 +142,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private JcDatabase loadOrCreateDataBase(String dbname) throws ExecutionException, InterruptedException {
-        return Utils.loadOrCreateDataBase(dbname, InMemoryHierarchy.INSTANCE);
+        return CommonUtils.loadOrCreateDataBase(dbname, InMemoryHierarchy.INSTANCE);
     }
 
     private <T> @NotNull ResultFinding findCallsInternal(

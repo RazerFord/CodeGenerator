@@ -5,7 +5,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeVariableName;
 import org.apache.commons.lang3.function.TriConsumer;
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.codegenerator.generator.methodsequencefinders.concrete.BuilderMethodSequenceFinder;
 import org.codegenerator.history.History;
 import org.codegenerator.history.HistoryCall;
@@ -141,7 +141,7 @@ public class GenericResolver {
         ParameterizedType retType = (ParameterizedType) build.getGenericReturnType();
         Class<?> type = node.getObject().getClass();
         Supplier<IllegalArgumentException> exceptionSupplier = IllegalArgumentException::new;
-        Utils.throwIf(type != retType.getRawType(), exceptionSupplier);
+        CommonUtils.throwIf(type != retType.getRawType(), exceptionSupplier);
 
         Type[] types = retType.getActualTypeArguments();
         Map<Type, Object> newTypeToObject = new HashMap<>();
@@ -176,7 +176,7 @@ public class GenericResolver {
                     Object object = typeToObject.get(typeVariable);
                     TypeName typeName;
                     if (object != null) {
-                        type = Utils.findClosestCommonSuperOrInterface(object.getClass(), bound.concreteType);
+                        type = CommonUtils.findClosestCommonSuperOrInterface(object.getClass(), bound.concreteType);
                         typeName = object.getClass() != type || !cachedTypeNames.containsKey(object) ?
                                 TypeName.get(bound.concreteType) :
                                 cachedTypeNames.get(object);
@@ -298,7 +298,7 @@ public class GenericResolver {
 
                     if (bounds1.concreteType == null) continue;
 
-                    concreteType = Utils.findClosestCommonSuperOrInterface(concreteType, bounds1.concreteType);
+                    concreteType = CommonUtils.findClosestCommonSuperOrInterface(concreteType, bounds1.concreteType);
                 }
             }
         }

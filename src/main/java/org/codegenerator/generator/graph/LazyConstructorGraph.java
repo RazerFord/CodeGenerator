@@ -1,5 +1,6 @@
 package org.codegenerator.generator.graph;
 
+import org.codegenerator.CustomLogger;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
@@ -9,10 +10,14 @@ import org.codegenerator.generator.graph.edges.EdgeGenerator;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.logging.Logger;
 
-import static org.codegenerator.Utils.throwIf;
+import static org.codegenerator.CommonUtils.throwIf;
 
 public class LazyConstructorGraph {
+    private static final Logger LOGGER = CustomLogger.getLogger();
+
     private final EdgeGenerator edgeGenerator = new EdgeGenerator();
 
     public @NotNull EdgeConstructor findPath(@NotNull TargetObject targetObject) {
@@ -30,21 +35,36 @@ public class LazyConstructorGraph {
         throwIf(edges.isEmpty(), new InvariantCheckingException(NO_CONSTRUCTORS));
 
         Node finalNode = ClassFieldExtractor.extract(finalObject);
-        EdgeConstructor edgeConstructor = edges.get(0);
-        Object currObject = edgeConstructor.invoke();
-        Node currNode = ClassFieldExtractor.extract(currObject);
+        EdgeConstructor edgeConstructor = null;
+        Node currNode = null;
 
-        for (int i = 1, length = edges.size(); i < length; i++) {
-            EdgeConstructor tempEdgeConstructor = edges.get(i);
-            Object tempObject = tempEdgeConstructor.invoke();
-            Node tempNode = ClassFieldExtractor.extract(tempObject);
-
-            if (finalNode.diff(currNode) > finalNode.diff(tempNode)) {
-                edgeConstructor = tempEdgeConstructor;
-                currNode = tempNode;
+        int start = 0;
+        for (int size = edges.size(); start < size; start++) {
+            try {
+                edgeConstructor = edges.get(start);
+                Object tempObject = edgeConstructor.invoke();
+                currNode = ClassFieldExtractor.extract(tempObject);
+                start++;
+                break;
+            } catch (Exception e) {
+                LOGGER.warning(edges.get(start).getMethod().getName());
             }
         }
-        return edgeConstructor;
+
+        for (int size = edges.size(); start < size; start++) {
+            try {
+                Object tempObject = edges.get(start).invoke();
+                Node tempNode = ClassFieldExtractor.extract(tempObject);
+
+                if (finalNode.diff(currNode) > finalNode.diff(tempNode)) {
+                    edgeConstructor = edges.get(start);
+                    currNode = tempNode;
+                }
+            } catch (Exception e) {
+                LOGGER.warning(edges.get(start).getMethod().getName());
+            }
+        }
+        return Objects.requireNonNull(edgeConstructor, NO_CONSTRUCTORS);
     }
 
     private static final String NO_CONSTRUCTORS = "No constructors found";

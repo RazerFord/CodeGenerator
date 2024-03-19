@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static org.codegenerator.Utils.throwUnless;
+import static org.codegenerator.CommonUtils.throwUnless;
 
 public class Leaf implements Node {
     protected static final Node NULL_NODE = new Leaf(null, null);

@@ -1,7 +1,7 @@
 package org.codegenerator.extractor.node;
 
 import org.apache.commons.lang3.ClassUtils;
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Field;
@@ -9,7 +9,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static org.codegenerator.Utils.throwIf;
+import static org.codegenerator.CommonUtils.throwIf;
 
 public class InnerNode implements Node {
     private boolean visited = false;
@@ -135,10 +135,11 @@ public class InnerNode implements Node {
 
         while (clz != null) {
             for (Field field : clz.getDeclaredFields()) {
-                if (Modifier.isStatic(field.getModifiers())) continue;
+                if (Modifier.isStatic(field.getModifiers()) ||
+                        field.isSynthetic()) continue;
 
                 field.setAccessible(true);
-                Object o = Utils.callSupplierWrapper(() -> field.get(value));
+                Object o = CommonUtils.callSupplierWrapper(() -> field.get(value));
 
                 Node node = visited.get(o);
                 if (node != null) {

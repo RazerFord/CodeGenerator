@@ -1,6 +1,6 @@
 package org.codegenerator.generator.methodsequencefinders.concrete;
 
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
 import org.codegenerator.generator.graph.resultfinding.ResultFindingImpl;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Field;
 import java.util.*;
 
-import static org.codegenerator.Utils.throwIf;
+import static org.codegenerator.CommonUtils.throwIf;
 
 public class ReflectionMethodSequenceFinder {
     private final Map<Class<?>, List<Field>> cachedFields = new IdentityHashMap<>();
@@ -38,10 +38,10 @@ public class ReflectionMethodSequenceFinder {
         List<Object> suspects = new ArrayList<>();
         List<SetterUsingReflection<T>> sur = new ArrayList<>();
         for (Field field : fields) {
-            Object expectedValue = Utils.callSupplierWrapper(() -> field.get(expected));
-            Object actualValue = Utils.callSupplierWrapper(() -> field.get(actual));
+            Object expectedValue = CommonUtils.callSupplierWrapper(() -> field.get(expected));
+            Object actualValue = CommonUtils.callSupplierWrapper(() -> field.get(actual));
             if (!equals(expectedValue, actualValue)) {
-                Utils.callRunnableWrapper(() -> field.set(actual, expectedValue));
+                CommonUtils.callRunnableWrapper(() -> field.set(actual, expectedValue));
                 suspects.add(expectedValue);
                 sur.add(new SetterUsingReflection<>(history, field, expectedValue));
             }

@@ -6,7 +6,7 @@ import java.lang.reflect.Array;
 import java.util.*;
 import java.util.function.Supplier;
 
-import static org.codegenerator.Utils.throwUnless;
+import static org.codegenerator.CommonUtils.throwUnless;
 
 public class ArrayNode implements Node {
     private boolean visited = false;

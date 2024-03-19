@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 import static java.util.Collections.swap;
 
-public class Utils {
+public class CommonUtils {
     public static <T extends RuntimeException> void throwIf(boolean cond, T exception) {
         if (cond) {
             throw exception;
@@ -97,7 +97,7 @@ public class Utils {
         List<File> fileList = Arrays.stream(classes)
                 .filter(it -> it.getProtectionDomain().getCodeSource() != null)
                 .map(it -> it.getProtectionDomain().getCodeSource().getLocation())
-                .map(it -> Utils.callSupplierWrapper(() -> new File(it.toURI()))
+                .map(it -> CommonUtils.callSupplierWrapper(() -> new File(it.toURI()))
                 ).collect(Collectors.toList());
         return db.asyncClasspath(fileList).get();
     }
@@ -204,15 +204,15 @@ public class Utils {
         Executable constructor = calls.get(0).getMethod();
         Object builder;
         if (constructor instanceof Constructor<?>) {
-            builder = Utils.callSupplierWrapper(() -> ((Constructor<?>) constructor).newInstance());
+            builder = CommonUtils.callSupplierWrapper(() -> ((Constructor<?>) constructor).newInstance());
         } else {
-            builder = Utils.callSupplierWrapper(() -> (((Method) constructor).invoke(null)));
+            builder = CommonUtils.callSupplierWrapper(() -> (((Method) constructor).invoke(null)));
         }
         for (int i = 1; i < calls.size() - 1; i++) {
             HistoryCall<Executable> call = calls.get(i);
             Executable method = call.getMethod();
             Object[] args = call.getArgs();
-            Utils.callRunnableWrapper(() -> ((Method) method).invoke(builder, args));
+            CommonUtils.callRunnableWrapper(() -> ((Method) method).invoke(builder, args));
         }
         return builder;
     }

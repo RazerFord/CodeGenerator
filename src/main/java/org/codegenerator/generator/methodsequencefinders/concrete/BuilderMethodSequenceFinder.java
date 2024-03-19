@@ -4,7 +4,7 @@ import com.rits.cloning.Cloner;
 import kotlin.Pair;
 import org.apache.commons.lang3.ArrayUtils;
 import org.codegenerator.ClonerUtilities;
-import org.codegenerator.Utils;
+import org.codegenerator.CommonUtils;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
@@ -36,8 +36,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
-import static org.codegenerator.Utils.loadOrCreateDataBase;
-import static org.codegenerator.Utils.throwIf;
+import static org.codegenerator.CommonUtils.loadOrCreateDataBase;
+import static org.codegenerator.CommonUtils.throwIf;
 
 public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     private static final String BUILDER_NOT_FOUND = "Builder not found";
@@ -113,7 +113,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         Object object = targetObject.getObject();
         history.put(object, new HistoryObject<>(object, calls, BuilderMethodSequenceFinder.class));
 
-        Object built = Utils.callSupplierWrapper(() -> builderInfo.method().invoke(path.getActualObject()));
+        Object built = CommonUtils.callSupplierWrapper(() -> builderInfo.method().invoke(path.getActualObject()));
         return new ResultFindingImpl(built, path.getDeviation(), suspect);
     }
 
@@ -126,7 +126,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
             List<EdgeMethod> methods = path.getMethods();
 
             Class<?> builderClazz = builderInfo.builder();
-            JcClasspath classpath = Utils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
+            JcClasspath classpath = CommonUtils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
 
             List<HistoryCall<JcMethod>> calls = new ArrayList<>();
             List<Object> suspect = new ArrayList<>();
@@ -141,7 +141,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
             Object object = targetObject.getObject();
             history.put(object, new HistoryObject<>(object, calls, BuilderMethodSequenceFinder.class));
 
-            Object built = Utils.callSupplierWrapper(() -> builderInfo.method().invoke(path.getActualObject()));
+            Object built = CommonUtils.callSupplierWrapper(() -> builderInfo.method().invoke(path.getActualObject()));
             return new ResultFindingImpl(built, path.getDeviation(), suspect);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -159,7 +159,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     ) {
         JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
 
-        JcMethod jcMethod = lookup.method(Utils.buildMethodName(method), Utils.buildDescriptor(method));
+        JcMethod jcMethod = lookup.method(CommonUtils.buildMethodName(method), CommonUtils.buildDescriptor(method));
         calls.add(new HistoryCall<>(history, jcMethod));
     }
 
@@ -302,17 +302,17 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         @Contract(pure = true)
         private static @NotNull Supplier<Object> createConstructorSupplier(Executable executable) {
             if (executable instanceof Method) {
-                return () -> Utils.callSupplierWrapper(() -> ((Method) executable).invoke(null));
+                return () -> CommonUtils.callSupplierWrapper(() -> ((Method) executable).invoke(null));
             }
             if (executable instanceof Constructor<?>) {
-                return () -> Utils.callSupplierWrapper(((Constructor<?>) executable)::newInstance);
+                return () -> CommonUtils.callSupplierWrapper(((Constructor<?>) executable)::newInstance);
             }
             throw new IllegalArgumentException();
         }
 
         @Contract(pure = true)
         private static @NotNull UnaryOperator<Object> createTerminationFunction(Method method) {
-            return o -> Utils.callSupplierWrapper(() -> method.invoke(o));
+            return o -> CommonUtils.callSupplierWrapper(() -> method.invoke(o));
         }
     }
 }
