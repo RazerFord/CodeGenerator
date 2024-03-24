@@ -103,7 +103,7 @@ public class PipelineMethodSequencePipeline implements MethodSequencePipeline {
                     return;
                 }
             } catch (Exception ignored) {
-                logging(methodSequenceFinder);
+                log(methodSequenceFinder);
             }
         }
         throw new MethodSequenceNotFoundException();
@@ -147,7 +147,7 @@ public class PipelineMethodSequencePipeline implements MethodSequencePipeline {
         return reflectionMethodSequenceFinder.findSetter(expected, actual, history);
     }
 
-    private static void logging(@Nullable MethodSequenceFinder finder) {
+    private static void log(@Nullable MethodSequenceFinder finder) {
         if (finder != null) {
             String className = finder.getClass().getName();
             String msg = String.format("%s failed", className);

@@ -214,13 +214,13 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         }
 
         private @Nullable IndexedWrapper<RangeResultFinding> findInternal(@NotNull Range range, int start) {
-            Func func = (o) -> doFind(range, o);
+            Func func = o -> doFind(range, o);
             Class<?> clazz = range.getTo().getClazz();
             return findInternal(clazz, func, range.getTo(), start);
         }
 
         private @Nullable IndexedWrapper<RangeResultFinding> findInternal(@NotNull TargetObject target, int start) {
-            Func func = (o) -> doFind(target, o);
+            Func func = o -> doFind(target, o);
             Class<?> clazz = target.getClazz();
             return findInternal(clazz, func, target, start);
         }
@@ -276,7 +276,7 @@ public class IterablePipeline implements Iterable<History<Executable>> {
                         return res;
                     }
                 } catch (Exception ignored) {
-                    logging(finder);
+                    log(finder);
                 }
             }
             return null;
@@ -285,14 +285,14 @@ public class IterablePipeline implements Iterable<History<Executable>> {
         interface Func extends Function<IndexedWrapper<MethodSequenceFinder>, IndexedWrapper<RangeResultFinding>> {
         }
 
-        private static void logging(@Nullable IndexedWrapper<MethodSequenceFinder> indexedFinder) {
+        private static void log(@Nullable IndexedWrapper<MethodSequenceFinder> indexedFinder) {
             if (indexedFinder != null) {
-                IterablePipeline.logging(indexedFinder.value);
+                IterablePipeline.log(indexedFinder.value);
             }
         }
     }
 
-    private static void logging(@Nullable MethodSequenceFinder finder) {
+    private static void log(@Nullable MethodSequenceFinder finder) {
         if (finder != null) {
             String className = finder.getClass().getName();
             String msg = String.format("%s failed", className);

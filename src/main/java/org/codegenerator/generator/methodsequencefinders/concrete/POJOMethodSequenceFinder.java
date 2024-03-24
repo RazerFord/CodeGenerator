@@ -110,12 +110,12 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
         Object from = constructor.invoke();
         Object to = from;
         ranges.add(new RangeResult(new RangeObject(new TargetObject(from), new TargetObject(to)), Collections.singletonList(constructor)));
-        for (int i = 0; i < methods.size(); i++) {
+        for (int i = 1; i < methods.size(); i++) {
             to = cloner.deepClone(to);
             methods.get(i).invoke(to);
             RangeObject range = new RangeObject(new TargetObject(from), new TargetObject(to));
             List<Edge<? extends Executable>> allMethods = new ArrayList<>(Collections.singletonList(constructor));
-            allMethods.addAll(methods.subList(0, i + 1));
+            allMethods.addAll(methods.subList(1, i + 1));
             ranges.add(new RangeResult(range, allMethods));
         }
 

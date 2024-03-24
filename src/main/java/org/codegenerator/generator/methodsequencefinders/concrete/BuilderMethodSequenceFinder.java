@@ -290,7 +290,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
                 for (BuilderInfo builderInfo : builderInfoList) {
                     try {
                         consumer.accept(builderInfo);
-                        finder = (Consumer<BuilderInfo> consumer1) -> consumer1.accept(builderInfo);
+                        finder = (Consumer<BuilderInfo> consumer1)
+                                -> consumer1.accept(builderInfo);
                         return;
                     } catch (Exception e) {
                         // this block must be empty
