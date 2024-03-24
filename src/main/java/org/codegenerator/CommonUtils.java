@@ -3,6 +3,7 @@ package org.codegenerator;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codegenerator.exceptions.CallWrapperException;
+import org.codegenerator.generator.graph.edges.Edge;
 import org.codegenerator.history.HistoryCall;
 import org.jacodb.api.JcClassOrInterface;
 import org.jacodb.api.JcClasspath;
@@ -215,6 +216,12 @@ public class CommonUtils {
             CommonUtils.callRunnableWrapper(() -> ((Method) method).invoke(builder, args));
         }
         return builder;
+    }
+
+    public static String message(@NotNull Edge<? extends Executable> edge) {
+        String funcName = edge.getMethod().getName();
+        String argNames = Arrays.toString(edge.getArgs());
+        return String.format("Error calling the function \"%s\" with arguments %s", funcName, argNames);
     }
 
     private static final @NotNull @UnmodifiableView Map<Class<?>, String> PRIMITIVES_TO_DESCRIPTOR = getPrimitiveToDescriptor();

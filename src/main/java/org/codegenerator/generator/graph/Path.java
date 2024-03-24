@@ -1,18 +1,19 @@
 package org.codegenerator.generator.graph;
 
-import org.codegenerator.generator.graph.edges.EdgeMethod;
+import org.codegenerator.generator.graph.edges.Edge;
 
+import java.lang.reflect.Executable;
 import java.util.List;
 
 public class Path {
     private final Object actualObject;
     private final int deviation;
-    private final List<EdgeMethod> methods;
+    private final List<Edge<? extends Executable>> methods;
 
     public Path(
             Object actualObject,
             int deviation,
-            List<EdgeMethod> methods
+            List<Edge<? extends Executable>> methods
     ) {
         this.actualObject = actualObject;
         this.deviation = deviation;
@@ -27,7 +28,7 @@ public class Path {
         return deviation;
     }
 
-    public List<EdgeMethod> getMethods() {
+    public List<Edge<? extends Executable>> getMethods() {
         return methods;
     }
 }

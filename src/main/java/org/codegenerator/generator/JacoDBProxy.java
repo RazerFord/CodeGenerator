@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.concrete;
+package org.codegenerator.generator;
 
 import kotlin.sequences.Sequence;
 import org.apache.commons.lang3.ArrayUtils;
@@ -6,6 +6,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.codegenerator.CommonUtils;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.generator.graph.edges.EdgeExecutable;
+import org.codegenerator.generator.methodsequencefinders.concrete.BuilderMethodSequenceFinder;
 import org.codegenerator.history.*;
 import org.jacodb.api.*;
 import org.jacodb.impl.features.*;
@@ -104,8 +105,7 @@ public class JacoDBProxy {
 
             return loadedClass.getMethod(jcMethod.getName(), getParameterTypes(jcMethod, classLoader));
         } catch (
-                ClassNotFoundException |
-                NoSuchMethodException e
+                ClassNotFoundException | NoSuchMethodException e
         ) {
             throw new JacoDBException(e);
         }

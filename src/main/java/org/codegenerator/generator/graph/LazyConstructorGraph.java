@@ -1,16 +1,15 @@
 package org.codegenerator.generator.graph;
 
+import org.codegenerator.CommonUtils;
 import org.codegenerator.CustomLogger;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
-import org.codegenerator.generator.graph.edges.Edge;
-import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.generator.graph.edges.EdgeConstructor;
 import org.codegenerator.generator.graph.edges.EdgeGenerator;
+import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.Executable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -49,14 +48,10 @@ public class LazyConstructorGraph {
                     currNode = tempNode;
                 }
             } catch (Exception e) {
-                logging(tempEc);
+                LOGGER.warning(CommonUtils.message(tempEc));
             }
         }
         return Objects.requireNonNull(ec, NO_CONSTRUCTORS);
-    }
-
-    private static <E extends Edge<? extends Executable>> void logging(@NotNull E edgeMethod) {
-        LOGGER.warning(CustomLogger.message(edgeMethod));
     }
 
     private static final String NO_CONSTRUCTORS = "No constructors found";

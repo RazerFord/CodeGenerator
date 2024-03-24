@@ -8,11 +8,12 @@ import org.codegenerator.CommonUtils;
 import org.codegenerator.exceptions.InvariantCheckingException;
 import org.codegenerator.exceptions.JacoDBException;
 import org.codegenerator.exceptions.MethodSequenceNotFoundException;
+import org.codegenerator.generator.BuilderInfo;
+import org.codegenerator.generator.JacoDBProxy;
 import org.codegenerator.generator.graph.LazyMethodGraph;
 import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.edges.Edge;
 import org.codegenerator.generator.graph.edges.EdgeExecutable;
-import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.codegenerator.generator.graph.resultfinding.RangeResultFinding;
 import org.codegenerator.generator.graph.resultfinding.RangeResultFindingImpl;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
@@ -98,13 +99,13 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         Pair<BuilderInfo, Path> found = methodFinder.find(targetObject);
         BuilderInfo builderInfo = found.getFirst();
         Path path = found.getSecond();
-        List<EdgeMethod> methods = path.getMethods();
+        List<Edge<? extends Executable>> methods = path.getMethods();
 
         List<HistoryCall<Executable>> calls = new ArrayList<>();
         List<Object> suspect = new ArrayList<>();
 
         calls.add(new HistoryCall<>(history, builderInfo.constructor()));
-        for (EdgeMethod method : methods) {
+        for (Edge<? extends Executable> method : methods) {
             calls.add(new HistoryCall<>(history, method.getMethod(), method.getArgs()));
             suspect.addAll(Arrays.asList(method.getArgs()));
         }
@@ -123,7 +124,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
             Pair<BuilderInfo, Path> found = methodFinder.find(targetObject);
             BuilderInfo builderInfo = found.getFirst();
             Path path = found.getSecond();
-            List<EdgeMethod> methods = path.getMethods();
+            List<Edge<? extends Executable>> methods = path.getMethods();
 
             Class<?> builderClazz = builderInfo.builder();
             JcClasspath classpath = CommonUtils.toJcClasspath(db, ArrayUtils.add(classes, builderClazz));
@@ -166,13 +167,13 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     private void addMethods(
             @NotNull JcClassOrInterface jcClassOrInterface,
             History<JcMethod> history,
-            @NotNull List<EdgeMethod> methods,
+            @NotNull List<Edge<? extends Executable>> methods,
             @NotNull List<HistoryCall<JcMethod>> calls,
             @NotNull List<Object> suspect
     ) {
         JcLookup<JcField, JcMethod> lookup = jcClassOrInterface.getLookup();
 
-        for (EdgeMethod em : methods) {
+        for (Edge<? extends Executable> em : methods) {
             Object[] args = em.getArgs();
             calls.add(new HistoryCall<>(history, em.toJcMethod(lookup), args));
             suspect.addAll(Arrays.asList(args));
@@ -189,7 +190,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     ) {
         BuilderInfo builderInfo = found.getFirst();
         Path path = found.getSecond();
-        List<EdgeMethod> methods = path.getMethods();
+        List<Edge<? extends Executable>> methods = path.getMethods();
 
         List<Object> suspect = createSuspects(methods);
         List<RangeResult> ranges = createRanges(range.getFrom().getObject(), builderInfo, methods);
@@ -197,9 +198,9 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         return new RangeResultFindingImpl(range.getTo(), path.getDeviation(), BuilderMethodSequenceFinder.class, suspect, ranges);
     }
 
-    private @NotNull List<Object> createSuspects(@NotNull List<EdgeMethod> methods) {
+    private @NotNull List<Object> createSuspects(@NotNull List<Edge<? extends Executable>> methods) {
         List<Object> suspect = new ArrayList<>();
-        for (EdgeMethod method : methods) {
+        for (Edge<? extends Executable> method : methods) {
             suspect.addAll(Arrays.asList(method.getArgs()));
         }
         return suspect;
@@ -208,7 +209,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     private @NotNull List<RangeResult> createRanges(
             Object begin,
             @NotNull BuilderInfo info,
-            @NotNull List<EdgeMethod> methods
+            @NotNull List<Edge<? extends Executable>> methods
     ) {
         List<RangeResult> ranges = new ArrayList<>();
         Cloner cloner = ClonerUtilities.standard();

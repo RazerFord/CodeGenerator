@@ -4,11 +4,9 @@ import com.rits.cloning.Cloner;
 import org.codegenerator.ClonerUtilities;
 import org.codegenerator.CommonUtils;
 import org.codegenerator.exceptions.JacoDBException;
-import org.codegenerator.generator.graph.LazyConstructorGraph;
-import org.codegenerator.generator.graph.LazyMethodGraph;
+import org.codegenerator.generator.graph.LazyGraph;
 import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.edges.Edge;
-import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.codegenerator.generator.graph.resultfinding.RangeResultFinding;
 import org.codegenerator.generator.graph.resultfinding.RangeResultFindingImpl;
 import org.codegenerator.generator.graph.resultfinding.ResultFinding;
@@ -26,6 +24,7 @@ import org.jacodb.impl.features.InMemoryHierarchy;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,12 +32,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
+import java.util.function.Supplier;
+
+import static org.codegenerator.CommonUtils.throwIf;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
-    private final LazyMethodGraph lazyMethodGraph = new LazyMethodGraph();
-    private final LazyConstructorGraph lazyConstructorGraph = new LazyConstructorGraph();
+    private final LazyGraph lazyGraph = new LazyGraph();
 
     @Override
     public HistoryNode<Executable> createNode(
@@ -66,11 +66,11 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
 
     @Override
     public RangeResultFinding findRanges(@NotNull Range rangeObject) {
-        @NotNull Path path = lazyMethodGraph.findPath(rangeObject.getTo(), rangeObject.getFrom().getObject(), UnaryOperator.identity());
+        @NotNull Path path = lazyGraph.findPath(rangeObject);
         List<Object> suspects = new ArrayList<>();
-        List<EdgeMethod> methods = path.getMethods();
+        List<Edge<? extends Executable>> methods = path.getMethods();
 
-        for (EdgeMethod edgeMethod : methods) {
+        for (Edge<? extends Executable> edgeMethod : methods) {
             suspects.addAll(Arrays.asList(edgeMethod.getArgs()));
         }
 
@@ -92,19 +92,21 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
 
     @Override
     public RangeResultFinding findRanges(TargetObject targetObject) {
-        Edge<? extends Executable> constructor = lazyConstructorGraph.findPath(targetObject);
-        @NotNull Path path = lazyMethodGraph.findPath(targetObject, constructor.invoke(), UnaryOperator.identity());
+        @NotNull Path path = lazyGraph.findPath(targetObject);
 
-        List<Object> suspects = new ArrayList<>(Arrays.asList(constructor.getArgs()));
-        List<EdgeMethod> methods = path.getMethods();
+        List<Object> suspects = new ArrayList<>();
+        List<Edge<? extends Executable>> methods = path.getMethods();
 
-        for (EdgeMethod edgeMethod : methods) {
+        for (Edge<? extends Executable> edgeMethod : methods) {
             suspects.addAll(Arrays.asList(edgeMethod.getArgs()));
         }
 
         List<RangeResult> ranges = new ArrayList<>();
-
         Cloner cloner = ClonerUtilities.standard();
+
+        Edge<? extends Executable> constructor = path.getMethods().get(0);
+        throwIf(!(constructor.getMethod() instanceof Constructor<?>), (Supplier<IllegalStateException>) IllegalStateException::new);
+
         Object from = constructor.invoke();
         Object to = from;
         ranges.add(new RangeResult(new RangeObject(new TargetObject(from), new TargetObject(to)), Collections.singletonList(constructor)));
@@ -150,14 +152,11 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
             History<T> history,
             @NotNull Function<Edge<? extends Executable>, T> toMethod
     ) {
-        Edge<? extends Executable> constructor = lazyConstructorGraph.findPath(targetObject);
-        @NotNull Path path = lazyMethodGraph.findPath(targetObject, constructor::invoke);
-        List<? extends Edge<? extends Executable>> methods = path.getMethods();
+        Path path = lazyGraph.findPath(targetObject);
+        List<Edge<? extends Executable>> methods = path.getMethods();
 
         List<HistoryCall<T>> calls = new ArrayList<>();
-
-        List<Object> suspect = new ArrayList<>(Arrays.asList(constructor.getArgs()));
-        calls.add(new HistoryCall<>(history, toMethod.apply(constructor), constructor.getArgs()));
+        List<Object> suspect = new ArrayList<>();
 
         for (Edge<? extends Executable> em : methods) {
             Object[] args = em.getArgs();
@@ -168,8 +167,6 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
         Object object = targetObject.getObject();
         history.put(object, new HistoryObject<>(object, calls, POJOMethodSequenceFinder.class));
 
-        int deviation = path.getDeviation();
-
-        return new ResultFindingImpl(path.getActualObject(), deviation, suspect);
+        return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspect);
     }
 }

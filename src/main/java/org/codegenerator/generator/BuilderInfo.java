@@ -1,4 +1,4 @@
-package org.codegenerator.generator.methodsequencefinders.concrete;
+package org.codegenerator.generator;
 
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
@@ -8,7 +8,7 @@ public class BuilderInfo {
     private final Executable builderConstructor;
     private final Method builderBuildMethod;
 
-    BuilderInfo(
+    public BuilderInfo(
             Class<?> builderClazz,
             Executable builderConstructor,
             Method builderBuildMethod

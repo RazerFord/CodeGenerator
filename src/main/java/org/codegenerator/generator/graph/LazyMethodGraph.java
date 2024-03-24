@@ -7,12 +7,14 @@ import org.codegenerator.CustomLogger;
 import org.codegenerator.CommonUtils;
 import org.codegenerator.extractor.ClassFieldExtractor;
 import org.codegenerator.extractor.node.Node;
+import org.codegenerator.generator.graph.edges.Edge;
 import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.generator.graph.edges.EdgeGenerator;
 import org.codegenerator.generator.graph.edges.EdgeMethod;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Executable;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -61,6 +63,39 @@ public class LazyMethodGraph {
                 triple.getFirst(),
                 finalNode.diff(triple.getSecond()),
                 new ArrayList<>(path)
+        );
+    }
+
+    public @NotNull Path findPath(
+            @NotNull TargetObject targetObject,
+            @NotNull Object beginObject,
+            @NotNull UnaryOperator<Object> termination,
+            List<Edge<? extends Executable>> path
+    ) {
+        Class<?> clazz = beginObject.getClass();
+        UnaryOperator<Object> copyObject = copyObject();
+        Object finalObject = targetObject.getObject();
+
+        List<EdgeMethod> methods = edgeGenerator.generate(clazz.getMethods(), targetObject.get());
+
+        Node finalNode = ClassFieldExtractor.extract(finalObject);
+        Object beginObjectBuilt = termination.apply(beginObject);
+        Triple<Object, Node, PathNode> triple = new Triple<>(beginObject, ClassFieldExtractor.extract(beginObjectBuilt), new PathNode(null, null, 0));
+        triple = bfs(triple, finalNode, methods, copyObject, termination);
+
+        PathNode finalPathNode = triple.getThird();
+        Deque<EdgeMethod> localPath = new ArrayDeque<>();
+        while (finalPathNode != null && finalPathNode.edgeMethod != null) {
+            localPath.addFirst(finalPathNode.edgeMethod);
+            finalPathNode = finalPathNode.prevPathNode;
+        }
+
+        path.addAll(localPath);
+
+        return new Path(
+                triple.getFirst(),
+                finalNode.diff(triple.getSecond()),
+                path
         );
     }
 
@@ -127,7 +162,7 @@ public class LazyMethodGraph {
             try {
                 edgeMethod.invoke(instance);
             } catch (Exception ignored) {
-                logging(edgeMethod);
+                LOGGER.warning(CommonUtils.message(edgeMethod));
                 continue;
             }
             Object instanceBuilt = CommonUtils.callSupplierWrapper(() -> termination.apply(instance));
@@ -159,12 +194,5 @@ public class LazyMethodGraph {
             this.edgeMethod = edgeMethod;
             this.depth = depth;
         }
-    }
-
-    private static void logging(@NotNull EdgeMethod edgeMethod) {
-        String funcName = edgeMethod.getMethod().getName();
-        String argNames = Arrays.toString(edgeMethod.getArgs());
-        String msg = String.format("Error calling the function \"%s\" with arguments %s", funcName, argNames);
-        LOGGER.warning(msg);
     }
 }

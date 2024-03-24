@@ -5,7 +5,6 @@ import org.codegenerator.generator.codegenerators.FileGenerator;
 import org.codegenerator.generator.methodsequencefinders.IterablePipeline;
 import org.codegenerator.generator.methodsequencefinders.MethodSequencePipeline;
 import org.codegenerator.generator.methodsequencefinders.PipelineMethodSequencePipeline;
-import org.codegenerator.generator.methodsequencefinders.concrete.JacoDBProxy;
 import org.codegenerator.generator.methodsequencefinders.concrete.MethodSequenceFinder;
 import org.codegenerator.generator.objectwrappers.TargetObject;
 import org.codegenerator.history.History;
