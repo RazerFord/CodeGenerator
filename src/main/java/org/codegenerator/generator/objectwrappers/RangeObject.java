@@ -8,6 +8,14 @@ public class RangeObject implements Range {
         this(new TargetObject(from), new TargetObject(to));
     }
 
+    public RangeObject(TargetObject from, Object to) {
+        this(from, new TargetObject(to));
+    }
+
+    public RangeObject(Object from, TargetObject to) {
+        this(new TargetObject(from), to);
+    }
+
     public RangeObject(TargetObject from, TargetObject to) {
         this.from = from;
         this.to = to;

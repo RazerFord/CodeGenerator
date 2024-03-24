@@ -74,18 +74,7 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
             suspects.addAll(Arrays.asList(edgeMethod.getArgs()));
         }
 
-        List<RangeResult> ranges = new ArrayList<>();
-
-        Cloner cloner = ClonerUtilities.standard();
-        Object from = cloner.deepClone(rangeObject.getFrom().getObject());
-        Object to = from;
-        for (int i = 0; i < methods.size(); i++) {
-            to = cloner.deepClone(to);
-            methods.get(i).invoke(to);
-            RangeObject range = new RangeObject(new TargetObject(from), new TargetObject(to));
-            List<Edge<? extends Executable>> allMethods = new ArrayList<>(methods.subList(0, i + 1));
-            ranges.add(new RangeResult(range, allMethods));
-        }
+        List<RangeResult> ranges = buildRanges(0, false, rangeObject, methods);
 
         return new RangeResultFindingImpl(rangeObject.getTo(), path.getDeviation(), POJOMethodSequenceFinder.class, suspects, ranges);
     }
@@ -101,25 +90,41 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
             suspects.addAll(Arrays.asList(edgeMethod.getArgs()));
         }
 
-        List<RangeResult> ranges = new ArrayList<>();
-        Cloner cloner = ClonerUtilities.standard();
-
         Edge<? extends Executable> constructor = path.getMethods().get(0);
         throwIf(!(constructor.getMethod() instanceof Constructor<?>), (Supplier<IllegalStateException>) IllegalStateException::new);
 
         Object from = constructor.invoke();
+        List<RangeResult> ranges = buildRanges(1, true, new RangeObject(from, targetObject), methods);
+
+        return new RangeResultFindingImpl(targetObject, path.getDeviation(), POJOMethodSequenceFinder.class, suspects, ranges);
+    }
+
+    private static @NotNull List<RangeResult> buildRanges(
+            int applyStartIdx,
+            boolean addZero,
+            @NotNull Range rangeObject,
+            @NotNull List<Edge<? extends Executable>> methods
+    ) {
+        List<RangeResult> ranges = new ArrayList<>();
+
+        Cloner cloner = ClonerUtilities.standard();
+        Object from = cloner.deepClone(rangeObject.getFrom().getObject());
         Object to = from;
-        ranges.add(new RangeResult(new RangeObject(new TargetObject(from), new TargetObject(to)), Collections.singletonList(constructor)));
-        for (int i = 1; i < methods.size(); i++) {
+
+        if (addZero) {
+            List<Edge<? extends Executable>> list = Collections.singletonList(methods.get(0));
+            ranges.add(new RangeResult(new RangeObject(from, to), list));
+        }
+
+        for (int i = applyStartIdx; i < methods.size(); i++) {
             to = cloner.deepClone(to);
             methods.get(i).invoke(to);
-            RangeObject range = new RangeObject(new TargetObject(from), new TargetObject(to));
-            List<Edge<? extends Executable>> allMethods = new ArrayList<>(Collections.singletonList(constructor));
-            allMethods.addAll(methods.subList(1, i + 1));
+            RangeObject range = new RangeObject(from, to);
+            List<Edge<? extends Executable>> allMethods = new ArrayList<>(methods.subList(0, i + 1));
             ranges.add(new RangeResult(range, allMethods));
         }
 
-        return new RangeResultFindingImpl(targetObject, path.getDeviation(), POJOMethodSequenceFinder.class, suspects, ranges);
+        return ranges;
     }
 
     @Override
