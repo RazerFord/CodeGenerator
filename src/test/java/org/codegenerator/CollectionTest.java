@@ -1,5 +1,8 @@
 package org.codegenerator;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 import org.codegenerator.generator.Generator;
 import org.codegenerator.generator.Generators;
 import org.jetbrains.annotations.NotNull;
@@ -279,6 +282,27 @@ class CollectionTest {
         doTestMap(generatedClassName, TreeMap::new, 1_000_000);
     }
 
+    ///////////////////////// Testing Multimap Guava /////////////////////////
+    @Test
+    void smallMultimapTest() throws IOException {
+        final String generatedClassName = "GeneratedSmallMultimapClass";
+        doTestMultimap(generatedClassName, ArrayListMultimap::create, 10, 5);
+    }
+
+    @Test
+    @Timeout(10)
+    void mediumMultimapTest() throws IOException {
+        final String generatedClassName = "GeneratedMediumLinkedHashMapClass";
+        doTestMultimap(generatedClassName, ArrayListMultimap::create, 1_000, 500);
+    }
+
+    @Test
+    @Timeout(10)
+    void largeMultimapTest() throws IOException {
+        final String generatedClassName = "GeneratedLargeMultimapClass";
+        doTestMultimap(generatedClassName, ArrayListMultimap::create, 1_000_000, 500_000);
+    }
+
     private static void doTestList(
             String generatedClassName,
             Supplier<List<Integer>> supplier,
@@ -341,6 +365,21 @@ class CollectionTest {
         assertEquals(queue, other);
     }
 
+    private static void doTestMultimap(
+            String generatedClassName,
+            Supplier<Multimap<Integer, Integer>> supplier,
+            int size,
+            int maxIdx
+    ) throws IOException {
+        Generator generator = Generators.standard(PACKAGE_NAME, generatedClassName, METHOD_NAME);
+
+        Multimap<Integer, Integer> queue = toFillMultimapInteger(supplier, size, maxIdx, 42);
+        generator.generateCode(queue, Paths.get(OUTPUT_DIRECTORY));
+
+        ListMultimap<Integer, Integer> other = createObject(generatedClassName);
+        assertEquals(queue, other);
+    }
+
     private static <T extends Collection<Integer>> T toFillCollectionInteger(
             @NotNull Supplier<T> supplier,
             int size,
@@ -363,6 +402,20 @@ class CollectionTest {
         Random rnd = new Random(seed);
         for (int i = 0; i < size; i++) {
             list.put(i, rnd.nextInt());
+        }
+        return list;
+    }
+
+    private static <T extends Multimap<Integer, Integer>> T toFillMultimapInteger(
+            @NotNull Supplier<T> supplier,
+            int size,
+            int maxIdx,
+            int seed
+    ) {
+        T list = supplier.get();
+        Random rnd = new Random(seed);
+        for (int i = 0; i < size; i++) {
+            list.put(i % maxIdx, rnd.nextInt());
         }
         return list;
     }
