@@ -171,6 +171,8 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         List<Edge<? extends Executable>> methods = path.getMethods();
 
         List<Object> suspect = createSuspects(methods);
+        // Removing the `build` method from the list of methods
+        methods = methods.subList(0, methods.size()-1);
         List<RangeResult> ranges = buildRanges(range.getFrom().getObject(), methodFinder.getBuilderInfo(), methods);
 
         return new RangeResultFindingImpl(range.getTo(), path.getDeviation(), BuilderMethodSequenceFinder.class, suspect, ranges);
@@ -185,7 +187,7 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
     }
 
     private @NotNull List<RangeResult> buildRanges(
-            Object begin,
+            Object from,
             @NotNull BuilderInfo info,
             @NotNull List<Edge<? extends Executable>> methods
     ) {
@@ -195,22 +197,15 @@ public class BuilderMethodSequenceFinder implements MethodSequenceFinder {
         EdgeExecutable constructor = new EdgeExecutable(info.constructor());
         EdgeExecutable build = new EdgeExecutable(info.method());
 
-        Object from = cloner.deepClone(begin);
-        Object to = from;
-        Object built = build.invoke(cloner.deepClone(from));
-        ranges.add(new RangeResult(new RangeObject(new TargetObject(from), new TargetObject(built)), Arrays.asList(constructor, build)));
-        for (int i = 0; i < methods.size()-1; i++) {
+        Object to = cloner.deepClone(from);
+        Range range = new RangeObject(from, build.invoke(cloner.deepClone(from)));
+        ranges.add(new RangeResult(range, Arrays.asList(constructor, build)));
+        for (int i = 0; i < methods.size(); i++) {
             to = cloner.deepClone(to);
             methods.get(i).invoke(to);
-            built = build.invoke(cloner.deepClone(to));
-            RangeObject range1 = new RangeObject(new TargetObject(from), new TargetObject(built));
-
-            List<Edge<? extends Executable>> allMethods = new ArrayList<>();
-
-            allMethods.add(constructor);
-            allMethods.addAll(methods.subList(1, i + 1));
+            RangeObject range1 = new RangeObject(from, build.invoke(cloner.deepClone(to)));
+            List<Edge<? extends Executable>> allMethods = new ArrayList<>(methods.subList(0, i + 1));
             allMethods.add(build);
-
             ranges.add(new RangeResult(range1, allMethods));
         }
 
