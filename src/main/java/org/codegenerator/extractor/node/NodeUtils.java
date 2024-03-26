@@ -5,10 +5,28 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class NodeUtils {
     private NodeUtils() {
+    }
+
+    static int diff(DiffNode l, DiffNode r, Set<Node> visited) {
+        if (l == null || r == null) {
+            return diffIfNull(l, r, null, visited);
+        }
+        if (l == Leaf.NULL_NODE || r == Leaf.NULL_NODE) {
+            return diffIfNull(l, r, Leaf.NULL_NODE, visited);
+        }
+        return l.diff(r, visited);
+    }
+
+    static int diffIfNull(DiffNode l, DiffNode r, DiffNode nil, Set<Node> visited) {
+        if (l == nil) {
+            return r == nil ? 0 : r.power(visited) + 1;
+        }
+        return diffIfNull(r, l, nil, visited);
     }
 
     static int diff(Node l, Node r) {

@@ -8,9 +8,8 @@ import java.util.function.Supplier;
 
 import static org.codegenerator.CommonUtils.throwUnless;
 
-public class ArrayNode implements Node {
+public class ArrayNode implements DiffNode {
     private boolean visited = false;
-    private final Set<Node> visitedNode = new HashSet<>();
     private final Class<?> clazz;
     private final Object value;
     private final Map<Object, Node> fields;
@@ -54,18 +53,21 @@ public class ArrayNode implements Node {
 
     @Override
     public int diff(Node that) {
-        if (visitedNode.contains(this)) return 0;
-        visitedNode.add(this);
-        if (!(that instanceof ArrayNode)) return power();
-        int diff = 0;
-        for (Map.Entry<Object, Node> entry : fields.entrySet()) {
-            int curDiff = NodeUtils.diff(entry.getValue(), that.get(entry.getKey()));
-            // diff + curDiff >= MAX => curDiff >= MAX - diff
-            if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
-            diff += curDiff;
-        }
-        visitedNode.remove(this);
-        return diff;
+        return diff(that, Collections.newSetFromMap(new IdentityHashMap<>()));
+//        if (visited) return 0;
+//        visited = true;
+//        if (!(that instanceof ArrayNode)) return power();
+//        int diff = 0;
+//        for (Map.Entry<Object, Node> entry : fields.entrySet()) {
+//            DiffNode n1 = (DiffNode) entry.getValue();
+//            DiffNode n2 = (DiffNode) that.get(entry.getKey());
+//            int curDiff = NodeUtils.diff(n1, n2);
+//            // diff + curDiff >= MAX => curDiff >= MAX - diff
+//            if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
+//            diff += curDiff;
+//        }
+//        visited = false;
+//        return diff;
     }
 
     @Override
@@ -146,5 +148,37 @@ public class ArrayNode implements Node {
             }
         }
         return map;
+    }
+
+    @Override
+    public int diff(Node that, @NotNull Set<Node> visitedNode) {
+        if (visitedNode.contains(this) && visitedNode.contains(that)) return 0;
+        if (visitedNode.contains(this)) return ((DiffNode)that).power(visitedNode);
+        if (visitedNode.contains(that)) return power(visitedNode);
+        if (!(that instanceof ArrayNode)) return power();
+        visitedNode.add(this);
+        visitedNode.add(that);
+        visited = true;
+        int diff = 0;
+        for (Map.Entry<Object, Node> entry : fields.entrySet()) {
+            DiffNode n1 = (DiffNode) entry.getValue();
+            DiffNode n2 = (DiffNode) that.get(entry.getKey());
+            int curDiff = NodeUtils.diff(n1, n2, visitedNode);
+            // diff + curDiff >= MAX => curDiff >= MAX - diff
+            if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
+            diff += curDiff;
+        }
+        visited = false;
+        return diff;
+    }
+
+    @Override
+    public int power(@NotNull Set<Node> visited) {
+        if (visited.contains(this)) return 0;
+        return fields
+                .values()
+                .stream()
+                .filter(visited::add)
+                .mapToInt(Node::power).sum();
     }
 }

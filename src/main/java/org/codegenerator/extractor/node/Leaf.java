@@ -8,8 +8,8 @@ import java.util.function.Supplier;
 
 import static org.codegenerator.CommonUtils.throwUnless;
 
-public class Leaf implements Node {
-    protected static final Node NULL_NODE = new Leaf(null, null);
+public class Leaf implements DiffNode {
+    protected static final Leaf NULL_NODE = new Leaf(null, null);
     private static final int POWER = 1;
     private final Class<?> clazz;
     private final Object value;
@@ -85,9 +85,8 @@ public class Leaf implements Node {
         return fields.keySet();
     }
 
-    @NotNull
     @Override
-    public Collection<Node> values() {
+    public @NotNull Collection<Node> values() {
         return fields.values();
     }
 
@@ -106,5 +105,17 @@ public class Leaf implements Node {
     @Override
     public int hashCode() {
         return Objects.hash(clazz, value);
+    }
+
+    @Override
+    public int diff(Node that, @NotNull Set<Node> visited) {
+        if (visited.contains(this)) return 0;
+        visited.add(this);
+        return diff(that);
+    }
+
+    @Override
+    public int power(@NotNull Set<Node> visited) {
+        return visited.add(this) ? POWER : 0;
     }
 }
