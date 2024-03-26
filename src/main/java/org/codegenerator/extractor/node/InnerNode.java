@@ -13,6 +13,7 @@ import static org.codegenerator.CommonUtils.throwIf;
 
 public class InnerNode implements Node {
     private boolean visited = false;
+    private final Set<Node> visitedNode = new HashSet<>();
     private final Class<?> clazz;
     private final Object value;
     private final Map<Object, Node> fields;
@@ -47,11 +48,17 @@ public class InnerNode implements Node {
 
     @Override
     public int power() {
-        return power.get();
+        if (visited) return 0;
+        visited = true;
+        int p = power.get();
+        visited = false;
+        return p;
     }
 
     @Override
     public int diff(Node that) {
+        if (visitedNode.contains(this)) return 0;
+        visitedNode.add(this);
         if (!(that instanceof InnerNode)) return power();
         int diff = 0;
         for (Map.Entry<Object, Node> entry : fields.entrySet()) {
@@ -60,12 +67,16 @@ public class InnerNode implements Node {
             if (curDiff >= Integer.MAX_VALUE - diff) return Integer.MAX_VALUE;
             diff += curDiff;
         }
+        visitedNode.remove(this);
         return diff;
     }
 
     @Override
     public void accept(@NotNull NodeVisitor visitor) {
+        if (visited) return;
+        visited = true;
         visitor.visit(this);
+        visited = false;
     }
 
     @Override

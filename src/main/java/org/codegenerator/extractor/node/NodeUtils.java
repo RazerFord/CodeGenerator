@@ -12,10 +12,20 @@ public class NodeUtils {
     }
 
     static int diff(Node l, Node r) {
-        if (l == null) {
-            return r == null ? 0 : r.power();
+        if (l == null || r == null) {
+            return diffIfNull(l, r, null);
+        }
+        if (l == Leaf.NULL_NODE || r == Leaf.NULL_NODE) {
+            return diffIfNull(l, r, Leaf.NULL_NODE);
         }
         return l.diff(r);
+    }
+
+    static int diffIfNull(Node l, Node r, Node nil) {
+        if (l == nil) {
+            return r == nil ? 0 : r.power() + 1;
+        }
+        return diffIfNull(r, l, nil);
     }
 
     static @NotNull Node createNode(
