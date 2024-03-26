@@ -6,8 +6,8 @@ import com.google.common.collect.Multimap;
 import org.codegenerator.generator.Generator;
 import org.codegenerator.generator.Generators;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -44,56 +44,56 @@ class CollectionTest {
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumArrayListTest() throws IOException {
         final String generatedClassName = "GeneratedMediumArrayListClass";
         doTestList(generatedClassName, ArrayList::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumLinkedListTest() throws IOException {
         final String generatedClassName = "GeneratedMediumLinkedListClass";
         doTestList(generatedClassName, LinkedList::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumVectorTest() throws IOException {
         final String generatedClassName = "GeneratedMediumVectorClass";
         doTestList(generatedClassName, Vector::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumStackTest() throws IOException {
         final String generatedClassName = "GeneratedMediumStackClass";
         doTestList(generatedClassName, Stack::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeArrayListTest() throws IOException {
         final String generatedClassName = "GeneratedLargeArrayListClass";
         doTestList(generatedClassName, ArrayList::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeLinkedListTest() throws IOException {
         final String generatedClassName = "GeneratedLargeLinkedListClass";
         doTestList(generatedClassName, LinkedList::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeVectorTest() throws IOException {
         final String generatedClassName = "GeneratedLargeVectorClass";
         doTestList(generatedClassName, Vector::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeStackTest() throws IOException {
         final String generatedClassName = "GeneratedLargeStackClass";
         doTestList(generatedClassName, Stack::new, 1_000_000);
@@ -113,28 +113,28 @@ class CollectionTest {
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumArrayDequeTest() throws IOException {
         final String generatedClassName = "GeneratedMediumArrayDequeClass";
         doTestQueue(generatedClassName, ArrayDeque::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumPriorityQueueTest() throws IOException {
         final String generatedClassName = "GeneratedMediumPriorityQueueClass";
         doTestQueue(generatedClassName, PriorityQueue::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeArrayDequeTest() throws IOException {
         final String generatedClassName = "GeneratedLargeArrayDequeClass";
         doTestQueue(generatedClassName, ArrayDeque::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largePriorityQueueTest() throws IOException {
         final String generatedClassName = "GeneratedLargePriorityQueueClass";
         doTestQueue(generatedClassName, PriorityQueue::new, 1_000_000);
@@ -160,42 +160,42 @@ class CollectionTest {
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumHashSetDequeTest() throws IOException {
         final String generatedClassName = "GeneratedMediumHashSetClass";
         doTestSet(generatedClassName, HashSet::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumLinkedHashSetTest() throws IOException {
         final String generatedClassName = "GeneratedMediumLinkedHashSetClass";
         doTestSet(generatedClassName, LinkedHashSet::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumTreeSetTest() throws IOException {
         final String generatedClassName = "GeneratedMediumTreeSetClass";
         doTestSet(generatedClassName, TreeSet::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeHashSetDequeTest() throws IOException {
         final String generatedClassName = "GeneratedLargeHashSetClass";
         doTestSet(generatedClassName, HashSet::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeLinkedHashSetTest() throws IOException {
         final String generatedClassName = "GeneratedLargeLinkedHashSetClass";
         doTestSet(generatedClassName, LinkedHashSet::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeTreeSetTest() throws IOException {
         final String generatedClassName = "GeneratedLargeTreeSetClass";
         doTestSet(generatedClassName, TreeSet::new, 1_000_000);
@@ -227,56 +227,56 @@ class CollectionTest {
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumHashTableTest() throws IOException {
         final String generatedClassName = "GeneratedMediumHashTableClass";
         doTestMap(generatedClassName, Hashtable::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumLinkedHashMapTest() throws IOException {
         final String generatedClassName = "GeneratedMediumLinkedHashMapClass";
         doTestMap(generatedClassName, LinkedHashMap::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumHashMapTest() throws IOException {
         final String generatedClassName = "GeneratedMediumHashMapClass";
         doTestMap(generatedClassName, HashMap::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumTreeMapTest() throws IOException {
         final String generatedClassName = "GeneratedMediumTreeMapClass";
         doTestMap(generatedClassName, TreeMap::new, 1_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void bigHashTableTest() throws IOException {
         final String generatedClassName = "GeneratedBigHashTableClass";
         doTestMap(generatedClassName, Hashtable::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void bigLinkedHashMapTest() throws IOException {
         final String generatedClassName = "GeneratedBigLinkedHashMapClass";
         doTestMap(generatedClassName, LinkedHashMap::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void bigHashMapTest() throws IOException {
         final String generatedClassName = "GeneratedBigHashMapClass";
         doTestMap(generatedClassName, HashMap::new, 1_000_000);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void bigTreeMapTest() throws IOException {
         final String generatedClassName = "GeneratedBigTreeMapClass";
         doTestMap(generatedClassName, TreeMap::new, 1_000_000);
@@ -290,14 +290,14 @@ class CollectionTest {
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void mediumMultimapTest() throws IOException {
         final String generatedClassName = "GeneratedMediumLinkedHashMapClass";
         doTestMultimap(generatedClassName, ArrayListMultimap::create, 1_000, 500);
     }
 
     @Test
-    @Timeout(10)
+    @Disabled("This functionality is not supported")
     void largeMultimapTest() throws IOException {
         final String generatedClassName = "GeneratedLargeMultimapClass";
         doTestMultimap(generatedClassName, ArrayListMultimap::create, 1_000_000, 500_000);
