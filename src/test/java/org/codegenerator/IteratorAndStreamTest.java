@@ -91,7 +91,7 @@ class IteratorAndStreamTest {
 
     @Test
     void builderWithFourFieldsTest() throws IOException {
-        final String generatedClassName = "GeneratedPojoSetterBuilderClass";
+        final String generatedClassName = "GeneratedBuilderWithFourFieldsClass";
         Generator generator = Generators.forBuilder(SendingMoneyTransferWithPojo.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
         User userFrom = User.builder().created(32874).age(17).name("John Doe").coins(new long[]{5, 5, 5, 5, 5}).build();
 
@@ -113,8 +113,8 @@ class IteratorAndStreamTest {
     }
 
     @Test
-    void combinationPojoWithBuilder() throws IOException {
-        final String generatedClassName = "GeneratedPojoSetterBuilderClass";
+    void combinationPojoWithBuilderTest() throws IOException {
+        final String generatedClassName = "GeneratedCombinationPojoWithBuilderClass";
         Generator generator = Generators.forBuilder(CombinationPojoBuilder.class, PACKAGE_NAME, generatedClassName, METHOD_NAME);
 
         CombinationPojoBuilder o = CombinationPojoBuilder.builder()
