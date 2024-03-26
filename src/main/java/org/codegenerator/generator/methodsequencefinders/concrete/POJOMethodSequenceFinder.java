@@ -4,7 +4,7 @@ import com.rits.cloning.Cloner;
 import org.codegenerator.ClonerUtilities;
 import org.codegenerator.CommonUtils;
 import org.codegenerator.exceptions.JacoDBException;
-import org.codegenerator.generator.graph.LazyGraph;
+import org.codegenerator.generator.graph.LazyGraphCombinationPOJO;
 import org.codegenerator.generator.graph.Path;
 import org.codegenerator.generator.graph.edges.Edge;
 import org.codegenerator.generator.graph.resultfinding.RangeResultFinding;
@@ -38,7 +38,7 @@ import static org.codegenerator.CommonUtils.throwIf;
 
 public class POJOMethodSequenceFinder implements MethodSequenceFinder {
     private final String dbname = POJOMethodSequenceFinder.class.getCanonicalName();
-    private final LazyGraph lazyGraph = new LazyGraph();
+    private final LazyGraphCombinationPOJO lazyGraph = new LazyGraphCombinationPOJO();
 
     @Override
     public HistoryNode<Executable> createNode(
@@ -161,17 +161,17 @@ public class POJOMethodSequenceFinder implements MethodSequenceFinder {
         List<Edge<? extends Executable>> methods = path.getMethods();
 
         List<HistoryCall<T>> calls = new ArrayList<>();
-        List<Object> suspect = new ArrayList<>();
+        List<Object> suspects = new ArrayList<>();
 
         for (Edge<? extends Executable> em : methods) {
             Object[] args = em.getArgs();
             calls.add(new HistoryCall<>(history, toMethod.apply(em), args));
-            suspect.addAll(Arrays.asList(args));
+            suspects.addAll(Arrays.asList(args));
         }
 
         Object object = targetObject.getObject();
         history.put(object, new HistoryObject<>(object, calls, POJOMethodSequenceFinder.class));
 
-        return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspect);
+        return new ResultFindingImpl(path.getActualObject(), path.getDeviation(), suspects);
     }
 }
